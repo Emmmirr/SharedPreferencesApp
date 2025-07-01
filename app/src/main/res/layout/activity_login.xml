@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Iniciar Sesión"
+                android:text="Iniciar"
                 android:textAppearance="?attr/textAppearanceHeadline4"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
