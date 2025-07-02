@@ -190,7 +190,7 @@ public class GestionProtocoloFragment extends Fragment {
         for (String alumnoId : alumnosSet) {
             String nombre = alumnosPreferences.getString(alumnoId + "_nombre", "");
             String numControl = alumnosPreferences.getString(alumnoId + "_numControl", "");
-            alumnos.add(nombre + " (" + numControl + ") - " + alumnoId);
+            alumnos.add(nombre + " (" + numControl + ")");
         }
 
         if (alumnos.isEmpty()) {
