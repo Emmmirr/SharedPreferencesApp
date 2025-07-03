@@ -9,7 +9,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -31,6 +35,9 @@ public class LoginActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        // Limpiar cualquier sesión de Google previa al entrar al login
+        clearPreviousGoogleSession();
 
         tabLayout = findViewById(R.id.tab_layout);
         viewPager2 = findViewById(R.id.view_pager);
@@ -65,5 +72,18 @@ public class LoginActivity extends AppCompatActivity {
                 tabLayout.selectTab(tabLayout.getTabAt(position));
             }
         });
+    }
+
+    private void clearPreviousGoogleSession() {
+        // Configurar Google Sign-In Client
+        GoogleSignInOptions gOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        GoogleSignInClient gClient = GoogleSignIn.getClient(this, gOptions);
+
+        // Cerrar sesión silenciosamente
+        gClient.signOut();
+        FirebaseAuth.getInstance().signOut();
     }
 }

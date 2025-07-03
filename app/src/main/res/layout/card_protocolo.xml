@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    android:elevation="4dp"
+    android:elevation="8dp"
     app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="8dp">
+    app:cardCornerRadius="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,8 +37,8 @@
                     android:id="@+id/tvAlumno"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="#4299E1"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#38A169"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -46,25 +46,33 @@
                     android:id="@+id/tvEmpresa"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#4299E1"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBanco"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="#718096"
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/tvEstado"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="#48BB78"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvFecha"
+                    android:id="@+id/tvAsesor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="#718096"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvCiudad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#A0AEC0"
                     android:textSize="12sp" />
 
             </LinearLayout>

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "317407265613",
+    "project_id": "proyectoresidencia-c2c3a",
+    "storage_bucket": "proyectoresidencia-c2c3a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317407265613:android:c885ab56392d6cac0a6d04",
+        "android_client_info": {
+          "package_name": "com.example.sharedpreferencesapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "317407265613-pnhlv7uejj9ksct7fh3oohr3tapammuh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sharedpreferencesapp",
+            "certificate_hash": "9c0226cb479fb957cc037dd3274309ede6886bef"
+          }
+        },
+        {
+          "client_id": "317407265613-j33ufqcr1sa5kubos7eok0mpq4036c4p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiVmsxkqbA1hss9y80nKS7Pcjp56v5c9w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "317407265613-j33ufqcr1sa5kubos7eok0mpq4036c4p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
