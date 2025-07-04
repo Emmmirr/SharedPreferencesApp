@@ -25,7 +25,6 @@ public class GestionProtocoloFragment extends Fragment {
 
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
-    private FileManager fileManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -34,9 +33,6 @@ public class GestionProtocoloFragment extends Fragment {
         layoutProtocolos = view.findViewById(R.id.layoutProtocolos);
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
         Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
-
-        // Inicializar FileManager
-        fileManager = new FileManager(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
         cargarProtocolos();
@@ -66,27 +62,11 @@ public class GestionProtocoloFragment extends Fragment {
         EditText etTitular = dialogView.findViewById(R.id.etTitular);
         EditText etFirmante = dialogView.findViewById(R.id.etFirmante);
 
-        // Configurar spinner alumnos
+        // Configurar spinner alumnos - no students available since FileManager is removed
         ArrayList<String> alumnos = new ArrayList<>();
         ArrayList<String> alumnosIds = new ArrayList<>();
-        List<JSONObject> alumnosData = fileManager.cargarAlumnos();
-
-        for (JSONObject alumno : alumnosData) {
-            try {
-                String nombre = alumno.optString("nombre", "");
-                String numControl = alumno.optString("numControl", "");
-                String id = alumno.getString("id");
-                alumnos.add(nombre + " (" + numControl + ")");
-                alumnosIds.add(id);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (alumnos.isEmpty()) {
-            alumnos.add("No hay alumnos registrados");
-            alumnosIds.add("");
-        }
+        alumnos.add("No hay alumnos disponibles");
+        alumnosIds.add("");
 
         ArrayAdapter<String> alumnosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, alumnos);
         spinnerAlumno.setAdapter(alumnosAdapter);
@@ -116,7 +96,7 @@ public class GestionProtocoloFragment extends Fragment {
             String proyecto = etNombreProyecto.getText().toString();
             String empresa = etNombreEmpresa.getText().toString();
 
-            if (!proyecto.isEmpty() && !empresa.isEmpty() && spinnerAlumno.getSelectedItemPosition() != -1 && !alumnosIds.get(spinnerAlumno.getSelectedItemPosition()).isEmpty()) {
+            if (!proyecto.isEmpty() && !empresa.isEmpty()) {
 
                 try {
                     JSONObject protocolo = new JSONObject();
@@ -145,24 +125,10 @@ public class GestionProtocoloFragment extends Fragment {
                     protocolo.put("titular", etTitular.getText().toString());
                     protocolo.put("firmante", etFirmante.getText().toString());
 
-                    // Guardar en archivo
-                    boolean exito;
-                    if (fileManager.buscarProtocoloPorId(finalProtocoloId) != null) {
-                        // Actualizar existente
-                        exito = fileManager.actualizarProtocolo(finalProtocoloId, protocolo);
-                    } else {
-                        // Agregar nuevo
-                        exito = fileManager.agregarProtocolo(protocolo);
-                    }
-
-                    if (exito) {
-                        cargarProtocolos();
-                        dialog.dismiss();
-                        String mensaje = (protocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
-                        Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show();
-                    }
+                    // FileManager functionality removed - no actual saving to file
+                    cargarProtocolos();
+                    dialog.dismiss();
+                    Toast.makeText(getContext(), "Funcionalidad de guardado deshabilitada", Toast.LENGTH_SHORT).show();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -186,68 +152,15 @@ public class GestionProtocoloFragment extends Fragment {
                                       EditText etFirmante, ArrayList<String> alumnosIds,
                                       String[] bancos, String[] giros) {
 
-        JSONObject protocolo = fileManager.buscarProtocoloPorId(protocoloId);
-        if (protocolo != null) {
-            try {
-                String alumnoId = protocolo.optString("alumnoId", "");
-                for (int i = 0; i < alumnosIds.size(); i++) {
-                    if (alumnosIds.get(i).equals(alumnoId)) {
-                        spinnerAlumno.setSelection(i);
-                        break;
-                    }
-                }
-
-                etNombreProyecto.setText(protocolo.optString("nombreProyecto", ""));
-
-                String banco = protocolo.optString("banco", "");
-                for (int i = 0; i < bancos.length; i++) {
-                    if (bancos[i].equals(banco)) {
-                        spinnerBanco.setSelection(i);
-                        break;
-                    }
-                }
-
-                etAsesor.setText(protocolo.optString("asesor", ""));
-                etNombreEmpresa.setText(protocolo.optString("nombreEmpresa", ""));
-
-                String giro = protocolo.optString("giro", "");
-                for (int i = 0; i < giros.length; i++) {
-                    if (giros[i].equals(giro)) {
-                        spinnerGiro.setSelection(i);
-                        break;
-                    }
-                }
-
-                etRFC.setText(protocolo.optString("rfc", ""));
-                etDomicilio.setText(protocolo.optString("domicilio", ""));
-                etColonia.setText(protocolo.optString("colonia", ""));
-                etCodigoPostal.setText(protocolo.optString("codigoPostal", ""));
-                etCiudad.setText(protocolo.optString("ciudad", ""));
-                etCelular.setText(protocolo.optString("celular", ""));
-                etMision.setText(protocolo.optString("mision", ""));
-                etTitular.setText(protocolo.optString("titular", ""));
-                etFirmante.setText(protocolo.optString("firmante", ""));
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        // FileManager functionality removed - no data loading from file
+        // All fields remain empty when editing
     }
 
     private void cargarProtocolos() {
         layoutProtocolos.removeAllViews();
 
-        List<JSONObject> protocolos = fileManager.cargarProtocolos();
-
-        if (protocolos.isEmpty()) {
-            tvNoProtocolos.setVisibility(View.VISIBLE);
-        } else {
-            tvNoProtocolos.setVisibility(View.GONE);
-
-            for (JSONObject protocolo : protocolos) {
-                crearCardProtocolo(protocolo);
-            }
-        }
+        // Show no protocols message since we're removing FileManager functionality
+        tvNoProtocolos.setVisibility(View.VISIBLE);
     }
 
     private void crearCardProtocolo(JSONObject protocolo) {
@@ -272,15 +185,9 @@ public class GestionProtocoloFragment extends Fragment {
             String asesor = protocolo.optString("asesor", "");
             String ciudad = protocolo.optString("ciudad", "");
 
-            // Obtener datos del alumno
-            JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
+            // FileManager functionality removed - cannot get alumno data
             String nombreAlumno = "Sin alumno";
             String numControl = "";
-
-            if (alumno != null) {
-                nombreAlumno = alumno.optString("nombre", "Sin alumno");
-                numControl = alumno.optString("numControl", "");
-            }
 
             tvNombreProyecto.setText(nombreProyecto);
             tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
@@ -296,13 +203,9 @@ public class GestionProtocoloFragment extends Fragment {
                         .setTitle("Eliminar Protocolo")
                         .setMessage("¿Eliminar este protocolo?")
                         .setPositiveButton("Eliminar", (dialog, which) -> {
-                            boolean exito = fileManager.eliminarProtocolo(protocoloId);
-                            if (exito) {
-                                cargarProtocolos();
-                                Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show();
-                            }
+                            // FileManager functionality removed - no actual deletion from file
+                            cargarProtocolos();
+                            Toast.makeText(getContext(), "Funcionalidad de eliminación deshabilitada", Toast.LENGTH_SHORT).show();
                         })
                         .setNegativeButton("Cancelar", null)
                         .show();
