@@ -38,10 +38,10 @@ public class GestionAlumnoFragment extends Fragment {
     private final String[] SEMESTRES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
     private final String[] CARRERAS = {
             "CONTABILIDAD",
-            "INGENIERÍA EN INFORMÁTICA",
-            "INGENIERÍA EN GESTIÓN EMPRESARIAL",
-            "INGENIERÍA CIVIL",
-            "INGENIERÍA EN SISTEMAS COMPUTACIONALES"
+            "INGENIERIA EN INFORMATICA",
+            "INGENIERIA EN GESTION EMPRESARIAL",
+            "INGENIERIA CIVIL",
+            "INGENIERIA EN SISTEMAS COMPUTACIONALES"
     };
 
     public GestionAlumnoFragment() {

@@ -26,7 +26,7 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvNombreProyecto"
+                    android:id="@+id/tvNombreAlumno"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#1A202C"
@@ -34,7 +34,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvAlumno"
+                    android:id="@+id/tvNumControl"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -43,7 +43,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvEmpresa"
+                    android:id="@+id/tvCarrera"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -52,7 +52,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvBanco"
+                    android:id="@+id/tvProximaFecha"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -60,15 +60,16 @@
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/tvAsesor"
+                    android:id="@+id/tvProgreso"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:textColor="#718096"
-                    android:textSize="14sp" />
+                    android:textColor="#E53E3E"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvCiudad"
+                    android:id="@+id/tvFechaCreacion"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -83,7 +84,7 @@
                 android:orientation="vertical">
 
                 <Button
-                    android:id="@+id/btnPDF"
+                    android:id="@+id/btnPDFCalendario"
                     android:layout_width="60dp"
                     android:layout_height="36dp"
                     android:background="#FF5722"
@@ -93,7 +94,7 @@
                     android:textStyle="bold" />
 
                 <Button
-                    android:id="@+id/btnEditar"
+                    android:id="@+id/btnEditarCalendario"
                     android:layout_width="60dp"
                     android:layout_height="36dp"
                     android:layout_marginTop="4dp"
@@ -103,7 +104,7 @@
                     android:textSize="12sp" />
 
                 <Button
-                    android:id="@+id/btnEliminar"
+                    android:id="@+id/btnEliminarCalendario"
                     android:layout_width="60dp"
                     android:layout_height="36dp"
                     android:layout_marginTop="4dp"

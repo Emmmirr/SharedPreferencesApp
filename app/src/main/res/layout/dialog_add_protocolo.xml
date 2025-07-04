@@ -62,7 +62,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Asesor interno o externo"
+            android:hint="Asesor interno"
             android:textColor="#1A202C"
             android:textColorHint="#718096"
             android:padding="12dp"
@@ -168,7 +168,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Celular"
+            android:hint="Teléfono"
             android:inputType="phone"
             android:textColor="#1A202C"
             android:textColorHint="#718096"
@@ -195,8 +195,19 @@
             android:textColor="#1A202C"
             android:textColorHint="#718096"
             android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Contactos de la Empresa -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contactos de la Empresa"
+            android:textColor="#4299E1"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
+        <!-- Titular de la empresa -->
         <EditText
             android:id="@+id/etTitular"
             android:layout_width="match_parent"
@@ -209,11 +220,57 @@
             android:layout_marginBottom="8dp" />
 
         <EditText
+            android:id="@+id/etPuestoTitular"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#F7FAFC"
+            android:hint="Puesto del titular"
+            android:textColor="#1A202C"
+            android:textColorHint="#718096"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Asesor externo -->
+        <EditText
+            android:id="@+id/etAsesorExterno"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#F7FAFC"
+            android:hint="Nombre del asesor externo"
+            android:textColor="#1A202C"
+            android:textColorHint="#718096"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etPuestoAsesor"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#F7FAFC"
+            android:hint="Puesto del asesor externo"
+            android:textColor="#1A202C"
+            android:textColorHint="#718096"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Firmante del convenio -->
+        <EditText
             android:id="@+id/etFirmante"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
             android:hint="Persona que firmará el convenio"
+            android:textColor="#1A202C"
+            android:textColorHint="#718096"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etPuestoFirmante"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#F7FAFC"
+            android:hint="Puesto del firmante"
             android:textColor="#1A202C"
             android:textColorHint="#718096"
             android:padding="12dp"

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTituloFormulario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nuevo Calendario"
+            android:textColor="#1A202C"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Selector de Alumno -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👤 Selección de Alumno"
+            android:textColor="#4299E1"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/spinnerAlumno"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#F7FAFC"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Fechas del Calendario -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📅 Cronograma de Residencia"
+            android:textColor="#4299E1"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Entrega anteproyecto -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📋 Entrega anteproyecto:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaAnteproyecto"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Entrega de Viabilidad -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="✅ Entrega de Viabilidad:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaViabilidad"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Entrega de modificación -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📝 Entrega de modificación:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaModificacion"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Entrega de viabilidad final -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎯 Entrega de viabilidad final:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaViabilidadFinal"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Inicio de residencia -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🚀 Inicio de residencia:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaInicioResidencia"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- 1er seguimiento -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📊 1er seguimiento:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaPrimerSeguimiento"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- 2do seguimiento -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📈 2do seguimiento:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaSegundoSeguimiento"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Entrega final -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🏆 Entrega final:"
+                android:textColor="#1A202C"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+
+            <Button
+                android:id="@+id/btnFechaEntregaFinal"
+                android:layout_width="120dp"
+                android:layout_height="36dp"
+                android:text="Seleccionar"
+                android:textSize="11sp"
+                android:background="#E2E8F0"
+                android:textColor="#4299E1" />
+
+        </LinearLayout>
+
+        <!-- Botones -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/btnCancelar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="#E2E8F0"
+                android:text="CANCELAR"
+                android:textColor="#718096" />
+
+            <Button
+                android:id="@+id/btnGuardar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="#48BB78"
+                android:text="GUARDAR"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

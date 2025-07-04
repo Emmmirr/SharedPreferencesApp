@@ -1,6 +1,8 @@
 package com.example.sharedpreferencesapp;
 
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,19 +15,37 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class GestionProtocoloFragment extends Fragment {
 
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
     private FileManager fileManager;
+    private JSONObject protocoloPendiente;
+
+    private final ActivityResultLauncher<Intent> selectorCarpeta = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null && protocoloPendiente != null) {
+                        generarPDFEnUbicacion(protocoloPendiente, uri);
+                    }
+                }
+            }
+    );
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -35,7 +55,6 @@ public class GestionProtocoloFragment extends Fragment {
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
         Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
 
-        // Inicializar FileManager
         fileManager = new FileManager(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
@@ -65,6 +84,12 @@ public class GestionProtocoloFragment extends Fragment {
         EditText etMision = dialogView.findViewById(R.id.etMision);
         EditText etTitular = dialogView.findViewById(R.id.etTitular);
         EditText etFirmante = dialogView.findViewById(R.id.etFirmante);
+
+        // Nuevos campos de puesto
+        EditText etPuestoTitular = dialogView.findViewById(R.id.etPuestoTitular);
+        EditText etAsesorExterno = dialogView.findViewById(R.id.etAsesorExterno);
+        EditText etPuestoAsesor = dialogView.findViewById(R.id.etPuestoAsesor);
+        EditText etPuestoFirmante = dialogView.findViewById(R.id.etPuestoFirmante);
 
         // Configurar spinner alumnos
         ArrayList<String> alumnos = new ArrayList<>();
@@ -107,7 +132,8 @@ public class GestionProtocoloFragment extends Fragment {
             cargarDatosProtocolo(protocoloId, spinnerAlumno, etNombreProyecto, spinnerBanco,
                     etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
                     etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
-                    etTitular, etFirmante, alumnosIds, bancos, giros);
+                    etTitular, etFirmante, etPuestoTitular, etAsesorExterno,
+                    etPuestoAsesor, etPuestoFirmante, alumnosIds, bancos, giros);
         }
 
         AlertDialog dialog = builder.create();
@@ -145,13 +171,17 @@ public class GestionProtocoloFragment extends Fragment {
                     protocolo.put("titular", etTitular.getText().toString());
                     protocolo.put("firmante", etFirmante.getText().toString());
 
+                    // Nuevos campos
+                    protocolo.put("puestoTitular", etPuestoTitular.getText().toString());
+                    protocolo.put("asesorExterno", etAsesorExterno.getText().toString());
+                    protocolo.put("puestoAsesor", etPuestoAsesor.getText().toString());
+                    protocolo.put("puestoFirmante", etPuestoFirmante.getText().toString());
+
                     // Guardar en archivo
                     boolean exito;
                     if (fileManager.buscarProtocoloPorId(finalProtocoloId) != null) {
-                        // Actualizar existente
                         exito = fileManager.actualizarProtocolo(finalProtocoloId, protocolo);
                     } else {
-                        // Agregar nuevo
                         exito = fileManager.agregarProtocolo(protocolo);
                     }
 
@@ -183,8 +213,9 @@ public class GestionProtocoloFragment extends Fragment {
                                       Spinner spinnerGiro, EditText etRFC, EditText etDomicilio,
                                       EditText etColonia, EditText etCodigoPostal, EditText etCiudad,
                                       EditText etCelular, EditText etMision, EditText etTitular,
-                                      EditText etFirmante, ArrayList<String> alumnosIds,
-                                      String[] bancos, String[] giros) {
+                                      EditText etFirmante, EditText etPuestoTitular, EditText etAsesorExterno,
+                                      EditText etPuestoAsesor, EditText etPuestoFirmante,
+                                      ArrayList<String> alumnosIds, String[] bancos, String[] giros) {
 
         JSONObject protocolo = fileManager.buscarProtocoloPorId(protocoloId);
         if (protocolo != null) {
@@ -228,6 +259,12 @@ public class GestionProtocoloFragment extends Fragment {
                 etTitular.setText(protocolo.optString("titular", ""));
                 etFirmante.setText(protocolo.optString("firmante", ""));
 
+                // Cargar nuevos campos
+                etPuestoTitular.setText(protocolo.optString("puestoTitular", ""));
+                etAsesorExterno.setText(protocolo.optString("asesorExterno", ""));
+                etPuestoAsesor.setText(protocolo.optString("puestoAsesor", ""));
+                etPuestoFirmante.setText(protocolo.optString("puestoFirmante", ""));
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -259,11 +296,11 @@ public class GestionProtocoloFragment extends Fragment {
         TextView tvBanco = cardView.findViewById(R.id.tvBanco);
         TextView tvAsesor = cardView.findViewById(R.id.tvAsesor);
         TextView tvCiudad = cardView.findViewById(R.id.tvCiudad);
+        Button btnPDF = cardView.findViewById(R.id.btnPDF);
         Button btnEditar = cardView.findViewById(R.id.btnEditar);
         Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
 
         try {
-            // Cargar datos del protocolo
             String protocoloId = protocolo.getString("id");
             String nombreProyecto = protocolo.optString("nombreProyecto", "");
             String alumnoId = protocolo.optString("alumnoId", "");
@@ -272,22 +309,23 @@ public class GestionProtocoloFragment extends Fragment {
             String asesor = protocolo.optString("asesor", "");
             String ciudad = protocolo.optString("ciudad", "");
 
-            // Obtener datos del alumno
             JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
             String nombreAlumno = "Sin alumno";
             String numControl = "";
 
             if (alumno != null) {
-                nombreAlumno = alumno.optString("nombre", "Sin alumno");
+                nombreAlumno = limpiarTextoVista(alumno.optString("nombre", "Sin alumno"));
                 numControl = alumno.optString("numControl", "");
             }
 
-            tvNombreProyecto.setText(nombreProyecto);
+            tvNombreProyecto.setText(limpiarTextoVista(nombreProyecto));
             tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
-            tvEmpresa.setText("Empresa: " + empresa);
-            tvBanco.setText("Banco: " + banco);
-            tvAsesor.setText("Asesor: " + asesor);
-            tvCiudad.setText("Ciudad: " + ciudad);
+            tvEmpresa.setText("Empresa: " + limpiarTextoVista(empresa));
+            tvBanco.setText("Banco: " + limpiarTextoVista(banco));
+            tvAsesor.setText("Asesor: " + limpiarTextoVista(asesor));
+            tvCiudad.setText("Ciudad: " + limpiarTextoVista(ciudad));
+
+            btnPDF.setOnClickListener(v -> seleccionarUbicacionPDF(protocolo));
 
             btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
 
@@ -313,5 +351,97 @@ public class GestionProtocoloFragment extends Fragment {
         }
 
         layoutProtocolos.addView(cardView);
+    }
+
+    private void seleccionarUbicacionPDF(JSONObject protocolo) {
+        protocoloPendiente = protocolo;
+
+        String nombreProyecto = protocolo.optString("nombreProyecto", "Protocolo");
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String nombreArchivo = "Protocolo_" + nombreProyecto.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".pdf";
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_TITLE, nombreArchivo);
+
+        try {
+            selectorCarpeta.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "❌ Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void generarPDFEnUbicacion(JSONObject protocolo, Uri uri) {
+        Toast.makeText(getContext(), "📄 Generando PDF...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                PDFGeneratorExterno pdfGenerator = new PDFGeneratorExterno(requireContext());
+                boolean exito = pdfGenerator.generarPDFProtocoloEnUri(protocolo, uri);
+
+                requireActivity().runOnUiThread(() -> {
+                    if (exito) {
+                        String mensaje = "✅ PDF guardado exitosamente";
+                        Toast.makeText(getContext(), mensaje, Toast.LENGTH_LONG).show();
+
+                        new AlertDialog.Builder(getContext())
+                                .setTitle("📄 PDF Creado")
+                                .setMessage("El archivo PDF se ha guardado en la ubicación seleccionada.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                    } else {
+                        Toast.makeText(getContext(), "❌ Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "❌ Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    // Método para limpiar texto en la vista
+    private String limpiarTextoVista(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return "";
+        }
+
+        try {
+            byte[] bytes = texto.getBytes("UTF-8");
+            String textoLimpio = new String(bytes, "UTF-8");
+
+            textoLimpio = textoLimpio.replace("Ã¡", "á")
+                    .replace("Ã©", "é")
+                    .replace("Ã­", "í")
+                    .replace("Ã³", "ó")
+                    .replace("Ãº", "ú")
+                    .replace("Ã±", "ñ")
+                    .replace("Ã¼", "ü")
+                    .replace("Ã‰", "É")
+                    .replace("Ã", "Á")
+                    .replace("\u00C3\u201D", "Ó")
+                    .replace("Ãš", "Ú")
+                    .replace("\u00C3\u2018", "Ñ")
+                    .replace("\u2019", "'")
+                    .replace("\u201C", "\"")
+                    .replace("\u201D", "\"")
+                    .replace("\u2013", "-")
+                    .replace("Â", "")
+                    .replace("\u00A0", " ")
+                    .replace("\u00C3\u00A1", "á")
+                    .replace("\u00C3\u00A9", "é")
+                    .replace("\u00C3\u00AD", "í")
+                    .replace("\u00C3\u00B3", "ó")
+                    .replace("\u00C3\u00BA", "ú")
+                    .replace("\u00C3\u00B1", "ñ")
+                    .replace("\u00C3\u00BC", "ü");
+
+            return textoLimpio;
+        } catch (Exception e) {
+            return texto;
+        }
     }
 }
