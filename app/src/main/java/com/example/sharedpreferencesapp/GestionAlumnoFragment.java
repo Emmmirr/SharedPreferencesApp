@@ -31,7 +31,6 @@ public class GestionAlumnoFragment extends Fragment {
     private LinearLayout layoutAlumnos;
     private TextView tvNoAlumnos;
     private Button btnAgregarAlumno;
-    private FileManager fileManager;
 
     // Datos para los spinners
     private final String[] SEXOS = {"Masculino", "Femenino", "Otro"};
@@ -56,9 +55,6 @@ public class GestionAlumnoFragment extends Fragment {
         tvNoAlumnos = view.findViewById(R.id.tvNoAlumnos);
         btnAgregarAlumno = view.findViewById(R.id.btnAgregarAlumno);
 
-        // Inicializar FileManager
-        fileManager = new FileManager(requireContext());
-
         btnAgregarAlumno.setOnClickListener(v -> mostrarFormularioAlumno(null));
 
         cargarAlumnos();
@@ -68,18 +64,9 @@ public class GestionAlumnoFragment extends Fragment {
 
     private void cargarAlumnos() {
         layoutAlumnos.removeAllViews();
-
-        List<JSONObject> alumnos = fileManager.cargarAlumnos();
-
-        if (alumnos.isEmpty()) {
-            tvNoAlumnos.setVisibility(View.VISIBLE);
-        } else {
-            tvNoAlumnos.setVisibility(View.GONE);
-
-            for (JSONObject alumno : alumnos) {
-                crearCardAlumno(alumno);
-            }
-        }
+        
+        // Show no students message since we're removing FileManager functionality
+        tvNoAlumnos.setVisibility(View.VISIBLE);
     }
 
     private void crearCardAlumno(JSONObject alumno) {
@@ -246,36 +233,8 @@ public class GestionAlumnoFragment extends Fragment {
                                        Spinner spinnerCarrera, EditText etEspecialidad,
                                        EditText etTelefono, EditText etEmail, EditText etDireccion) {
 
-        JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
-        if (alumno != null) {
-            try {
-                etNombre.setText(alumno.optString("nombre", ""));
-                etCurp.setText(alumno.optString("curp", ""));
-                etFechaNacimiento.setText(alumno.optString("fechaNacimiento", ""));
-                etNumControl.setText(alumno.optString("numControl", ""));
-                etEspecialidad.setText(alumno.optString("especialidad", ""));
-                etTelefono.setText(alumno.optString("telefono", ""));
-                etEmail.setText(alumno.optString("email", ""));
-                etDireccion.setText(alumno.optString("direccion", ""));
-
-                // Seleccionar valores en spinners
-                String sexo = alumno.optString("sexo", "");
-                String semestre = alumno.optString("semestre", "");
-                String carrera = alumno.optString("carrera", "");
-
-                int sexoPosition = Arrays.asList(SEXOS).indexOf(sexo);
-                if (sexoPosition >= 0) spinnerSexo.setSelection(sexoPosition);
-
-                int semestrePosition = Arrays.asList(SEMESTRES).indexOf(semestre);
-                if (semestrePosition >= 0) spinnerSemestre.setSelection(semestrePosition);
-
-                int carreraPosition = Arrays.asList(CARRERAS).indexOf(carrera);
-                if (carreraPosition >= 0) spinnerCarrera.setSelection(carreraPosition);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        // FileManager functionality removed - no data loading from file
+        // All fields remain empty when editing
     }
 
     private boolean validarFormulario(EditText etNombre, EditText etCurp, EditText etFechaNacimiento,
@@ -366,19 +325,8 @@ public class GestionAlumnoFragment extends Fragment {
             alumno.put("email", etEmail.getText().toString().trim());
             alumno.put("direccion", etDireccion.getText().toString().trim());
 
-            // Guardar en archivo
-            boolean exito;
-            if (fileManager.buscarAlumnoPorId(alumnoId) != null) {
-                // Actualizar existente
-                exito = fileManager.actualizarAlumno(alumnoId, alumno);
-            } else {
-                // Agregar nuevo
-                exito = fileManager.agregarAlumno(alumno);
-            }
-
-            if (!exito) {
-                Toast.makeText(getContext(), "Error al guardar el alumno", Toast.LENGTH_SHORT).show();
-            }
+            // FileManager functionality removed - no actual saving to file
+            Toast.makeText(getContext(), "Funcionalidad de guardado deshabilitada", Toast.LENGTH_SHORT).show();
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -391,13 +339,9 @@ public class GestionAlumnoFragment extends Fragment {
                 .setTitle("Eliminar Alumno")
                 .setMessage("¿Está seguro de que desea eliminar este alumno?")
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    boolean exito = fileManager.eliminarAlumno(alumnoId);
-                    if (exito) {
-                        cargarAlumnos();
-                        Toast.makeText(getContext(), "Alumno eliminado", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Error al eliminar el alumno", Toast.LENGTH_SHORT).show();
-                    }
+                    // FileManager functionality removed - no actual deletion from file
+                    cargarAlumnos();
+                    Toast.makeText(getContext(), "Funcionalidad de eliminación deshabilitada", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
