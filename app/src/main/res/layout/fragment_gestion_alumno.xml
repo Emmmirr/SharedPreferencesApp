@@ -26,13 +26,29 @@
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="20dp"
+        android:layout_marginEnd="8dp"
         android:background="#4299E1"
         android:text="AGREGAR ALUMNO"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnDescargarAlumnos"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+
+    <Button
+        android:id="@+id/btnDescargarAlumnos"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="8dp"
+        android:background="#38A169"
+        android:text="DESCARGAR PDF"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnAgregarAlumno"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
     <ScrollView
@@ -42,7 +58,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnAgregarAlumno">
+        app:layout_constraintTop_toBottomOf="@+id/btnDescargarAlumnos">
 
         <LinearLayout
             android:id="@+id/layoutAlumnos"

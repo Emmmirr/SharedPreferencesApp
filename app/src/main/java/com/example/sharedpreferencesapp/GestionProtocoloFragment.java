@@ -26,6 +26,7 @@ public class GestionProtocoloFragment extends Fragment {
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
     private FileManager fileManager;
+    private PDFGenerator pdfGenerator;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -34,11 +35,14 @@ public class GestionProtocoloFragment extends Fragment {
         layoutProtocolos = view.findViewById(R.id.layoutProtocolos);
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
         Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
+        Button btnDescargarProtocolos = view.findViewById(R.id.btnDescargarProtocolos);
 
-        // Inicializar FileManager
+        // Inicializar FileManager y PDFGenerator
         fileManager = new FileManager(requireContext());
+        pdfGenerator = new PDFGenerator(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
+        btnDescargarProtocolos.setOnClickListener(v -> descargarPDFProtocolos());
         cargarProtocolos();
 
         return view;
@@ -261,6 +265,7 @@ public class GestionProtocoloFragment extends Fragment {
         TextView tvCiudad = cardView.findViewById(R.id.tvCiudad);
         Button btnEditar = cardView.findViewById(R.id.btnEditar);
         Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
+        Button btnDescargarPDF = cardView.findViewById(R.id.btnDescargarPDF);
 
         try {
             // Cargar datos del protocolo
@@ -291,6 +296,8 @@ public class GestionProtocoloFragment extends Fragment {
 
             btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
 
+            btnDescargarPDF.setOnClickListener(v -> descargarPDFProtocoloIndividual(protocolo));
+
             btnEliminar.setOnClickListener(v -> {
                 new AlertDialog.Builder(getContext())
                         .setTitle("Eliminar Protocolo")
@@ -313,5 +320,80 @@ public class GestionProtocoloFragment extends Fragment {
         }
 
         layoutProtocolos.addView(cardView);
+    }
+
+    /**
+     * Descarga PDF con todos los protocolos
+     */
+    private void descargarPDFProtocolos() {
+        if (!PermissionsHelper.hasStoragePermissions(requireContext())) {
+            PermissionsHelper.requestStoragePermissions(requireActivity());
+            return;
+        }
+
+        List<JSONObject> protocolos = fileManager.cargarProtocolos();
+        
+        if (protocolos.isEmpty()) {
+            Toast.makeText(getContext(), "No hay protocolos registrados para descargar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Generar PDF en hilo secundario
+        new Thread(() -> {
+            String pdfPath = pdfGenerator.generarPDFProtocolos(protocolos);
+            
+            // Volver al hilo principal para mostrar el resultado
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (pdfPath != null) {
+                        Toast.makeText(getContext(), "PDF guardado en: " + pdfPath, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Descarga PDF de un protocolo individual
+     */
+    private void descargarPDFProtocoloIndividual(JSONObject protocolo) {
+        if (!PermissionsHelper.hasStoragePermissions(requireContext())) {
+            PermissionsHelper.requestStoragePermissions(requireActivity());
+            return;
+        }
+
+        // Generar PDF en hilo secundario
+        new Thread(() -> {
+            String pdfPath = pdfGenerator.generarPDFProtocoloIndividual(protocolo);
+            
+            // Volver al hilo principal para mostrar el resultado
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (pdfPath != null) {
+                        Toast.makeText(getContext(), "PDF guardado en: " + pdfPath, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Maneja el resultado de solicitud de permisos
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == PermissionsHelper.STORAGE_PERMISSION_REQUEST_CODE) {
+            if (PermissionsHelper.arePermissionsGranted(grantResults)) {
+                Toast.makeText(getContext(), "Permisos concedidos. Puede descargar PDFs ahora.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Permisos denegados. No se pueden generar PDFs.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
