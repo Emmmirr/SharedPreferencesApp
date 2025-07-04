@@ -1,8 +1,6 @@
 package com.example.sharedpreferencesapp;
 
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,16 +15,17 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class GestionProtocoloFragment extends Fragment {
 
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
-    private SharedPreferences preferences;
-    private SharedPreferences alumnosPrefs;
+    private FileManager fileManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -36,8 +35,8 @@ public class GestionProtocoloFragment extends Fragment {
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
         Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
 
-        preferences = getActivity().getSharedPreferences("ProtocolosPrefs", Context.MODE_PRIVATE);
-        alumnosPrefs = getActivity().getSharedPreferences("AlumnosPrefs", Context.MODE_PRIVATE);
+        // Inicializar FileManager
+        fileManager = new FileManager(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
         cargarProtocolos();
@@ -70,17 +69,25 @@ public class GestionProtocoloFragment extends Fragment {
         // Configurar spinner alumnos
         ArrayList<String> alumnos = new ArrayList<>();
         ArrayList<String> alumnosIds = new ArrayList<>();
-        Set<String> alumnosSet = alumnosPrefs.getStringSet("lista_alumnos", new HashSet<>());
-        for (String alumnoId : alumnosSet) {
-            String nombre = alumnosPrefs.getString(alumnoId + "_nombre", "");
-            String numControl = alumnosPrefs.getString(alumnoId + "_numControl", "");
-            alumnos.add(nombre + " (" + numControl + ")");
-            alumnosIds.add(alumnoId);
+        List<JSONObject> alumnosData = fileManager.cargarAlumnos();
+
+        for (JSONObject alumno : alumnosData) {
+            try {
+                String nombre = alumno.optString("nombre", "");
+                String numControl = alumno.optString("numControl", "");
+                String id = alumno.getString("id");
+                alumnos.add(nombre + " (" + numControl + ")");
+                alumnosIds.add(id);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
+
         if (alumnos.isEmpty()) {
             alumnos.add("No hay alumnos registrados");
             alumnosIds.add("");
         }
+
         ArrayAdapter<String> alumnosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, alumnos);
         spinnerAlumno.setAdapter(alumnosAdapter);
 
@@ -97,45 +104,10 @@ public class GestionProtocoloFragment extends Fragment {
         // Si es edición, cargar datos
         if (protocoloId != null) {
             tvTitulo.setText("Editar Protocolo");
-
-            String alumnoId = preferences.getString(protocoloId + "_alumnoId", "");
-            for (int i = 0; i < alumnosIds.size(); i++) {
-                if (alumnosIds.get(i).equals(alumnoId)) {
-                    spinnerAlumno.setSelection(i);
-                    break;
-                }
-            }
-
-            etNombreProyecto.setText(preferences.getString(protocoloId + "_nombreProyecto", ""));
-
-            String banco = preferences.getString(protocoloId + "_banco", "");
-            for (int i = 0; i < bancos.length; i++) {
-                if (bancos[i].equals(banco)) {
-                    spinnerBanco.setSelection(i);
-                    break;
-                }
-            }
-
-            etAsesor.setText(preferences.getString(protocoloId + "_asesor", ""));
-            etNombreEmpresa.setText(preferences.getString(protocoloId + "_nombreEmpresa", ""));
-
-            String giro = preferences.getString(protocoloId + "_giro", "");
-            for (int i = 0; i < giros.length; i++) {
-                if (giros[i].equals(giro)) {
-                    spinnerGiro.setSelection(i);
-                    break;
-                }
-            }
-
-            etRFC.setText(preferences.getString(protocoloId + "_rfc", ""));
-            etDomicilio.setText(preferences.getString(protocoloId + "_domicilio", ""));
-            etColonia.setText(preferences.getString(protocoloId + "_colonia", ""));
-            etCodigoPostal.setText(preferences.getString(protocoloId + "_codigoPostal", ""));
-            etCiudad.setText(preferences.getString(protocoloId + "_ciudad", ""));
-            etCelular.setText(preferences.getString(protocoloId + "_celular", ""));
-            etMision.setText(preferences.getString(protocoloId + "_mision", ""));
-            etTitular.setText(preferences.getString(protocoloId + "_titular", ""));
-            etFirmante.setText(preferences.getString(protocoloId + "_firmante", ""));
+            cargarDatosProtocolo(protocoloId, spinnerAlumno, etNombreProyecto, spinnerBanco,
+                    etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
+                    etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
+                    etTitular, etFirmante, alumnosIds, bancos, giros);
         }
 
         AlertDialog dialog = builder.create();
@@ -145,42 +117,58 @@ public class GestionProtocoloFragment extends Fragment {
             String empresa = etNombreEmpresa.getText().toString();
 
             if (!proyecto.isEmpty() && !empresa.isEmpty() && spinnerAlumno.getSelectedItemPosition() != -1 && !alumnosIds.get(spinnerAlumno.getSelectedItemPosition()).isEmpty()) {
-                String finalProtocoloId = protocoloId;
-                if (finalProtocoloId == null) {
-                    finalProtocoloId = "protocolo_" + System.currentTimeMillis();
 
-                    // Solo agregar a la lista si es nuevo
-                    Set<String> protocolosSet = new HashSet<>(preferences.getStringSet("lista_protocolos", new HashSet<>()));
-                    protocolosSet.add(finalProtocoloId);
-                    preferences.edit().putStringSet("lista_protocolos", protocolosSet).apply();
+                try {
+                    JSONObject protocolo = new JSONObject();
+
+                    String finalProtocoloId = protocoloId;
+                    if (finalProtocoloId == null) {
+                        finalProtocoloId = "protocolo_" + System.currentTimeMillis();
+                    }
+
+                    // Guardar todos los datos
+                    String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition());
+                    protocolo.put("id", finalProtocoloId);
+                    protocolo.put("alumnoId", alumnoId);
+                    protocolo.put("nombreProyecto", proyecto);
+                    protocolo.put("banco", spinnerBanco.getSelectedItem().toString());
+                    protocolo.put("asesor", etAsesor.getText().toString());
+                    protocolo.put("nombreEmpresa", empresa);
+                    protocolo.put("giro", spinnerGiro.getSelectedItem().toString());
+                    protocolo.put("rfc", etRFC.getText().toString());
+                    protocolo.put("domicilio", etDomicilio.getText().toString());
+                    protocolo.put("colonia", etColonia.getText().toString());
+                    protocolo.put("codigoPostal", etCodigoPostal.getText().toString());
+                    protocolo.put("ciudad", etCiudad.getText().toString());
+                    protocolo.put("celular", etCelular.getText().toString());
+                    protocolo.put("mision", etMision.getText().toString());
+                    protocolo.put("titular", etTitular.getText().toString());
+                    protocolo.put("firmante", etFirmante.getText().toString());
+
+                    // Guardar en archivo
+                    boolean exito;
+                    if (fileManager.buscarProtocoloPorId(finalProtocoloId) != null) {
+                        // Actualizar existente
+                        exito = fileManager.actualizarProtocolo(finalProtocoloId, protocolo);
+                    } else {
+                        // Agregar nuevo
+                        exito = fileManager.agregarProtocolo(protocolo);
+                    }
+
+                    if (exito) {
+                        cargarProtocolos();
+                        dialog.dismiss();
+                        String mensaje = (protocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
+                        Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
                 }
 
-                SharedPreferences.Editor editor = preferences.edit();
-
-                // Guardar todos los datos
-                String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition());
-                editor.putString(finalProtocoloId + "_alumnoId", alumnoId);
-                editor.putString(finalProtocoloId + "_nombreProyecto", proyecto);
-                editor.putString(finalProtocoloId + "_banco", spinnerBanco.getSelectedItem().toString());
-                editor.putString(finalProtocoloId + "_asesor", etAsesor.getText().toString());
-                editor.putString(finalProtocoloId + "_nombreEmpresa", empresa);
-                editor.putString(finalProtocoloId + "_giro", spinnerGiro.getSelectedItem().toString());
-                editor.putString(finalProtocoloId + "_rfc", etRFC.getText().toString());
-                editor.putString(finalProtocoloId + "_domicilio", etDomicilio.getText().toString());
-                editor.putString(finalProtocoloId + "_colonia", etColonia.getText().toString());
-                editor.putString(finalProtocoloId + "_codigoPostal", etCodigoPostal.getText().toString());
-                editor.putString(finalProtocoloId + "_ciudad", etCiudad.getText().toString());
-                editor.putString(finalProtocoloId + "_celular", etCelular.getText().toString());
-                editor.putString(finalProtocoloId + "_mision", etMision.getText().toString());
-                editor.putString(finalProtocoloId + "_titular", etTitular.getText().toString());
-                editor.putString(finalProtocoloId + "_firmante", etFirmante.getText().toString());
-                editor.apply();
-
-                cargarProtocolos();
-                dialog.dismiss();
-
-                String mensaje = (protocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
-                Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Complete los campos obligatorios", Toast.LENGTH_SHORT).show();
             }
@@ -190,85 +178,140 @@ public class GestionProtocoloFragment extends Fragment {
         dialog.show();
     }
 
+    private void cargarDatosProtocolo(String protocoloId, Spinner spinnerAlumno, EditText etNombreProyecto,
+                                      Spinner spinnerBanco, EditText etAsesor, EditText etNombreEmpresa,
+                                      Spinner spinnerGiro, EditText etRFC, EditText etDomicilio,
+                                      EditText etColonia, EditText etCodigoPostal, EditText etCiudad,
+                                      EditText etCelular, EditText etMision, EditText etTitular,
+                                      EditText etFirmante, ArrayList<String> alumnosIds,
+                                      String[] bancos, String[] giros) {
+
+        JSONObject protocolo = fileManager.buscarProtocoloPorId(protocoloId);
+        if (protocolo != null) {
+            try {
+                String alumnoId = protocolo.optString("alumnoId", "");
+                for (int i = 0; i < alumnosIds.size(); i++) {
+                    if (alumnosIds.get(i).equals(alumnoId)) {
+                        spinnerAlumno.setSelection(i);
+                        break;
+                    }
+                }
+
+                etNombreProyecto.setText(protocolo.optString("nombreProyecto", ""));
+
+                String banco = protocolo.optString("banco", "");
+                for (int i = 0; i < bancos.length; i++) {
+                    if (bancos[i].equals(banco)) {
+                        spinnerBanco.setSelection(i);
+                        break;
+                    }
+                }
+
+                etAsesor.setText(protocolo.optString("asesor", ""));
+                etNombreEmpresa.setText(protocolo.optString("nombreEmpresa", ""));
+
+                String giro = protocolo.optString("giro", "");
+                for (int i = 0; i < giros.length; i++) {
+                    if (giros[i].equals(giro)) {
+                        spinnerGiro.setSelection(i);
+                        break;
+                    }
+                }
+
+                etRFC.setText(protocolo.optString("rfc", ""));
+                etDomicilio.setText(protocolo.optString("domicilio", ""));
+                etColonia.setText(protocolo.optString("colonia", ""));
+                etCodigoPostal.setText(protocolo.optString("codigoPostal", ""));
+                etCiudad.setText(protocolo.optString("ciudad", ""));
+                etCelular.setText(protocolo.optString("celular", ""));
+                etMision.setText(protocolo.optString("mision", ""));
+                etTitular.setText(protocolo.optString("titular", ""));
+                etFirmante.setText(protocolo.optString("firmante", ""));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void cargarProtocolos() {
         layoutProtocolos.removeAllViews();
 
-        Set<String> protocolosSet = preferences.getStringSet("lista_protocolos", new HashSet<>());
+        List<JSONObject> protocolos = fileManager.cargarProtocolos();
 
-        if (protocolosSet.isEmpty()) {
+        if (protocolos.isEmpty()) {
             tvNoProtocolos.setVisibility(View.VISIBLE);
         } else {
             tvNoProtocolos.setVisibility(View.GONE);
 
-            for (String protocoloId : protocolosSet) {
-                View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_protocolo, layoutProtocolos, false);
-
-                TextView tvNombreProyecto = cardView.findViewById(R.id.tvNombreProyecto);
-                TextView tvAlumno = cardView.findViewById(R.id.tvAlumno);
-                TextView tvEmpresa = cardView.findViewById(R.id.tvEmpresa);
-                TextView tvBanco = cardView.findViewById(R.id.tvBanco);
-                TextView tvAsesor = cardView.findViewById(R.id.tvAsesor);
-                TextView tvCiudad = cardView.findViewById(R.id.tvCiudad);
-                Button btnEditar = cardView.findViewById(R.id.btnEditar);
-                Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
-
-                // Cargar datos
-                String nombreProyecto = preferences.getString(protocoloId + "_nombreProyecto", "");
-                String alumnoId = preferences.getString(protocoloId + "_alumnoId", "");
-                String empresa = preferences.getString(protocoloId + "_nombreEmpresa", "");
-                String banco = preferences.getString(protocoloId + "_banco", "");
-                String asesor = preferences.getString(protocoloId + "_asesor", "");
-                String ciudad = preferences.getString(protocoloId + "_ciudad", "");
-
-                String nombreAlumno = alumnosPrefs.getString(alumnoId + "_nombre", "Sin alumno");
-                String numControl = alumnosPrefs.getString(alumnoId + "_numControl", "");
-
-                tvNombreProyecto.setText(nombreProyecto);
-                tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
-                tvEmpresa.setText("Empresa: " + empresa);
-                tvBanco.setText("Banco: " + banco);
-                tvAsesor.setText("Asesor: " + asesor);
-                tvCiudad.setText("Ciudad: " + ciudad);
-
-                btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
-
-                btnEliminar.setOnClickListener(v -> {
-                    new AlertDialog.Builder(getContext())
-                            .setTitle("Eliminar Protocolo")
-                            .setMessage("¿Eliminar este protocolo?")
-                            .setPositiveButton("Eliminar", (dialog, which) -> {
-                                SharedPreferences.Editor editor = preferences.edit();
-                                Set<String> protocolos = new HashSet<>(preferences.getStringSet("lista_protocolos", new HashSet<>()));
-                                protocolos.remove(protocoloId);
-                                editor.putStringSet("lista_protocolos", protocolos);
-
-                                // Eliminar todos los campos
-                                editor.remove(protocoloId + "_alumnoId");
-                                editor.remove(protocoloId + "_nombreProyecto");
-                                editor.remove(protocoloId + "_banco");
-                                editor.remove(protocoloId + "_asesor");
-                                editor.remove(protocoloId + "_nombreEmpresa");
-                                editor.remove(protocoloId + "_giro");
-                                editor.remove(protocoloId + "_rfc");
-                                editor.remove(protocoloId + "_domicilio");
-                                editor.remove(protocoloId + "_colonia");
-                                editor.remove(protocoloId + "_codigoPostal");
-                                editor.remove(protocoloId + "_ciudad");
-                                editor.remove(protocoloId + "_celular");
-                                editor.remove(protocoloId + "_mision");
-                                editor.remove(protocoloId + "_titular");
-                                editor.remove(protocoloId + "_firmante");
-                                editor.apply();
-
-                                cargarProtocolos();
-                                Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
-                            })
-                            .setNegativeButton("Cancelar", null)
-                            .show();
-                });
-
-                layoutProtocolos.addView(cardView);
+            for (JSONObject protocolo : protocolos) {
+                crearCardProtocolo(protocolo);
             }
         }
+    }
+
+    private void crearCardProtocolo(JSONObject protocolo) {
+        View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_protocolo, layoutProtocolos, false);
+
+        TextView tvNombreProyecto = cardView.findViewById(R.id.tvNombreProyecto);
+        TextView tvAlumno = cardView.findViewById(R.id.tvAlumno);
+        TextView tvEmpresa = cardView.findViewById(R.id.tvEmpresa);
+        TextView tvBanco = cardView.findViewById(R.id.tvBanco);
+        TextView tvAsesor = cardView.findViewById(R.id.tvAsesor);
+        TextView tvCiudad = cardView.findViewById(R.id.tvCiudad);
+        Button btnEditar = cardView.findViewById(R.id.btnEditar);
+        Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
+
+        try {
+            // Cargar datos del protocolo
+            String protocoloId = protocolo.getString("id");
+            String nombreProyecto = protocolo.optString("nombreProyecto", "");
+            String alumnoId = protocolo.optString("alumnoId", "");
+            String empresa = protocolo.optString("nombreEmpresa", "");
+            String banco = protocolo.optString("banco", "");
+            String asesor = protocolo.optString("asesor", "");
+            String ciudad = protocolo.optString("ciudad", "");
+
+            // Obtener datos del alumno
+            JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
+            String nombreAlumno = "Sin alumno";
+            String numControl = "";
+
+            if (alumno != null) {
+                nombreAlumno = alumno.optString("nombre", "Sin alumno");
+                numControl = alumno.optString("numControl", "");
+            }
+
+            tvNombreProyecto.setText(nombreProyecto);
+            tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
+            tvEmpresa.setText("Empresa: " + empresa);
+            tvBanco.setText("Banco: " + banco);
+            tvAsesor.setText("Asesor: " + asesor);
+            tvCiudad.setText("Ciudad: " + ciudad);
+
+            btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
+
+            btnEliminar.setOnClickListener(v -> {
+                new AlertDialog.Builder(getContext())
+                        .setTitle("Eliminar Protocolo")
+                        .setMessage("¿Eliminar este protocolo?")
+                        .setPositiveButton("Eliminar", (dialog, which) -> {
+                            boolean exito = fileManager.eliminarProtocolo(protocoloId);
+                            if (exito) {
+                                cargarProtocolos();
+                                Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+            });
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        layoutProtocolos.addView(cardView);
     }
 }

@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Nombre completo"
+            android:hint="Nombre completo *"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
@@ -45,6 +45,8 @@
             android:layout_height="48dp"
             android:background="#F7FAFC"
             android:hint="CURP"
+            android:inputType="textCapCharacters"
+            android:maxLength="18"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
@@ -53,17 +55,24 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Fecha de nacimiento"
+            android:hint="Fecha de nacimiento (DD/MM/AAAA)"
+            android:drawableEnd="@android:drawable/ic_menu_my_calendar"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
-        <EditText
-            android:id="@+id/etGenero"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sexo"
+            android:textColor="#718096"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerSexo"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Género"
-            android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
         <!-- Información Escolar -->
@@ -82,28 +91,39 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Número de control"
+            android:hint="Número de control *"
             android:inputType="number"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
-        <EditText
-            android:id="@+id/etSemestre"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Semestre"
+            android:textColor="#718096"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerSemestre"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Semestre"
-            android:inputType="number"
-            android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
-        <EditText
-            android:id="@+id/etCarrera"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Carrera"
+            android:textColor="#718096"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCarrera"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Carrera"
-            android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
         <EditText
@@ -131,8 +151,9 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="#F7FAFC"
-            android:hint="Teléfono"
+            android:hint="Teléfono (10 dígitos)"
             android:inputType="phone"
+            android:maxLength="15"
             android:padding="12dp"
             android:layout_marginBottom="8dp" />
 
@@ -153,6 +174,15 @@
             android:background="#F7FAFC"
             android:hint="Dirección completa"
             android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Nota de campos obligatorios -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="* Campos obligatorios"
+            android:textColor="#E53E3E"
+            android:textSize="12sp"
             android:layout_marginBottom="16dp" />
 
         <!-- Botones -->
