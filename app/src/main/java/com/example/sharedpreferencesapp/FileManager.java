@@ -397,4 +397,59 @@ public class FileManager {
             }
         }
     }
+
+    // ==================== MÉTODOS PARA CALENDARIOS ====================
+
+    private static final String CALENDARIOS_FILE = "calendarios.json";
+
+    public List<JSONObject> cargarCalendarios() {
+        return cargarDatosDesdeMemoriaInterna(CALENDARIOS_FILE);
+    }
+
+    public boolean guardarCalendarios(List<JSONObject> calendarios) {
+        return guardarDatosEnMemoriaInterna(CALENDARIOS_FILE, calendarios);
+    }
+
+    public boolean guardarCalendario(JSONObject calendario) {
+        List<JSONObject> calendarios = cargarCalendarios();
+
+        // Buscar si ya existe un calendario para este alumno
+        String alumnoId = calendario.optString("alumnoId", "");
+        for (int i = 0; i < calendarios.size(); i++) {
+            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
+                calendarios.set(i, calendario); // Actualizar existente
+                return guardarCalendarios(calendarios);
+            }
+        }
+
+        // Si no existe, agregar nuevo
+        calendarios.add(calendario);
+        return guardarCalendarios(calendarios);
+    }
+
+    public JSONObject buscarCalendarioPorAlumnoId(String alumnoId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        for (JSONObject calendario : calendarios) {
+            if (calendario.optString("alumnoId", "").equals(alumnoId)) {
+                return calendario;
+            }
+        }
+        return null;
+    }
+
+    public boolean eliminarCalendario(String alumnoId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        for (int i = 0; i < calendarios.size(); i++) {
+            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
+                calendarios.remove(i);
+                return guardarCalendarios(calendarios);
+            }
+        }
+        return false;
+    }
+
+    public int contarCalendarios() {
+        return cargarCalendarios().size();
+    }
+    
 }

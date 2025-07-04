@@ -1,6 +1,8 @@
 package com.example.sharedpreferencesapp;
 
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,19 +15,39 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class GestionProtocoloFragment extends Fragment {
 
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
     private FileManager fileManager;
+    private JSONObject protocoloPendiente; // ⬅️ AGREGAR ESTA VARIABLE
+
+    // ⬅️ AGREGAR ESTE LAUNCHER PARA SELECCIONAR CARPETA
+    private final ActivityResultLauncher<Intent> selectorCarpeta = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null && protocoloPendiente != null) {
+                        generarPDFEnUbicacion(protocoloPendiente, uri);
+                    }
+                }
+            }
+    );
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -259,6 +281,7 @@ public class GestionProtocoloFragment extends Fragment {
         TextView tvBanco = cardView.findViewById(R.id.tvBanco);
         TextView tvAsesor = cardView.findViewById(R.id.tvAsesor);
         TextView tvCiudad = cardView.findViewById(R.id.tvCiudad);
+        Button btnPDF = cardView.findViewById(R.id.btnPDF);
         Button btnEditar = cardView.findViewById(R.id.btnEditar);
         Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
 
@@ -289,6 +312,9 @@ public class GestionProtocoloFragment extends Fragment {
             tvAsesor.setText("Asesor: " + asesor);
             tvCiudad.setText("Ciudad: " + ciudad);
 
+            // ⬅️ CLICK LISTENER ACTUALIZADO PARA SELECCIONAR UBICACIÓN
+            btnPDF.setOnClickListener(v -> seleccionarUbicacionPDF(protocolo));
+
             btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
 
             btnEliminar.setOnClickListener(v -> {
@@ -313,5 +339,57 @@ public class GestionProtocoloFragment extends Fragment {
         }
 
         layoutProtocolos.addView(cardView);
+    }
+
+    // ⬅️ MÉTODO PARA SELECCIONAR UBICACIÓN DONDE GUARDAR
+    private void seleccionarUbicacionPDF(JSONObject protocolo) {
+        protocoloPendiente = protocolo; // Guardar protocolo para usar después
+
+        String nombreProyecto = protocolo.optString("nombreProyecto", "Protocolo");
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String nombreArchivo = "Protocolo_" + nombreProyecto.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".pdf";
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_TITLE, nombreArchivo);
+
+        try {
+            selectorCarpeta.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "❌ Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ⬅️ MÉTODO PARA GENERAR PDF EN LA UBICACIÓN SELECCIONADA
+    private void generarPDFEnUbicacion(JSONObject protocolo, Uri uri) {
+        Toast.makeText(getContext(), "📄 Generando PDF...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                PDFGeneratorExterno pdfGenerator = new PDFGeneratorExterno(requireContext());
+                boolean exito = pdfGenerator.generarPDFProtocoloEnUri(protocolo, uri);
+
+                requireActivity().runOnUiThread(() -> {
+                    if (exito) {
+                        String mensaje = "✅ PDF guardado exitosamente";
+                        Toast.makeText(getContext(), mensaje, Toast.LENGTH_LONG).show();
+
+                        new AlertDialog.Builder(getContext())
+                                .setTitle("📄 PDF Creado")
+                                .setMessage("El archivo PDF se ha guardado en la ubicación seleccionada.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                    } else {
+                        Toast.makeText(getContext(), "❌ Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "❌ Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
     }
 }
