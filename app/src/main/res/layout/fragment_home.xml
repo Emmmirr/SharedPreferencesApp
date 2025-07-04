@@ -47,10 +47,27 @@
     </LinearLayout>
 
     <Button
+        android:id="@+id/btnInternalStorage"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="20dp"
+        android:background="#3182CE"
+        android:text="MEMORIA INTERNA"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:elevation="6dp"
+        android:textAllCaps="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/contentArea" />
+
+    <Button
         android:id="@+id/btnLogOut"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="20dp"
         android:background="#E53E3E"
         android:text="CERRAR SESIÓN"
         android:textColor="#FFFFFF"
@@ -61,6 +78,6 @@
         android:textAllCaps="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/contentArea" />
+        app:layout_constraintTop_toBottomOf="@+id/btnInternalStorage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
