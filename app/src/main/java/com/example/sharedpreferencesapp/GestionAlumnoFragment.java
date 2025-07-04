@@ -31,7 +31,9 @@ public class GestionAlumnoFragment extends Fragment {
     private LinearLayout layoutAlumnos;
     private TextView tvNoAlumnos;
     private Button btnAgregarAlumno;
+    private Button btnDescargarAlumnos;
     private FileManager fileManager;
+    private PDFGenerator pdfGenerator;
 
     // Datos para los spinners
     private final String[] SEXOS = {"Masculino", "Femenino", "Otro"};
@@ -55,11 +57,14 @@ public class GestionAlumnoFragment extends Fragment {
         layoutAlumnos = view.findViewById(R.id.layoutAlumnos);
         tvNoAlumnos = view.findViewById(R.id.tvNoAlumnos);
         btnAgregarAlumno = view.findViewById(R.id.btnAgregarAlumno);
+        btnDescargarAlumnos = view.findViewById(R.id.btnDescargarAlumnos);
 
-        // Inicializar FileManager
+        // Inicializar FileManager y PDFGenerator
         fileManager = new FileManager(requireContext());
+        pdfGenerator = new PDFGenerator(requireContext());
 
         btnAgregarAlumno.setOnClickListener(v -> mostrarFormularioAlumno(null));
+        btnDescargarAlumnos.setOnClickListener(v -> descargarPDFAlumnos());
 
         cargarAlumnos();
 
@@ -91,6 +96,7 @@ public class GestionAlumnoFragment extends Fragment {
         TextView tvSemestre = cardView.findViewById(R.id.tvSemestre);
         Button btnEditar = cardView.findViewById(R.id.btnEditar);
         Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
+        Button btnDescargarPDF = cardView.findViewById(R.id.btnDescargarPDF);
 
         try {
             // Mostrar datos
@@ -107,6 +113,7 @@ public class GestionAlumnoFragment extends Fragment {
 
             btnEditar.setOnClickListener(v -> mostrarFormularioAlumno(id));
             btnEliminar.setOnClickListener(v -> eliminarAlumno(id));
+            btnDescargarPDF.setOnClickListener(v -> descargarPDFAlumnoIndividual(alumno));
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -401,5 +408,80 @@ public class GestionAlumnoFragment extends Fragment {
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+
+    /**
+     * Descarga PDF con todos los alumnos
+     */
+    private void descargarPDFAlumnos() {
+        if (!PermissionsHelper.hasStoragePermissions(requireContext())) {
+            PermissionsHelper.requestStoragePermissions(requireActivity());
+            return;
+        }
+
+        List<JSONObject> alumnos = fileManager.cargarAlumnos();
+        
+        if (alumnos.isEmpty()) {
+            Toast.makeText(getContext(), "No hay alumnos registrados para descargar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Generar PDF en hilo secundario
+        new Thread(() -> {
+            String pdfPath = pdfGenerator.generarPDFAlumnos(alumnos);
+            
+            // Volver al hilo principal para mostrar el resultado
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (pdfPath != null) {
+                        Toast.makeText(getContext(), "PDF guardado en: " + pdfPath, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Descarga PDF de un alumno individual
+     */
+    private void descargarPDFAlumnoIndividual(JSONObject alumno) {
+        if (!PermissionsHelper.hasStoragePermissions(requireContext())) {
+            PermissionsHelper.requestStoragePermissions(requireActivity());
+            return;
+        }
+
+        // Generar PDF en hilo secundario
+        new Thread(() -> {
+            String pdfPath = pdfGenerator.generarPDFAlumnoIndividual(alumno);
+            
+            // Volver al hilo principal para mostrar el resultado
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (pdfPath != null) {
+                        Toast.makeText(getContext(), "PDF guardado en: " + pdfPath, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /**
+     * Maneja el resultado de solicitud de permisos
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == PermissionsHelper.STORAGE_PERMISSION_REQUEST_CODE) {
+            if (PermissionsHelper.arePermissionsGranted(grantResults)) {
+                Toast.makeText(getContext(), "Permisos concedidos. Puede descargar PDFs ahora.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Permisos denegados. No se pueden generar PDFs.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

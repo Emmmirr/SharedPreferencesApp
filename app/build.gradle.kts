@@ -48,6 +48,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
+    
+    // iText PDF library
+    implementation("com.itextpdf:itext7-core:7.2.5")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

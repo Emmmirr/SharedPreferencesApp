@@ -101,6 +101,16 @@
                     android:textColor="#E53E3E"
                     android:textSize="12sp" />
 
+                <Button
+                    android:id="@+id/btnDescargarPDF"
+                    android:layout_width="60dp"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="4dp"
+                    android:background="#D6F5D6"
+                    android:text="PDF"
+                    android:textColor="#38A169"
+                    android:textSize="12sp" />
+
             </LinearLayout>
 
         </LinearLayout>
