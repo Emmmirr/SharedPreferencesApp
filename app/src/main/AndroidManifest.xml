@@ -12,6 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SharedPreferencesApp">
         <activity
+            android:name=".InternalStorageActivity"
+            android:exported="false"
+            android:label="Memoria Interna" />
+        <activity
             android:name=".RegisterActivity"
             android:exported="false" />
         <activity

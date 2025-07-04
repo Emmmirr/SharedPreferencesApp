@@ -23,7 +23,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class HomeFragment extends Fragment {
 
     private TextView tvWelcome;
-    private Button btnLogout;
+    private Button btnLogout, btnInternalStorage;
     private GoogleSignInClient gClient;
     private FirebaseAuth auth;
 
@@ -38,6 +38,7 @@ public class HomeFragment extends Fragment {
 
         tvWelcome = view.findViewById(R.id.tvWelcome);
         btnLogout = view.findViewById(R.id.btnLogOut);
+        btnInternalStorage = view.findViewById(R.id.btnInternalStorage);
 
         // Inicializar Firebase Auth y Google Sign-In Client
         auth = FirebaseAuth.getInstance();
@@ -56,6 +57,12 @@ public class HomeFragment extends Fragment {
         } else {
             tvWelcome.setText("Bienvenido: " + username + "!");
         }
+
+        // Configurar botón de memoria interna
+        btnInternalStorage.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), InternalStorageActivity.class);
+            startActivity(intent);
+        });
 
         btnLogout.setOnClickListener(v -> {
             String method = prefs.getString("loginMethod", "normal");
