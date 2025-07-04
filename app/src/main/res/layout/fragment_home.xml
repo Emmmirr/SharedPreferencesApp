@@ -4,63 +4,137 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7FAFC"
-    android:padding="32dp"
+    android:background="?android:attr/colorBackground"
+    android:padding="24dp"
     tools:context=".HomeFragment">
 
-    <LinearLayout
-        android:id="@+id/contentArea"
+    <!-- Card de bienvenida -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardWelcome"
         android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:background="#FFFFFF"
-        android:elevation="8dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="40dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:cardUseCompatPadding="true"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.3">
+        app:layout_constraintBottom_toTopOf="@+id/cardActions"
+        app:layout_constraintVertical_chainStyle="packed">
 
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="¡Bienvenido!"
-            android:textColor="#1A202C"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-condensed" />
+            android:orientation="vertical"
+            android:padding="40dp"
+            android:gravity="center">
 
-        <TextView
-            android:id="@+id/tvMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Sesión iniciada correctamente"
-            android:textColor="#718096"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-light" />
+            <!-- Icono de bienvenida -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="40dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="?attr/colorPrimary">
 
-    </LinearLayout>
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_dialog_info"
+                    android:tint="?attr/colorOnPrimary" />
 
-    <Button
-        android:id="@+id/btnLogOut"
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Texto de bienvenida -->
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¡Bienvenido!"
+                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Tipo de login -->
+            <TextView
+                android:id="@+id/tvLoginType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sesión iniciada"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Card de acciones -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardActions"
         android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="60dp"
-        android:background="#E53E3E"
-        android:text="CERRAR SESIÓN"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
-        android:elevation="6dp"
-        android:textAllCaps="true"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:cardUseCompatPadding="true"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/contentArea" />
+        app:layout_constraintTop_toBottomOf="@+id/cardWelcome"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Opciones de sesión"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
+
+            <!-- ⬅️ AGREGAR ESTE BOTÓN -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDebugJSON"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:padding="16dp"
+                android:text="📱 Ver Memoria Interna"
+                android:textSize="16sp"
+                app:backgroundTint="#FF9800"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_menu_info_details"
+                app:iconTint="?attr/colorOnPrimary"
+                app:iconGravity="start" />
+
+            <!-- Botón de logout -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogOut"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="CERRAR SESIÓN"
+                android:textSize="16sp"
+                app:backgroundTint="?attr/colorError"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_menu_close_clear_cancel"
+                app:iconTint="?attr/colorOnError"
+                app:iconGravity="start" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
