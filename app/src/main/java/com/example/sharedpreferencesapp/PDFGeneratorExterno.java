@@ -30,7 +30,7 @@ public class PDFGeneratorExterno {
     private FileManager fileManager;
 
     // Datos institucionales predefinidos
-    private static final String LUGAR = "Chilpancingo de los Bravo, Guerrero";
+    private static final String LUGAR = "CHILPANCINGO DE LOS BRAVO, GUERRERO";
     private static final String JEFE_DIVISION = "M.A. MOISES VAZQUEZ PENA";
 
     public PDFGeneratorExterno(Context context) {
@@ -81,14 +81,14 @@ public class PDFGeneratorExterno {
     }
 
     private void agregarEncabezado(Document document, PdfFont boldFont) throws Exception {
-        Paragraph titulo = new Paragraph("INSTITUTO TECNOLÓGICO DE CHILPANCINGO")
+        Paragraph titulo = new Paragraph("INSTITUTO TECNOLOGICO DE CHILPANCINGO")
                 .setFont(boldFont)
                 .setFontSize(16)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginBottom(10);
         document.add(titulo);
 
-        Paragraph division = new Paragraph("DIVISIÓN DE ESTUDIOS PROFESIONALES\nRESIDENCIA PROFESIONAL\nSOLICITUD DE RESIDENCIA PROFESIONAL")
+        Paragraph division = new Paragraph("DIVISION DE ESTUDIOS PROFESIONALES\nRESIDENCIA PROFESIONAL\nSOLICITUD DE RESIDENCIA PROFESIONAL")
                 .setFont(boldFont)
                 .setFontSize(12)
                 .setTextAlignment(TextAlignment.CENTER)
@@ -103,7 +103,7 @@ public class PDFGeneratorExterno {
         String coordinador = "";
 
         if (alumno != null) {
-            carreraAlumno = limpiarTexto(alumno.optString("carrera", ""));
+            carreraAlumno = convertirAMayusculasSinAcentos(alumno.optString("carrera", ""));
             coordinador = obtenerCoordinadorPorCarrera(carreraAlumno);
         }
 
@@ -114,10 +114,10 @@ public class PDFGeneratorExterno {
         // Fecha actual del sistema
         String fechaActual = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
 
-        tablaBasica.addCell(crearCelda("Lugar:", boldFont));
+        tablaBasica.addCell(crearCelda("LUGAR:", boldFont));
         tablaBasica.addCell(crearCelda(LUGAR, font));
 
-        tablaBasica.addCell(crearCelda("Fecha:", boldFont));
+        tablaBasica.addCell(crearCelda("FECHA:", boldFont));
         tablaBasica.addCell(crearCelda(fechaActual, font));
 
         tablaBasica.addCell(crearCelda("C:", boldFont));
@@ -130,7 +130,7 @@ public class PDFGeneratorExterno {
         document.add(new Paragraph("\n"));
 
         // Información del proyecto
-        Paragraph jefe = new Paragraph("Jefe de la Div. de Estudios Profesionales     Coord. de la Carrera de " + carreraAlumno)
+        Paragraph jefe = new Paragraph("JEFE DE LA DIV. DE ESTUDIOS PROFESIONALES     COORD. DE LA CARRERA DE " + carreraAlumno)
                 .setFont(boldFont)
                 .setFontSize(10)
                 .setMarginBottom(10);
@@ -140,10 +140,10 @@ public class PDFGeneratorExterno {
         tablaProyecto.setWidth(UnitValue.createPercentValue(100));
 
         tablaProyecto.addCell(crearCelda("NOMBRE DEL PROYECTO:", boldFont));
-        tablaProyecto.addCell(crearCelda(limpiarTexto(protocolo.optString("nombreProyecto", "")), font));
+        tablaProyecto.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("nombreProyecto", "")), font));
 
-        tablaProyecto.addCell(crearCelda("OPCIÓN ELEGIDA:", boldFont));
-        tablaProyecto.addCell(crearCelda("Banco de Proyectos: " + limpiarTexto(protocolo.optString("banco", "")), font));
+        tablaProyecto.addCell(crearCelda("OPCION ELEGIDA:", boldFont));
+        tablaProyecto.addCell(crearCelda("BANCO DE PROYECTOS: " + convertirAMayusculasSinAcentos(protocolo.optString("banco", "")), font));
 
         document.add(tablaProyecto);
         document.add(new Paragraph("\n"));
@@ -157,13 +157,12 @@ public class PDFGeneratorExterno {
 
         String carreraLower = carrera.toLowerCase();
 
-        if (carreraLower.contains("contabilidad") || carreraLower.contains("gestión empresarial") ||
-                carreraLower.contains("gestion empresarial")) {
+        if (carreraLower.contains("contabilidad") || carreraLower.contains("gestion empresarial")) {
             return "LIC. MARIA ALCOCER SOLACHE";
         } else if (carreraLower.contains("civil")) {
             return "ING. ALBERTO CARBAJAL RAMIREZ";
-        } else if (carreraLower.contains("sistemas") || carreraLower.contains("informática") ||
-                carreraLower.contains("informatica") || carreraLower.contains("computacionales")) {
+        } else if (carreraLower.contains("sistemas") || carreraLower.contains("informatica") ||
+                carreraLower.contains("computacionales")) {
             return "SANDRA ALICIA KEMECHS DEL RIO";
         } else {
             return "COORDINADOR DE CARRERA";
@@ -174,7 +173,7 @@ public class PDFGeneratorExterno {
         // Obtener datos del alumno
         JSONObject alumno = fileManager.buscarAlumnoPorId(protocolo.optString("alumnoId", ""));
 
-        Paragraph datosResidente = new Paragraph("Datos del Residente:")
+        Paragraph datosResidente = new Paragraph("DATOS DEL RESIDENTE:")
                 .setFont(boldFont)
                 .setFontSize(12)
                 .setMarginBottom(10);
@@ -184,25 +183,25 @@ public class PDFGeneratorExterno {
         tablaAlumno.setWidth(UnitValue.createPercentValue(100));
 
         if (alumno != null) {
-            tablaAlumno.addCell(crearCelda("Nombre:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("nombre", "")), font));
-            tablaAlumno.addCell(crearCelda("Sexo:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("sexo", "")), font));
+            tablaAlumno.addCell(crearCelda("NOMBRE:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(alumno.optString("nombre", "")), font));
+            tablaAlumno.addCell(crearCelda("SEXO:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(alumno.optString("sexo", "")), font));
 
-            tablaAlumno.addCell(crearCelda("Carrera:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("carrera", "")), font));
-            tablaAlumno.addCell(crearCelda("No. de control:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("numControl", "")), font));
+            tablaAlumno.addCell(crearCelda("CARRERA:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(alumno.optString("carrera", "")), font));
+            tablaAlumno.addCell(crearCelda("NO. DE CONTROL:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(alumno.optString("numControl", "")), font));
 
-            tablaAlumno.addCell(crearCelda("Domicilio:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("direccion", "")), font));
-            tablaAlumno.addCell(crearCelda("E-mail:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("email", "")), font));
+            tablaAlumno.addCell(crearCelda("DOMICILIO:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(alumno.optString("direccion", "")), font));
+            tablaAlumno.addCell(crearCelda("E-MAIL:", boldFont));
+            tablaAlumno.addCell(crearCelda(alumno.optString("email", ""), font)); // Email se mantiene original
 
-            tablaAlumno.addCell(crearCelda("Ciudad:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(protocolo.optString("ciudad", "")), font));
-            tablaAlumno.addCell(crearCelda("Teléfono:", boldFont));
-            tablaAlumno.addCell(crearCelda(limpiarTexto(alumno.optString("telefono", "")), font));
+            tablaAlumno.addCell(crearCelda("CIUDAD:", boldFont));
+            tablaAlumno.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("ciudad", "")), font));
+            tablaAlumno.addCell(crearCelda("TELEFONO:", boldFont));
+            tablaAlumno.addCell(crearCelda(alumno.optString("telefono", ""), font));
         }
 
         document.add(tablaAlumno);
@@ -210,7 +209,7 @@ public class PDFGeneratorExterno {
     }
 
     private void agregarSeccionEmpresa(Document document, JSONObject protocolo, PdfFont font, PdfFont boldFont) throws Exception {
-        Paragraph datosEmpresa = new Paragraph("Datos de la institución o empresa donde realizará la residencia profesional:")
+        Paragraph datosEmpresa = new Paragraph("DATOS DE LA INSTITUCION O EMPRESA DONDE REALIZARA LA RESIDENCIA PROFESIONAL:")
                 .setFont(boldFont)
                 .setFontSize(12)
                 .setMarginBottom(10);
@@ -220,30 +219,30 @@ public class PDFGeneratorExterno {
         Table tablaEmpresa = new Table(UnitValue.createPercentArray(new float[]{20, 30, 20, 30}));
         tablaEmpresa.setWidth(UnitValue.createPercentValue(100));
 
-        tablaEmpresa.addCell(crearCelda("Nombre:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("nombreEmpresa", "")), font));
+        tablaEmpresa.addCell(crearCelda("NOMBRE:", boldFont));
+        tablaEmpresa.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("nombreEmpresa", "")), font));
         tablaEmpresa.addCell(crearCelda("R.F.C:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("rfc", "")), font));
+        tablaEmpresa.addCell(crearCelda(protocolo.optString("rfc", "").toUpperCase(), font));
 
-        String giroCompleto = limpiarTexto(protocolo.optString("giro", ""));
-        tablaEmpresa.addCell(crearCelda("Giro, Ramo o Sector:", boldFont));
+        String giroCompleto = convertirAMayusculasSinAcentos(protocolo.optString("giro", ""));
+        tablaEmpresa.addCell(crearCelda("GIRO, RAMO O SECTOR:", boldFont));
         tablaEmpresa.addCell(crearCelda(giroCompleto, font));
         tablaEmpresa.addCell(crearCelda("", font));
         tablaEmpresa.addCell(crearCelda("", font));
 
-        tablaEmpresa.addCell(crearCelda("Domicilio:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("domicilio", "")), font));
-        tablaEmpresa.addCell(crearCelda("Colonia:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("colonia", "")), font));
+        tablaEmpresa.addCell(crearCelda("DOMICILIO:", boldFont));
+        tablaEmpresa.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("domicilio", "")), font));
+        tablaEmpresa.addCell(crearCelda("COLONIA:", boldFont));
+        tablaEmpresa.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("colonia", "")), font));
 
-        tablaEmpresa.addCell(crearCelda("Ciudad:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("ciudad", "")), font));
+        tablaEmpresa.addCell(crearCelda("CIUDAD:", boldFont));
+        tablaEmpresa.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("ciudad", "")), font));
         tablaEmpresa.addCell(crearCelda("C.P:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("codigoPostal", "")), font));
+        tablaEmpresa.addCell(crearCelda(protocolo.optString("codigoPostal", ""), font));
 
         // Solo teléfono, sin fax
-        tablaEmpresa.addCell(crearCelda("Teléfono:", boldFont));
-        tablaEmpresa.addCell(crearCelda(limpiarTexto(protocolo.optString("celular", "")), font));
+        tablaEmpresa.addCell(crearCelda("TELEFONO:", boldFont));
+        tablaEmpresa.addCell(crearCelda(protocolo.optString("celular", ""), font));
         tablaEmpresa.addCell(crearCelda("", font));
         tablaEmpresa.addCell(crearCelda("", font));
 
@@ -254,8 +253,8 @@ public class PDFGeneratorExterno {
         Table tablaMision = new Table(UnitValue.createPercentArray(new float[]{25, 75}));
         tablaMision.setWidth(UnitValue.createPercentValue(100));
 
-        tablaMision.addCell(crearCelda("Misión de la Empresa:", boldFont));
-        tablaMision.addCell(crearCelda(limpiarTexto(protocolo.optString("mision", "")), font));
+        tablaMision.addCell(crearCelda("MISION DE LA EMPRESA:", boldFont));
+        tablaMision.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("mision", "")), font));
 
         document.add(tablaMision);
         document.add(new Paragraph("\n"));
@@ -264,24 +263,24 @@ public class PDFGeneratorExterno {
         Table tablaContactos = new Table(UnitValue.createPercentArray(new float[]{30, 35, 35}));
         tablaContactos.setWidth(UnitValue.createPercentValue(100));
 
-        tablaContactos.addCell(crearCelda("Nombre del Titular:", boldFont));
-        tablaContactos.addCell(crearCelda(limpiarTexto(protocolo.optString("titular", "")), font));
-        tablaContactos.addCell(crearCelda("Puesto: " + limpiarTexto(protocolo.optString("puestoTitular", "")), font));
+        tablaContactos.addCell(crearCelda("NOMBRE DEL TITULAR:", boldFont));
+        tablaContactos.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("titular", "")), font));
+        tablaContactos.addCell(crearCelda("PUESTO: " + convertirAMayusculasSinAcentos(protocolo.optString("puestoTitular", "")), font));
 
-        tablaContactos.addCell(crearCelda("Nombre del Asesor Externo:", boldFont));
-        tablaContactos.addCell(crearCelda(limpiarTexto(protocolo.optString("asesorExterno", "")), font));
-        tablaContactos.addCell(crearCelda("Puesto: " + limpiarTexto(protocolo.optString("puestoAsesor", "")), font));
+        tablaContactos.addCell(crearCelda("NOMBRE DEL ASESOR EXTERNO:", boldFont));
+        tablaContactos.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("asesorExterno", "")), font));
+        tablaContactos.addCell(crearCelda("PUESTO: " + convertirAMayusculasSinAcentos(protocolo.optString("puestoAsesor", "")), font));
 
-        tablaContactos.addCell(crearCelda("Nombre de la persona que firmará el Convenio:", boldFont));
-        tablaContactos.addCell(crearCelda(limpiarTexto(protocolo.optString("firmante", "")), font));
-        tablaContactos.addCell(crearCelda("Puesto: " + limpiarTexto(protocolo.optString("puestoFirmante", "")), font));
+        tablaContactos.addCell(crearCelda("NOMBRE DE LA PERSONA QUE FIRMARA EL CONVENIO:", boldFont));
+        tablaContactos.addCell(crearCelda(convertirAMayusculasSinAcentos(protocolo.optString("firmante", "")), font));
+        tablaContactos.addCell(crearCelda("PUESTO: " + convertirAMayusculasSinAcentos(protocolo.optString("puestoFirmante", "")), font));
 
         document.add(tablaContactos);
 
         // Agregar fecha de generación al final
         document.add(new Paragraph("\n"));
         String fechaGeneracion = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-        Paragraph pie = new Paragraph("Documento generado el: " + fechaGeneracion)
+        Paragraph pie = new Paragraph("DOCUMENTO GENERADO EL: " + fechaGeneracion)
                 .setFont(font)
                 .setFontSize(8)
                 .setTextAlignment(TextAlignment.RIGHT)
@@ -294,37 +293,45 @@ public class PDFGeneratorExterno {
                 .setPadding(3);
     }
 
-    // Método mejorado para limpiar texto con acentos
-    private String limpiarTexto(String texto) {
+    // ⬅️ NUEVO MÉTODO: CONVIERTE A MAYÚSCULAS Y QUITA ACENTOS
+    private String convertirAMayusculasSinAcentos(String texto) {
         if (texto == null || texto.isEmpty()) {
             return "";
         }
 
-        try {
-            // Asegurar que el texto esté en UTF-8
-            byte[] bytes = texto.getBytes("UTF-8");
-            String textoLimpio = new String(bytes, "UTF-8");
+        // Convertir a mayúsculas
+        String textoMayus = texto.toUpperCase();
 
-            // Reemplazar caracteres problemáticos usando códigos Unicode
-            textoLimpio = textoLimpio.replace("\u2018", "'")  // Comilla simple izquierda
-                    .replace("\u2019", "'")    // Comilla simple derecha
-                    .replace("\u201C", "\"")   // Comilla doble izquierda
-                    .replace("\u201D", "\"")   // Comilla doble derecha
-                    .replace("\u2013", "-")    // En dash
-                    .replace("\u2014", "-")    // Em dash
-                    .replace("\u00A0", " ")    // Espacio no rompible
-                    .replace("\u00C3\u00A1", "á")    // á mal codificada
-                    .replace("\u00C3\u00A9", "é")    // é mal codificada
-                    .replace("\u00C3\u00AD", "í")    // í mal codificada
-                    .replace("\u00C3\u00B3", "ó")    // ó mal codificada
-                    .replace("\u00C3\u00BA", "ú")    // ú mal codificada
-                    .replace("\u00C3\u00B1", "ñ")    // ñ mal codificada
-                    .replace("\u00C3\u00BC", "ü");   // ü mal codificada
+        // Quitar acentos y caracteres especiales
+        textoMayus = textoMayus.replace("Á", "A")
+                .replace("É", "E")
+                .replace("Í", "I")
+                .replace("Ó", "O")
+                .replace("Ú", "U")
+                .replace("Ñ", "N")
+                .replace("Ü", "U")
+                .replace("À", "A")
+                .replace("È", "E")
+                .replace("Ì", "I")
+                .replace("Ò", "O")
+                .replace("Ù", "U")
+                // Remover caracteres problemáticos
+                .replace("Ã¡", "A")
+                .replace("Ã©", "E")
+                .replace("Ã­", "I")
+                .replace("Ã³", "O")
+                .replace("Ãº", "U")
+                .replace("Ã±", "N")
+                .replace("Ã¼", "U")
+                .replace("Â", "")
+                .replace("\u00A0", " ")
+                .replace("\u2018", "'")
+                .replace("\u2019", "'")
+                .replace("\u201C", "\"")
+                .replace("\u201D", "\"")
+                .replace("\u2013", "-")
+                .replace("\u2014", "-");
 
-            return textoLimpio;
-        } catch (Exception e) {
-            Log.w(TAG, "Error procesando texto: " + texto, e);
-            return texto; // Devolver original si hay error
-        }
+        return textoMayus.trim();
     }
 }

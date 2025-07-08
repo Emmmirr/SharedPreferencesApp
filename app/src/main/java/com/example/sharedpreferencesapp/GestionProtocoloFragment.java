@@ -117,12 +117,12 @@ public class GestionProtocoloFragment extends Fragment {
         spinnerAlumno.setAdapter(alumnosAdapter);
 
         // Configurar spinner banco de proyectos
-        String[] bancos = {"Interdisciplinario", "Integradores", "Educación dual"};
+        String[] bancos = {"Interdisciplinario", "Integradores", "Educacion dual"};
         ArrayAdapter<String> bancosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, bancos);
         spinnerBanco.setAdapter(bancosAdapter);
 
         // Configurar spinner giro
-        String[] giros = {"Industrial", "Servicios", "Público", "Privado", "Otro"};
+        String[] giros = {"Industrial", "Servicios", "Publico", "Privado", "Otro"};
         ArrayAdapter<String> girosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, giros);
         spinnerGiro.setAdapter(girosAdapter);
 
@@ -152,30 +152,30 @@ public class GestionProtocoloFragment extends Fragment {
                         finalProtocoloId = "protocolo_" + System.currentTimeMillis();
                     }
 
-                    // Guardar todos los datos
+                    // ⬅️ GUARDAR TODOS LOS DATOS CONVERTIDOS A MAYÚSCULAS SIN ACENTOS
                     String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition());
                     protocolo.put("id", finalProtocoloId);
                     protocolo.put("alumnoId", alumnoId);
-                    protocolo.put("nombreProyecto", proyecto);
+                    protocolo.put("nombreProyecto", convertirAMayusculasSinAcentos(proyecto));
                     protocolo.put("banco", spinnerBanco.getSelectedItem().toString());
-                    protocolo.put("asesor", etAsesor.getText().toString());
-                    protocolo.put("nombreEmpresa", empresa);
+                    protocolo.put("asesor", convertirAMayusculasSinAcentos(etAsesor.getText().toString()));
+                    protocolo.put("nombreEmpresa", convertirAMayusculasSinAcentos(empresa));
                     protocolo.put("giro", spinnerGiro.getSelectedItem().toString());
-                    protocolo.put("rfc", etRFC.getText().toString());
-                    protocolo.put("domicilio", etDomicilio.getText().toString());
-                    protocolo.put("colonia", etColonia.getText().toString());
+                    protocolo.put("rfc", etRFC.getText().toString().toUpperCase());
+                    protocolo.put("domicilio", convertirAMayusculasSinAcentos(etDomicilio.getText().toString()));
+                    protocolo.put("colonia", convertirAMayusculasSinAcentos(etColonia.getText().toString()));
                     protocolo.put("codigoPostal", etCodigoPostal.getText().toString());
-                    protocolo.put("ciudad", etCiudad.getText().toString());
+                    protocolo.put("ciudad", convertirAMayusculasSinAcentos(etCiudad.getText().toString()));
                     protocolo.put("celular", etCelular.getText().toString());
-                    protocolo.put("mision", etMision.getText().toString());
-                    protocolo.put("titular", etTitular.getText().toString());
-                    protocolo.put("firmante", etFirmante.getText().toString());
+                    protocolo.put("mision", convertirAMayusculasSinAcentos(etMision.getText().toString()));
+                    protocolo.put("titular", convertirAMayusculasSinAcentos(etTitular.getText().toString()));
+                    protocolo.put("firmante", convertirAMayusculasSinAcentos(etFirmante.getText().toString()));
 
                     // Nuevos campos
-                    protocolo.put("puestoTitular", etPuestoTitular.getText().toString());
-                    protocolo.put("asesorExterno", etAsesorExterno.getText().toString());
-                    protocolo.put("puestoAsesor", etPuestoAsesor.getText().toString());
-                    protocolo.put("puestoFirmante", etPuestoFirmante.getText().toString());
+                    protocolo.put("puestoTitular", convertirAMayusculasSinAcentos(etPuestoTitular.getText().toString()));
+                    protocolo.put("asesorExterno", convertirAMayusculasSinAcentos(etAsesorExterno.getText().toString()));
+                    protocolo.put("puestoAsesor", convertirAMayusculasSinAcentos(etPuestoAsesor.getText().toString()));
+                    protocolo.put("puestoFirmante", convertirAMayusculasSinAcentos(etPuestoFirmante.getText().toString()));
 
                     // Guardar en archivo
                     boolean exito;
@@ -314,16 +314,16 @@ public class GestionProtocoloFragment extends Fragment {
             String numControl = "";
 
             if (alumno != null) {
-                nombreAlumno = limpiarTextoVista(alumno.optString("nombre", "Sin alumno"));
+                nombreAlumno = alumno.optString("nombre", "Sin alumno");
                 numControl = alumno.optString("numControl", "");
             }
 
-            tvNombreProyecto.setText(limpiarTextoVista(nombreProyecto));
+            tvNombreProyecto.setText(nombreProyecto);
             tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
-            tvEmpresa.setText("Empresa: " + limpiarTextoVista(empresa));
-            tvBanco.setText("Banco: " + limpiarTextoVista(banco));
-            tvAsesor.setText("Asesor: " + limpiarTextoVista(asesor));
-            tvCiudad.setText("Ciudad: " + limpiarTextoVista(ciudad));
+            tvEmpresa.setText("Empresa: " + empresa);
+            tvBanco.setText("Banco: " + banco);
+            tvAsesor.setText("Asesor: " + asesor);
+            tvCiudad.setText("Ciudad: " + ciudad);
 
             btnPDF.setOnClickListener(v -> seleccionarUbicacionPDF(protocolo));
 
@@ -403,45 +403,45 @@ public class GestionProtocoloFragment extends Fragment {
         }).start();
     }
 
-    // Método para limpiar texto en la vista
-    private String limpiarTextoVista(String texto) {
+    // CONVIERTE A MAYÚSCULAS Y QUITA ACENTOS
+    private String convertirAMayusculasSinAcentos(String texto) {
         if (texto == null || texto.isEmpty()) {
             return "";
         }
 
-        try {
-            byte[] bytes = texto.getBytes("UTF-8");
-            String textoLimpio = new String(bytes, "UTF-8");
+        // Convertir a mayúsculas
+        String textoMayus = texto.toUpperCase();
 
-            textoLimpio = textoLimpio.replace("Ã¡", "á")
-                    .replace("Ã©", "é")
-                    .replace("Ã­", "í")
-                    .replace("Ã³", "ó")
-                    .replace("Ãº", "ú")
-                    .replace("Ã±", "ñ")
-                    .replace("Ã¼", "ü")
-                    .replace("Ã‰", "É")
-                    .replace("Ã", "Á")
-                    .replace("\u00C3\u201D", "Ó")
-                    .replace("Ãš", "Ú")
-                    .replace("\u00C3\u2018", "Ñ")
-                    .replace("\u2019", "'")
-                    .replace("\u201C", "\"")
-                    .replace("\u201D", "\"")
-                    .replace("\u2013", "-")
-                    .replace("Â", "")
-                    .replace("\u00A0", " ")
-                    .replace("\u00C3\u00A1", "á")
-                    .replace("\u00C3\u00A9", "é")
-                    .replace("\u00C3\u00AD", "í")
-                    .replace("\u00C3\u00B3", "ó")
-                    .replace("\u00C3\u00BA", "ú")
-                    .replace("\u00C3\u00B1", "ñ")
-                    .replace("\u00C3\u00BC", "ü");
+        // Quitar acentos y caracteres especiales
+        textoMayus = textoMayus.replace("Á", "A")
+                .replace("É", "E")
+                .replace("Í", "I")
+                .replace("Ó", "O")
+                .replace("Ú", "U")
+                .replace("Ñ", "N")
+                .replace("Ü", "U")
+                .replace("À", "A")
+                .replace("È", "E")
+                .replace("Ì", "I")
+                .replace("Ò", "O")
+                .replace("Ù", "U")
+                // Remover caracteres problemáticos
+                .replace("Ã¡", "A")
+                .replace("Ã©", "E")
+                .replace("Ã­", "I")
+                .replace("Ã³", "O")
+                .replace("Ãº", "U")
+                .replace("Ã±", "N")
+                .replace("Ã¼", "U")
+                .replace("Â", "")
+                .replace("\u00A0", " ")
+                .replace("\u2018", "'")
+                .replace("\u2019", "'")
+                .replace("\u201C", "\"")
+                .replace("\u201D", "\"")
+                .replace("\u2013", "-")
+                .replace("\u2014", "-");
 
-            return textoLimpio;
-        } catch (Exception e) {
-            return texto;
-        }
+        return textoMayus.trim();
     }
 }
