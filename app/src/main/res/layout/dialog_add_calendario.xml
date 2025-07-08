@@ -21,14 +21,28 @@
             android:layout_marginBottom="16dp" />
 
         <!-- Selector de Alumno -->
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="👤 Selección de Alumno"
-            android:textColor="#4299E1"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/libro"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selección de Alumno"
+                android:textColor="#4299E1"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <Spinner
             android:id="@+id/spinnerAlumno"
@@ -39,14 +53,41 @@
             android:layout_marginBottom="16dp" />
 
         <!-- Fechas del Calendario -->
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📅 Cronograma de Residencia"
-            android:textColor="#4299E1"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/libro"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cronograma de Residencia"
+                android:textColor="#4299E1"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- ⬅️ BOTÓN BORRAR FECHAS -->
+            <Button
+                android:id="@+id/btnBorrarFechas"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="BORRAR FECHAS"
+                android:textSize="11sp"
+                android:background="#E53E3E"
+                android:textColor="#FFFFFF"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
+
+        </LinearLayout>
 
         <!-- Entrega anteproyecto -->
         <LinearLayout
@@ -55,15 +96,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📋 Entrega anteproyecto:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrega anteproyecto:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaAnteproyecto"
@@ -83,15 +137,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="✅ Entrega de Viabilidad:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrega de Viabilidad:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaViabilidad"
@@ -111,15 +178,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📝 Entrega de modificación:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrega de modificación:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaModificacion"
@@ -139,15 +219,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🎯 Entrega de viabilidad final:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrega de viabilidad final:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaViabilidadFinal"
@@ -167,15 +260,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🚀 Inicio de residencia:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Inicio de residencia:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaInicioResidencia"
@@ -195,15 +301,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📊 1er seguimiento:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1er seguimiento:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaPrimerSeguimiento"
@@ -223,15 +342,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📈 2do seguimiento:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2do seguimiento:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaSegundoSeguimiento"
@@ -251,15 +383,28 @@
             android:orientation="horizontal"
             android:layout_marginBottom="16dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🏆 Entrega final:"
-                android:textColor="#1A202C"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_gravity="center_vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/libro"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrega final:"
+                    android:textColor="#1A202C"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFechaEntregaFinal"

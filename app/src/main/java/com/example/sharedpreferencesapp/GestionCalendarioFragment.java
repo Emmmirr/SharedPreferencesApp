@@ -88,9 +88,19 @@ public class GestionCalendarioFragment extends Fragment {
         Button btnFechaSegundoSeguimiento = dialogView.findViewById(R.id.btnFechaSegundoSeguimiento);
         Button btnFechaEntregaFinal = dialogView.findViewById(R.id.btnFechaEntregaFinal);
 
+        // ⬅️ BOTÓN BORRAR FECHAS
+        Button btnBorrarFechas = dialogView.findViewById(R.id.btnBorrarFechas);
+
         // Variables para fechas
         final String[] fechas = new String[8]; // Array para almacenar fechas
         SimpleDateFormat formatoFecha = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
+        // ⬅️ ARRAY DE TODOS LOS BOTONES DE FECHA
+        Button[] botonesFecha = {
+                btnFechaAnteproyecto, btnFechaViabilidad, btnFechaModificacion,
+                btnFechaViabilidadFinal, btnFechaInicioResidencia, btnFechaPrimerSeguimiento,
+                btnFechaSegundoSeguimiento, btnFechaEntregaFinal
+        };
 
         // Configurar spinner alumnos
         ArrayList<String> alumnos = new ArrayList<>();
@@ -130,6 +140,20 @@ public class GestionCalendarioFragment extends Fragment {
         btnFechaPrimerSeguimiento.setOnClickListener(v -> mostrarDatePicker(btnFechaPrimerSeguimiento, fechas[4], fechas, 5, formatoFecha));
         btnFechaSegundoSeguimiento.setOnClickListener(v -> mostrarDatePicker(btnFechaSegundoSeguimiento, fechas[5], fechas, 6, formatoFecha));
         btnFechaEntregaFinal.setOnClickListener(v -> mostrarDatePicker(btnFechaEntregaFinal, fechas[6], fechas, 7, formatoFecha));
+
+        // ⬅️ CONFIGURAR LISTENER PARA BORRAR FECHAS
+        btnBorrarFechas.setOnClickListener(v -> {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Borrar Fechas")
+                    .setMessage("¿Estás seguro que quieres eliminar todas las fechas?")
+                    .setIcon(R.drawable.libro)
+                    .setPositiveButton("Sí, Borrar", (dialog, which) -> {
+                        borrarTodasLasFechas(fechas, botonesFecha);
+                        Toast.makeText(getContext(), "Todas las fechas han sido eliminadas", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
 
         // Si es edición, cargar datos
         if (calendarioId != null) {
@@ -179,23 +203,38 @@ public class GestionCalendarioFragment extends Fragment {
                 if (exito) {
                     cargarCalendarios();
                     dialog.dismiss();
-                    String mensaje = (calendarioId == null) ? "✅ Calendario agregado exitosamente" : "✅ Calendario actualizado exitosamente";
+                    String mensaje = (calendarioId == null) ? "Calendario agregado exitosamente" : "Calendario actualizado exitosamente";
                     Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), "❌ Error al guardar el calendario", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error al guardar el calendario", Toast.LENGTH_SHORT).show();
                 }
 
             } catch (JSONException e) {
                 e.printStackTrace();
-                Toast.makeText(getContext(), "❌ Error al procesar los datos", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
-                Toast.makeText(getContext(), "❌ Error: Selección inválida", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Error: Selección inválida", Toast.LENGTH_SHORT).show();
             }
         });
 
         dialogView.findViewById(R.id.btnCancelar).setOnClickListener(v -> dialog.dismiss());
         dialog.show();
+    }
+
+    // ⬅️ NUEVO MÉTODO PARA BORRAR TODAS LAS FECHAS
+    private void borrarTodasLasFechas(String[] fechas, Button[] botones) {
+        // Limpiar el array de fechas
+        for (int i = 0; i < fechas.length; i++) {
+            fechas[i] = null;
+        }
+
+        // Resetear todos los botones a su estado original
+        for (Button boton : botones) {
+            boton.setText("Seleccionar");
+            boton.setBackgroundColor(0xFFE2E8F0); // Color gris original
+            boton.setTextColor(0xFF4299E1); // Color azul original
+        }
     }
 
     private void mostrarDatePicker(Button boton, String fechaMinima, String[] fechas, int indice, SimpleDateFormat formatoFecha) {
@@ -462,12 +501,12 @@ public class GestionCalendarioFragment extends Fragment {
         try {
             selectorCarpeta.launch(intent);
         } catch (Exception e) {
-            Toast.makeText(getContext(), "❌ Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void generarPDFEnUbicacion(JSONObject calendario, Uri uri) {
-        Toast.makeText(getContext(), "📄 Generando PDF...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Generando PDF...", Toast.LENGTH_SHORT).show();
 
         new Thread(() -> {
             try {
@@ -476,28 +515,28 @@ public class GestionCalendarioFragment extends Fragment {
 
                 requireActivity().runOnUiThread(() -> {
                     if (exito) {
-                        String mensaje = "✅ PDF de calendario guardado exitosamente";
+                        String mensaje = "PDF de calendario guardado exitosamente";
                         Toast.makeText(getContext(), mensaje, Toast.LENGTH_LONG).show();
 
                         new AlertDialog.Builder(getContext())
-                                .setTitle("📄 PDF Creado")
+                                .setTitle("PDF Creado")
                                 .setMessage("El archivo PDF se ha guardado en la ubicación seleccionada.")
+                                .setIcon(R.drawable.libro)
                                 .setPositiveButton("OK", null)
                                 .show();
                     } else {
-                        Toast.makeText(getContext(), "❌ Error al generar PDF", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show();
                     }
                 });
 
             } catch (Exception e) {
                 requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "❌ Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
         }).start();
     }
 
-    // Método corregido para limpiar texto en la vista
     private String limpiarTextoVista(String texto) {
         if (texto == null || texto.isEmpty()) {
             return "";
@@ -507,7 +546,6 @@ public class GestionCalendarioFragment extends Fragment {
             byte[] bytes = texto.getBytes("UTF-8");
             String textoLimpio = new String(bytes, "UTF-8");
 
-            // Usar códigos Unicode para evitar problemas de compilación
             textoLimpio = textoLimpio.replace("Ã¡", "á")
                     .replace("Ã©", "é")
                     .replace("Ã­", "í")
@@ -517,20 +555,20 @@ public class GestionCalendarioFragment extends Fragment {
                     .replace("Ã¼", "ü")
                     .replace("Ã‰", "É")
                     .replace("Ã", "Á")
-                    .replace("\u00C3\u201D", "Ó")    // Ó mal codificada
+                    .replace("\u00C3\u201D", "Ó")
                     .replace("Ãš", "Ú")
-                    .replace("\u00C3\u2018", "Ñ")    // Ñ mal codificada
-                    .replace("\u2019", "'")           // Comilla inteligente
-                    .replace("\u201C", "\"")          // Comilla doble izquierda
-                    .replace("\u201D", "\"")          // Comilla doble derecha
-                    .replace("\u2013", "-")           // Guión largo
-                    .replace("Â", "")                 // Caracteres extra
-                    .replace("\u00A0", " ")           // Espacio no rompible
+                    .replace("\u00C3\u2018", "Ñ")
+                    .replace("\u2019", "'")
+                    .replace("\u201C", "\"")
+                    .replace("\u201D", "\"")
+                    .replace("\u2013", "-")
+                    .replace("Â", "")
+                    .replace("\u00A0", " ")
                     .replace("\u00C3\u00A1", "á")
                     .replace("\u00C3\u00A9", "é")
                     .replace("\u00C3\u00AD", "í")
                     .replace("\u00C3\u00B3", "ó")
-                    .replace("\u00C3\u00BA", "ú")
+                    .replace("\u00C3\u00FA", "ú")
                     .replace("\u00C3\u00B1", "ñ")
                     .replace("\u00C3\u00BC", "ü");
 
