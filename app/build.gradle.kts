@@ -49,6 +49,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
     implementation("com.itextpdf:itext7-core:7.2.5")
+    //implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.google.android.material:material:1.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

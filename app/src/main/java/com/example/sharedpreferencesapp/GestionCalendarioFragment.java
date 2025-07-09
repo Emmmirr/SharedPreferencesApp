@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -37,6 +38,10 @@ public class GestionCalendarioFragment extends Fragment {
     private TextView tvNoCalendarios;
     private FileManager fileManager;
     private JSONObject calendarioPendiente;
+
+    // Variables para el calendario actual
+    private String calendarioActualId = null;
+    private String alumnoActualId = null;
 
     private final ActivityResultLauncher<Intent> selectorCarpeta = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -78,26 +83,66 @@ public class GestionCalendarioFragment extends Fragment {
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
         Spinner spinnerAlumno = dialogView.findViewById(R.id.spinnerAlumno);
 
-        // Botones de fechas
-        Button btnFechaAnteproyecto = dialogView.findViewById(R.id.btnFechaAnteproyecto);
-        Button btnFechaViabilidad = dialogView.findViewById(R.id.btnFechaViabilidad);
-        Button btnFechaModificacion = dialogView.findViewById(R.id.btnFechaModificacion);
-        Button btnFechaViabilidadFinal = dialogView.findViewById(R.id.btnFechaViabilidadFinal);
-        Button btnFechaInicioResidencia = dialogView.findViewById(R.id.btnFechaInicioResidencia);
-        Button btnFechaPrimerSeguimiento = dialogView.findViewById(R.id.btnFechaPrimerSeguimiento);
-        Button btnFechaSegundoSeguimiento = dialogView.findViewById(R.id.btnFechaSegundoSeguimiento);
-        Button btnFechaEntregaFinal = dialogView.findViewById(R.id.btnFechaEntregaFinal);
+        // ⬅️ ICONOS DE CALENDARIO
+        ImageView btnCalendarioAnteproyecto = dialogView.findViewById(R.id.btnCalendarioAnteproyecto);
+        ImageView btnCalendarioViabilidad = dialogView.findViewById(R.id.btnCalendarioViabilidad);
+        ImageView btnCalendarioModificacion = dialogView.findViewById(R.id.btnCalendarioModificacion);
+        ImageView btnCalendarioViabilidadFinal = dialogView.findViewById(R.id.btnCalendarioViabilidadFinal);
+        ImageView btnCalendarioInicioResidencia = dialogView.findViewById(R.id.btnCalendarioInicioResidencia);
+        ImageView btnCalendarioPrimerSeguimiento = dialogView.findViewById(R.id.btnCalendarioPrimerSeguimiento);
+        ImageView btnCalendarioSegundoSeguimiento = dialogView.findViewById(R.id.btnCalendarioSegundoSeguimiento);
+        ImageView btnCalendarioEntregaFinal = dialogView.findViewById(R.id.btnCalendarioEntregaFinal);
+
+        // ⬅️ ICONOS GUARDAR INDIVIDUALES
+        ImageView btnGuardarAnteproyecto = dialogView.findViewById(R.id.btnGuardarAnteproyecto);
+        ImageView btnGuardarViabilidad = dialogView.findViewById(R.id.btnGuardarViabilidad);
+        ImageView btnGuardarModificacion = dialogView.findViewById(R.id.btnGuardarModificacion);
+        ImageView btnGuardarViabilidadFinal = dialogView.findViewById(R.id.btnGuardarViabilidadFinal);
+        ImageView btnGuardarInicioResidencia = dialogView.findViewById(R.id.btnGuardarInicioResidencia);
+        ImageView btnGuardarPrimerSeguimiento = dialogView.findViewById(R.id.btnGuardarPrimerSeguimiento);
+        ImageView btnGuardarSegundoSeguimiento = dialogView.findViewById(R.id.btnGuardarSegundoSeguimiento);
+        ImageView btnGuardarEntregaFinal = dialogView.findViewById(R.id.btnGuardarEntregaFinal);
+
+        // TextViews para mostrar las fechas
+        TextView tvFechaAnteproyecto = dialogView.findViewById(R.id.tvFechaAnteproyecto);
+        TextView tvFechaViabilidad = dialogView.findViewById(R.id.tvFechaViabilidad);
+        TextView tvFechaModificacion = dialogView.findViewById(R.id.tvFechaModificacion);
+        TextView tvFechaViabilidadFinal = dialogView.findViewById(R.id.tvFechaViabilidadFinal);
+        TextView tvFechaInicioResidencia = dialogView.findViewById(R.id.tvFechaInicioResidencia);
+        TextView tvFechaPrimerSeguimiento = dialogView.findViewById(R.id.tvFechaPrimerSeguimiento);
+        TextView tvFechaSegundoSeguimiento = dialogView.findViewById(R.id.tvFechaSegundoSeguimiento);
+        TextView tvFechaEntregaFinal = dialogView.findViewById(R.id.tvFechaEntregaFinal);
 
         Button btnBorrarFechas = dialogView.findViewById(R.id.btnBorrarFechas);
 
-        // Variables para fechas
-        final String[] fechas = new String[8]; // Array para almacenar fechas
+        // Variables para fechas temporales
+        final String[] fechasTemp = new String[8];
         SimpleDateFormat formatoFecha = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-        Button[] botonesFecha = {
-                btnFechaAnteproyecto, btnFechaViabilidad, btnFechaModificacion,
-                btnFechaViabilidadFinal, btnFechaInicioResidencia, btnFechaPrimerSeguimiento,
-                btnFechaSegundoSeguimiento, btnFechaEntregaFinal
+        // Arrays para manejar elementos
+        TextView[] textViewsFecha = {
+                tvFechaAnteproyecto, tvFechaViabilidad, tvFechaModificacion,
+                tvFechaViabilidadFinal, tvFechaInicioResidencia, tvFechaPrimerSeguimiento,
+                tvFechaSegundoSeguimiento, tvFechaEntregaFinal
+        };
+
+        ImageView[] iconosCalendario = {
+                btnCalendarioAnteproyecto, btnCalendarioViabilidad, btnCalendarioModificacion,
+                btnCalendarioViabilidadFinal, btnCalendarioInicioResidencia, btnCalendarioPrimerSeguimiento,
+                btnCalendarioSegundoSeguimiento, btnCalendarioEntregaFinal
+        };
+
+        // ⬅️ CAMBIO: AHORA SON ImageView EN LUGAR DE Button
+        ImageView[] iconosGuardar = {
+                btnGuardarAnteproyecto, btnGuardarViabilidad, btnGuardarModificacion,
+                btnGuardarViabilidadFinal, btnGuardarInicioResidencia, btnGuardarPrimerSeguimiento,
+                btnGuardarSegundoSeguimiento, btnGuardarEntregaFinal
+        };
+
+        String[] nombresCampos = {
+                "fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                "fechaSegundoSeguimiento", "fechaEntregaFinal"
         };
 
         // Configurar spinner alumnos
@@ -105,7 +150,7 @@ public class GestionCalendarioFragment extends Fragment {
         ArrayList<String> alumnosIds = new ArrayList<>();
         List<JSONObject> alumnosData = fileManager.cargarAlumnos();
 
-        alumnos.add("Selecciona un alumno..."); // Posición 0
+        alumnos.add("Selecciona un alumno...");
 
         for (JSONObject alumno : alumnosData) {
             try {
@@ -129,113 +174,89 @@ public class GestionCalendarioFragment extends Fragment {
         alumnosAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAlumno.setAdapter(alumnosAdapter);
 
-        // Configurar listeners para fechas
-        btnFechaAnteproyecto.setOnClickListener(v -> mostrarDatePicker(btnFechaAnteproyecto, null, fechas, 0, formatoFecha));
-        btnFechaViabilidad.setOnClickListener(v -> mostrarDatePicker(btnFechaViabilidad, fechas[0], fechas, 1, formatoFecha));
-        btnFechaModificacion.setOnClickListener(v -> mostrarDatePicker(btnFechaModificacion, fechas[1], fechas, 2, formatoFecha));
-        btnFechaViabilidadFinal.setOnClickListener(v -> mostrarDatePicker(btnFechaViabilidadFinal, fechas[2], fechas, 3, formatoFecha));
-        btnFechaInicioResidencia.setOnClickListener(v -> mostrarDatePicker(btnFechaInicioResidencia, fechas[3], fechas, 4, formatoFecha));
-        btnFechaPrimerSeguimiento.setOnClickListener(v -> mostrarDatePicker(btnFechaPrimerSeguimiento, fechas[4], fechas, 5, formatoFecha));
-        btnFechaSegundoSeguimiento.setOnClickListener(v -> mostrarDatePicker(btnFechaSegundoSeguimiento, fechas[5], fechas, 6, formatoFecha));
-        btnFechaEntregaFinal.setOnClickListener(v -> mostrarDatePicker(btnFechaEntregaFinal, fechas[6], fechas, 7, formatoFecha));
+        // ⬅️ CONFIGURAR LISTENERS PARA ICONOS DE CALENDARIO
+        for (int i = 0; i < iconosCalendario.length; i++) {
+            final int indice = i;
+            iconosCalendario[i].setOnClickListener(v -> {
+                if (spinnerAlumno.getSelectedItemPosition() == 0) {
+                    Toast.makeText(getContext(), "Primero selecciona un alumno", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String fechaMinima = indice > 0 ? fechasTemp[indice - 1] : null;
+                mostrarDatePickerIndividualIcono(indice, fechasTemp, textViewsFecha, iconosGuardar, formatoFecha, fechaMinima);
+            });
+        }
+
+        // ⬅️ CONFIGURAR LISTENERS PARA ICONOS GUARDAR INDIVIDUALES
+        for (int i = 0; i < iconosGuardar.length; i++) {
+            final int indice = i;
+            iconosGuardar[i].setOnClickListener(v -> {
+                if (spinnerAlumno.getSelectedItemPosition() == 0) {
+                    Toast.makeText(getContext(), "Primero selecciona un alumno", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                guardarFechaIndividualIcono(spinnerAlumno, alumnosIds, fechasTemp, indice, nombresCampos[indice],
+                        textViewsFecha[indice], iconosGuardar[indice], formatoFecha);
+            });
+        }
 
         // Configurar listener para borrar fechas
         btnBorrarFechas.setOnClickListener(v -> {
+            if (alumnoActualId == null) {
+                Toast.makeText(getContext(), "Primero selecciona un alumno", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             new AlertDialog.Builder(getContext())
                     .setTitle("Borrar Fechas")
                     .setMessage("¿Estás seguro que quieres eliminar todas las fechas?")
                     .setIcon(R.drawable.libro)
                     .setPositiveButton("Sí, Borrar", (dialog, which) -> {
-                        borrarTodasLasFechas(fechas, botonesFecha);
+                        borrarTodasLasFechasIndividualIcono(fechasTemp, textViewsFecha, iconosGuardar);
                         Toast.makeText(getContext(), "Todas las fechas han sido eliminadas", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
         });
 
+        // ⬅️ CONFIGURAR LISTENER DEL SPINNER
+        spinnerAlumno.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0 && !alumnosIds.isEmpty()) {
+                    alumnoActualId = alumnosIds.get(position - 1);
+                    calendarioActualId = "calendario_" + alumnoActualId;
+                    cargarDatosCalendarioExistenteIcono(fechasTemp, textViewsFecha, iconosGuardar);
+                } else {
+                    alumnoActualId = null;
+                    calendarioActualId = null;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                alumnoActualId = null;
+                calendarioActualId = null;
+            }
+        });
+
         // Si es edición, cargar datos
         if (calendarioId != null) {
             tvTitulo.setText("Editar Calendario");
-            cargarDatosCalendario(calendarioId, spinnerAlumno, alumnosIds, fechas,
-                    btnFechaAnteproyecto, btnFechaViabilidad, btnFechaModificacion,
-                    btnFechaViabilidadFinal, btnFechaInicioResidencia, btnFechaPrimerSeguimiento,
-                    btnFechaSegundoSeguimiento, btnFechaEntregaFinal);
+            cargarDatosCalendarioParaEdicionIcono(calendarioId, spinnerAlumno, alumnosIds, fechasTemp, textViewsFecha, iconosGuardar);
         }
 
         AlertDialog dialog = builder.create();
 
-        dialogView.findViewById(R.id.btnGuardar).setOnClickListener(v -> {
-            if (spinnerAlumno.getSelectedItemPosition() == 0) {
-                Toast.makeText(getContext(), "Selecciona un alumno", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (alumnosIds.isEmpty()) {
-                Toast.makeText(getContext(), "No hay alumnos registrados", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            try {
-                String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition() - 1);
-                JSONObject calendario = new JSONObject();
-
-                String finalCalendarioId = calendarioId;
-                if (finalCalendarioId == null) {
-                    finalCalendarioId = "calendario_" + alumnoId;
-                }
-
-                calendario.put("id", finalCalendarioId);
-                calendario.put("alumnoId", alumnoId);
-                calendario.put("fechaAnteproyecto", fechas[0] != null ? fechas[0] : "");
-                calendario.put("fechaViabilidad", fechas[1] != null ? fechas[1] : "");
-                calendario.put("fechaModificacion", fechas[2] != null ? fechas[2] : "");
-                calendario.put("fechaViabilidadFinal", fechas[3] != null ? fechas[3] : "");
-                calendario.put("fechaInicioResidencia", fechas[4] != null ? fechas[4] : "");
-                calendario.put("fechaPrimerSeguimiento", fechas[5] != null ? fechas[5] : "");
-                calendario.put("fechaSegundoSeguimiento", fechas[6] != null ? fechas[6] : "");
-                calendario.put("fechaEntregaFinal", fechas[7] != null ? fechas[7] : "");
-                calendario.put("fechaCreacion", formatoFecha.format(new Date()));
-
-                boolean exito = fileManager.guardarCalendario(calendario);
-
-                if (exito) {
-                    cargarCalendarios();
-                    dialog.dismiss();
-                    String mensaje = (calendarioId == null) ? "Calendario agregado exitosamente" : "Calendario actualizado exitosamente";
-                    Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Error al guardar el calendario", Toast.LENGTH_SHORT).show();
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
-            } catch (IndexOutOfBoundsException e) {
-                e.printStackTrace();
-                Toast.makeText(getContext(), "Error: Selección inválida", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        dialogView.findViewById(R.id.btnCancelar).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnCerrar).setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 
-    private void borrarTodasLasFechas(String[] fechas, Button[] botones) {
-        // Limpiar el array de fechas
-        for (int i = 0; i < fechas.length; i++) {
-            fechas[i] = null;
-        }
-
-        // Resetear todos los botones a su estado original
-        for (Button boton : botones) {
-            boton.setText("Seleccionar");
-            boton.setBackgroundColor(0xFFE2E8F0); // Color gris original
-            boton.setTextColor(0xFF4299E1); // Color azul original
-        }
-    }
-
-    // ⬅️ MÉTODO ACTUALIZADO CON VALIDACIÓN DE DÍAS LABORALES
-    private void mostrarDatePicker(Button boton, String fechaMinima, String[] fechas, int indice, SimpleDateFormat formatoFecha) {
+    // ⬅️ MÉTODO ACTUALIZADO PARA ICONOS
+    private void mostrarDatePickerIndividualIcono(int indice, String[] fechasTemp, TextView[] textViews,
+                                                  ImageView[] iconosGuardar, SimpleDateFormat formatoFecha, String fechaMinima) {
         Calendar calendar = Calendar.getInstance();
 
         if (fechaMinima != null && !fechaMinima.isEmpty()) {
@@ -258,7 +279,7 @@ public class GestionCalendarioFragment extends Fragment {
                     Calendar selectedDate = Calendar.getInstance();
                     selectedDate.set(year, month, dayOfMonth);
 
-                    // ⬅️ VALIDAR QUE NO SEA FIN DE SEMANA
+                    // Validar que no sea fin de semana
                     if (esFindeSemana(selectedDate)) {
                         Toast.makeText(getContext(), "No se pueden seleccionar sábados ni domingos (días no laborales)", Toast.LENGTH_LONG).show();
                         return;
@@ -267,10 +288,14 @@ public class GestionCalendarioFragment extends Fragment {
                     // Validar que sea posterior a la fecha mínima
                     if (validarFecha(selectedDate.getTime(), fechaMinima, formatoFecha)) {
                         String fechaSeleccionada = formatoFecha.format(selectedDate.getTime());
-                        fechas[indice] = fechaSeleccionada;
-                        boton.setText(fechaSeleccionada);
-                        boton.setBackgroundColor(0xFF48BB78);
-                        boton.setTextColor(0xFFFFFFFF);
+                        fechasTemp[indice] = fechaSeleccionada;
+
+                        // ⬅️ ACTUALIZAR TextView Y HABILITAR ICONO GUARDAR
+                        textViews[indice].setText("Fecha: " + fechaSeleccionada);
+                        textViews[indice].setTextColor(0xFF1976D2);
+                        iconosGuardar[indice].setEnabled(true);
+                        iconosGuardar[indice].setAlpha(1.0f); // Opacidad completa
+                        iconosGuardar[indice].setColorFilter(0xFF1976D2); // Azul cuando está habilitado
                     } else {
                         Toast.makeText(getContext(), "La fecha debe ser posterior a la fecha anterior", Toast.LENGTH_SHORT).show();
                     }
@@ -297,16 +322,362 @@ public class GestionCalendarioFragment extends Fragment {
         datePickerDialog.show();
     }
 
+    // ⬅️ MÉTODO PARA GUARDAR CON ICONOS
+    private void guardarFechaIndividualIcono(Spinner spinnerAlumno, ArrayList<String> alumnosIds, String[] fechasTemp,
+                                             int indice, String nombreCampo, TextView textView, ImageView iconoGuardar,
+                                             SimpleDateFormat formatoFecha) {
+        try {
+            String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition() - 1);
+            String calendarioId = "calendario_" + alumnoId;
+
+            // Buscar o crear calendario
+            JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioId);
+            if (calendario == null) {
+                calendario = new JSONObject();
+                calendario.put("id", calendarioId);
+                calendario.put("alumnoId", alumnoId);
+                calendario.put("fechaCreacion", formatoFecha.format(new Date()));
+
+                // Inicializar todas las fechas vacías
+                String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                        "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                        "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+                for (String campo : campos) {
+                    calendario.put(campo, "");
+                }
+            }
+
+            // Actualizar solo el campo específico
+            calendario.put(nombreCampo, fechasTemp[indice]);
+
+            boolean exito = fileManager.guardarCalendario(calendario);
+
+            if (exito) {
+                // ⬅️ CAMBIAR A VERDE Y MOSTRAR CHECK
+                textView.setTextColor(0xFF2E7D32); // Verde cuando está guardado
+                iconoGuardar.setEnabled(false);
+                iconoGuardar.setColorFilter(0xFF4CAF50); // Verde
+                iconoGuardar.setImageResource(android.R.drawable.ic_menu_save); // Cambiar a check
+
+                // Restaurar después de 2 segundos
+                iconoGuardar.postDelayed(() -> {
+                    iconoGuardar.setImageResource(android.R.drawable.ic_menu_save);
+                    iconoGuardar.setColorFilter(0xFF4CAF50); // Mantener verde
+                }, 2000);
+
+                Toast.makeText(getContext(), "Fecha guardada exitosamente", Toast.LENGTH_SHORT).show();
+                cargarCalendarios(); // Actualizar la lista
+            } else {
+                Toast.makeText(getContext(), "Error al guardar la fecha", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (JSONException | IndexOutOfBoundsException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ⬅️ MÉTODO PARA CARGAR DATOS CON ICONOS
+    private void cargarDatosCalendarioExistenteIcono(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar) {
+        if (calendarioActualId == null) return;
+
+        JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioActualId);
+        if (calendario != null) {
+            String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                    "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                    "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+
+            for (int i = 0; i < campos.length; i++) {
+                String fecha = calendario.optString(campos[i], "");
+                if (!fecha.isEmpty()) {
+                    fechasTemp[i] = fecha;
+                    textViews[i].setText("Fecha: " + fecha);
+                    textViews[i].setTextColor(0xFF2E7D32); // Verde para fechas guardadas
+                    iconosGuardar[i].setEnabled(false);
+                    iconosGuardar[i].setColorFilter(0xFF4CAF50); // Verde
+                    iconosGuardar[i].setAlpha(1.0f);
+                }
+            }
+        }
+    }
+
+    // ⬅️ MÉTODO PARA BORRAR FECHAS CON ICONOS
+    private void borrarTodasLasFechasIndividualIcono(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar) {
+        if (calendarioActualId == null) return;
+
+        try {
+            JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioActualId);
+            if (calendario != null) {
+                // Limpiar todas las fechas en el calendario
+                String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                        "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                        "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+
+                for (String campo : campos) {
+                    calendario.put(campo, "");
+                }
+
+                fileManager.guardarCalendario(calendario);
+            }
+
+            // Limpiar arrays temporales y UI
+            for (int i = 0; i < fechasTemp.length; i++) {
+                fechasTemp[i] = null;
+                textViews[i].setText("Fecha: Sin asignar");
+                textViews[i].setTextColor(0xFF4299E1);
+                iconosGuardar[i].setEnabled(false);
+                iconosGuardar[i].setColorFilter(0xFF1976D2);
+                iconosGuardar[i].setAlpha(0.5f);
+            }
+
+            cargarCalendarios(); // Actualizar lista
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Método para cargar datos en modo edición con iconos
+    private void cargarDatosCalendarioParaEdicionIcono(String calendarioId, Spinner spinnerAlumno, ArrayList<String> alumnosIds,
+                                                       String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar) {
+        JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioId);
+        if (calendario != null) {
+            try {
+                String alumnoId = calendario.optString("alumnoId", "");
+                alumnoActualId = alumnoId;
+                calendarioActualId = calendarioId;
+
+                // Seleccionar alumno en spinner
+                for (int i = 0; i < alumnosIds.size(); i++) {
+                    if (alumnosIds.get(i).equals(alumnoId)) {
+                        spinnerAlumno.setSelection(i + 1);
+                        break;
+                    }
+                }
+
+                // Cargar fechas
+                cargarDatosCalendarioExistenteIcono(fechasTemp, textViews, iconosGuardar);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //DATEPICKER INDIVIDUAL
+    private void mostrarDatePickerIndividual(int indice, String[] fechasTemp, TextView[] textViews,
+                                             Button[] botonesGuardar, SimpleDateFormat formatoFecha, String fechaMinima) {
+        Calendar calendar = Calendar.getInstance();
+
+        if (fechaMinima != null && !fechaMinima.isEmpty()) {
+            try {
+                Date fechaMin = formatoFecha.parse(fechaMinima);
+                if (fechaMin != null) {
+                    Calendar calMin = Calendar.getInstance();
+                    calMin.setTime(fechaMin);
+                    calMin.add(Calendar.DAY_OF_MONTH, 1);
+                    calendar = calMin;
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selectedDate = Calendar.getInstance();
+                    selectedDate.set(year, month, dayOfMonth);
+
+                    // Validar que no sea fin de semana
+                    if (esFindeSemana(selectedDate)) {
+                        Toast.makeText(getContext(), "No se pueden seleccionar sábados ni domingos (días no laborales)", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Validar que sea posterior a la fecha mínima
+                    if (validarFecha(selectedDate.getTime(), fechaMinima, formatoFecha)) {
+                        String fechaSeleccionada = formatoFecha.format(selectedDate.getTime());
+                        fechasTemp[indice] = fechaSeleccionada;
+
+                        // Actualizar TextView y habilitar botón guardar
+                        textViews[indice].setText("Fecha: " + fechaSeleccionada);
+                        textViews[indice].setTextColor(0xFF1976D2);
+                        botonesGuardar[indice].setEnabled(true);
+                        botonesGuardar[indice].setBackgroundColor(0xFF1976D2);
+                    } else {
+                        Toast.makeText(getContext(), "La fecha debe ser posterior a la fecha anterior", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        if (fechaMinima != null && !fechaMinima.isEmpty()) {
+            try {
+                Date fechaMin = formatoFecha.parse(fechaMinima);
+                if (fechaMin != null) {
+                    Calendar calMin = Calendar.getInstance();
+                    calMin.setTime(fechaMin);
+                    calMin.add(Calendar.DAY_OF_MONTH, 1);
+                    datePickerDialog.getDatePicker().setMinDate(calMin.getTimeInMillis());
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        datePickerDialog.show();
+    }
+
+    //FECHA INDIVIDUAL
+    private void guardarFechaIndividual(Spinner spinnerAlumno, ArrayList<String> alumnosIds, String[] fechasTemp,
+                                        int indice, String nombreCampo, TextView textView, Button botonGuardar,
+                                        SimpleDateFormat formatoFecha) {
+        try {
+            String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition() - 1);
+            String calendarioId = "calendario_" + alumnoId;
+
+            // Buscar o crear calendario
+            JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioId);
+            if (calendario == null) {
+                calendario = new JSONObject();
+                calendario.put("id", calendarioId);
+                calendario.put("alumnoId", alumnoId);
+                calendario.put("fechaCreacion", formatoFecha.format(new Date()));
+
+                // Inicializar todas las fechas vacías
+                String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                        "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                        "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+                for (String campo : campos) {
+                    calendario.put(campo, "");
+                }
+            }
+
+            // Actualizar solo el campo específico
+            calendario.put(nombreCampo, fechasTemp[indice]);
+
+            boolean exito = fileManager.guardarCalendario(calendario);
+
+            if (exito) {
+                textView.setTextColor(0xFF2E7D32); // Verde cuando está guardado
+                botonGuardar.setEnabled(false);
+                botonGuardar.setBackgroundColor(0xFF4CAF50); // Verde
+                botonGuardar.setText("✓");
+
+                // Restaurar después de 2 segundos
+                botonGuardar.postDelayed(() -> {
+                    botonGuardar.setText("Guardar");
+                    botonGuardar.setBackgroundColor(0xFF1976D2);
+                }, 2000);
+
+                Toast.makeText(getContext(), "Fecha guardada exitosamente", Toast.LENGTH_SHORT).show();
+                cargarCalendarios(); // Actualizar la lista
+            } else {
+                Toast.makeText(getContext(), "Error al guardar la fecha", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (JSONException | IndexOutOfBoundsException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //CARGAR DATOS DE CALENDARIO EXISTENTE
+    private void cargarDatosCalendarioExistente(String[] fechasTemp, TextView[] textViews, Button[] botonesGuardar) {
+        if (calendarioActualId == null) return;
+
+        JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioActualId);
+        if (calendario != null) {
+            String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                    "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                    "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+
+            for (int i = 0; i < campos.length; i++) {
+                String fecha = calendario.optString(campos[i], "");
+                if (!fecha.isEmpty()) {
+                    fechasTemp[i] = fecha;
+                    textViews[i].setText("Fecha: " + fecha);
+                    textViews[i].setTextColor(0xFF2E7D32); // Verde para fechas guardadas
+                    botonesGuardar[i].setEnabled(false);
+                    botonesGuardar[i].setBackgroundColor(0xFF4CAF50);
+                }
+            }
+        }
+    }
+
+    //BORRAR TODAS LAS FECHAS INDIVIDUAL
+    private void borrarTodasLasFechasIndividual(String[] fechasTemp, TextView[] textViews, Button[] botonesGuardar) {
+        if (calendarioActualId == null) return;
+
+        try {
+            JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioActualId);
+            if (calendario != null) {// Limpiar todas las fechas en el calendario
+                String[] campos = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
+                        "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
+                        "fechaSegundoSeguimiento", "fechaEntregaFinal"};
+
+                for (String campo : campos) {
+                    calendario.put(campo, "");
+                }
+
+                fileManager.guardarCalendario(calendario);
+            }
+
+            // Limpiar arrays temporales y UI
+            for (int i = 0; i < fechasTemp.length; i++) {
+                fechasTemp[i] = null;
+                textViews[i].setText("Fecha: Sin asignar");
+                textViews[i].setTextColor(0xFF4299E1);
+                botonesGuardar[i].setEnabled(false);
+                botonesGuardar[i].setBackgroundColor(0xFF1976D2);
+                botonesGuardar[i].setText("Guardar");
+            }
+
+            cargarCalendarios(); // Actualizar lista
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Método para cargar datos en modo edición
+    private void cargarDatosCalendarioParaEdicion(String calendarioId, Spinner spinnerAlumno, ArrayList<String> alumnosIds,
+                                                  String[] fechasTemp, TextView[] textViews, Button[] botonesGuardar) {
+        JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioId);
+        if (calendario != null) {
+            try {
+                String alumnoId = calendario.optString("alumnoId", "");
+                alumnoActualId = alumnoId;
+                calendarioActualId = calendarioId;
+
+                // Seleccionar alumno en spinner
+                for (int i = 0; i < alumnosIds.size(); i++) {
+                    if (alumnosIds.get(i).equals(alumnoId)) {
+                        spinnerAlumno.setSelection(i + 1);
+                        break;
+                    }
+                }
+
+                // Cargar fechas
+                cargarDatosCalendarioExistente(fechasTemp, textViews, botonesGuardar);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     // VALIDAR DÍAS DE FIN DE SEMANA
     private boolean esFindeSemana(Calendar fecha) {
         int diaSemana = fecha.get(Calendar.DAY_OF_WEEK);
-        // Calendar.SATURDAY = 7, Calendar.SUNDAY = 1
         return diaSemana == Calendar.SATURDAY || diaSemana == Calendar.SUNDAY;
     }
 
     // VALIDAR FECHAS LABORALES
     private boolean validarFecha(Date fechaSeleccionada, String fechaMinima, SimpleDateFormat formatoFecha) {
-        // Primero validar que no sea fin de semana
         Calendar calFecha = Calendar.getInstance();
         calFecha.setTime(fechaSeleccionada);
 
@@ -314,7 +685,6 @@ public class GestionCalendarioFragment extends Fragment {
             return false;
         }
 
-        // Luego validar que sea posterior a la fecha mínima
         if (fechaMinima == null || fechaMinima.isEmpty()) {
             return true;
         }
@@ -325,60 +695,6 @@ public class GestionCalendarioFragment extends Fragment {
         } catch (ParseException e) {
             e.printStackTrace();
             return true;
-        }
-    }
-
-    // OBTENER EL SIGUIENTE DÍA LABORAL
-    private Calendar obtenerSiguienteDiaLaboral(Calendar fecha) {
-        Calendar siguienteDia = (Calendar) fecha.clone();
-
-        do {
-            siguienteDia.add(Calendar.DAY_OF_MONTH, 1);
-        } while (esFindeSemana(siguienteDia));
-
-        return siguienteDia;
-    }
-
-    private void cargarDatosCalendario(String calendarioId, Spinner spinnerAlumno, ArrayList<String> alumnosIds,
-                                       String[] fechas, Button... botones) {
-        JSONObject calendario = null;
-
-        List<JSONObject> calendarios = fileManager.cargarCalendarios();
-        for (JSONObject cal : calendarios) {
-            if (cal.optString("id", "").equals(calendarioId)) {
-                calendario = cal;
-                break;
-            }
-        }
-
-        if (calendario != null) {
-            try {
-                String alumnoId = calendario.optString("alumnoId", "");
-
-                for (int i = 0; i < alumnosIds.size(); i++) {
-                    if (alumnosIds.get(i).equals(alumnoId)) {
-                        spinnerAlumno.setSelection(i + 1);
-                        break;
-                    }
-                }
-
-                String[] camposFecha = {"fechaAnteproyecto", "fechaViabilidad", "fechaModificacion",
-                        "fechaViabilidadFinal", "fechaInicioResidencia", "fechaPrimerSeguimiento",
-                        "fechaSegundoSeguimiento", "fechaEntregaFinal"};
-
-                for (int i = 0; i < camposFecha.length && i < botones.length; i++) {
-                    String fecha = calendario.optString(camposFecha[i], "");
-                    if (!fecha.isEmpty()) {
-                        fechas[i] = fecha;
-                        botones[i].setText(fecha);
-                        botones[i].setBackgroundColor(0xFF48BB78);
-                        botones[i].setTextColor(0xFFFFFFFF);
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
 

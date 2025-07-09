@@ -451,5 +451,19 @@ public class FileManager {
     public int contarCalendarios() {
         return cargarCalendarios().size();
     }
-    
+    public JSONObject buscarCalendarioPorId(String calendarioId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+
+        for (JSONObject calendario : calendarios) {
+            try {
+                if (calendario.getString("id").equals(calendarioId)) {
+                    return calendario;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null; // No encontrado
+    }
 }
