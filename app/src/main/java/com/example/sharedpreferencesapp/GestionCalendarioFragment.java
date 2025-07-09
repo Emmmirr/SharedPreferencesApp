@@ -88,14 +88,12 @@ public class GestionCalendarioFragment extends Fragment {
         Button btnFechaSegundoSeguimiento = dialogView.findViewById(R.id.btnFechaSegundoSeguimiento);
         Button btnFechaEntregaFinal = dialogView.findViewById(R.id.btnFechaEntregaFinal);
 
-        // ⬅️ BOTÓN BORRAR FECHAS
         Button btnBorrarFechas = dialogView.findViewById(R.id.btnBorrarFechas);
 
         // Variables para fechas
         final String[] fechas = new String[8]; // Array para almacenar fechas
         SimpleDateFormat formatoFecha = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-        // ⬅️ ARRAY DE TODOS LOS BOTONES DE FECHA
         Button[] botonesFecha = {
                 btnFechaAnteproyecto, btnFechaViabilidad, btnFechaModificacion,
                 btnFechaViabilidadFinal, btnFechaInicioResidencia, btnFechaPrimerSeguimiento,
@@ -141,7 +139,7 @@ public class GestionCalendarioFragment extends Fragment {
         btnFechaSegundoSeguimiento.setOnClickListener(v -> mostrarDatePicker(btnFechaSegundoSeguimiento, fechas[5], fechas, 6, formatoFecha));
         btnFechaEntregaFinal.setOnClickListener(v -> mostrarDatePicker(btnFechaEntregaFinal, fechas[6], fechas, 7, formatoFecha));
 
-        // ⬅️ CONFIGURAR LISTENER PARA BORRAR FECHAS
+        // Configurar listener para borrar fechas
         btnBorrarFechas.setOnClickListener(v -> {
             new AlertDialog.Builder(getContext())
                     .setTitle("Borrar Fechas")
@@ -222,7 +220,6 @@ public class GestionCalendarioFragment extends Fragment {
         dialog.show();
     }
 
-    // ⬅️ NUEVO MÉTODO PARA BORRAR TODAS LAS FECHAS
     private void borrarTodasLasFechas(String[] fechas, Button[] botones) {
         // Limpiar el array de fechas
         for (int i = 0; i < fechas.length; i++) {
@@ -237,6 +234,7 @@ public class GestionCalendarioFragment extends Fragment {
         }
     }
 
+    // ⬅️ MÉTODO ACTUALIZADO CON VALIDACIÓN DE DÍAS LABORALES
     private void mostrarDatePicker(Button boton, String fechaMinima, String[] fechas, int indice, SimpleDateFormat formatoFecha) {
         Calendar calendar = Calendar.getInstance();
 
@@ -260,6 +258,13 @@ public class GestionCalendarioFragment extends Fragment {
                     Calendar selectedDate = Calendar.getInstance();
                     selectedDate.set(year, month, dayOfMonth);
 
+                    // ⬅️ VALIDAR QUE NO SEA FIN DE SEMANA
+                    if (esFindeSemana(selectedDate)) {
+                        Toast.makeText(getContext(), "No se pueden seleccionar sábados ni domingos (días no laborales)", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Validar que sea posterior a la fecha mínima
                     if (validarFecha(selectedDate.getTime(), fechaMinima, formatoFecha)) {
                         String fechaSeleccionada = formatoFecha.format(selectedDate.getTime());
                         fechas[indice] = fechaSeleccionada;
@@ -292,7 +297,24 @@ public class GestionCalendarioFragment extends Fragment {
         datePickerDialog.show();
     }
 
+    // VALIDAR DÍAS DE FIN DE SEMANA
+    private boolean esFindeSemana(Calendar fecha) {
+        int diaSemana = fecha.get(Calendar.DAY_OF_WEEK);
+        // Calendar.SATURDAY = 7, Calendar.SUNDAY = 1
+        return diaSemana == Calendar.SATURDAY || diaSemana == Calendar.SUNDAY;
+    }
+
+    // VALIDAR FECHAS LABORALES
     private boolean validarFecha(Date fechaSeleccionada, String fechaMinima, SimpleDateFormat formatoFecha) {
+        // Primero validar que no sea fin de semana
+        Calendar calFecha = Calendar.getInstance();
+        calFecha.setTime(fechaSeleccionada);
+
+        if (esFindeSemana(calFecha)) {
+            return false;
+        }
+
+        // Luego validar que sea posterior a la fecha mínima
         if (fechaMinima == null || fechaMinima.isEmpty()) {
             return true;
         }
@@ -304,6 +326,17 @@ public class GestionCalendarioFragment extends Fragment {
             e.printStackTrace();
             return true;
         }
+    }
+
+    // OBTENER EL SIGUIENTE DÍA LABORAL
+    private Calendar obtenerSiguienteDiaLaboral(Calendar fecha) {
+        Calendar siguienteDia = (Calendar) fecha.clone();
+
+        do {
+            siguienteDia.add(Calendar.DAY_OF_MONTH, 1);
+        } while (esFindeSemana(siguienteDia));
+
+        return siguienteDia;
     }
 
     private void cargarDatosCalendario(String calendarioId, Spinner spinnerAlumno, ArrayList<String> alumnosIds,
