@@ -45,6 +45,10 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.fragment)
 
+    implementation("com.google.firebase:firebase-firestore") // ✅ AÑADIDA: Para la base de datos
+    implementation("com.google.firebase:firebase-storage") // ✅ AÑADIDA: Para guardar los PDFs
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+
     implementation("com.google.firebase:firebase-auth:22.3.1")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")

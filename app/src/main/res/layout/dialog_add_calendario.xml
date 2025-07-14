@@ -58,6 +58,7 @@
                         android:textColor="#4299E1"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
 
                 <Spinner
@@ -79,7 +80,9 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
+
             </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
         <!-- Título de Cronograma -->
@@ -110,6 +113,7 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:textStyle="bold" />
+
         </LinearLayout>
 
         <!-- Card 1: Entrega Seguimiento -->
@@ -135,34 +139,43 @@
                     android:layout_marginEnd="16dp"
                     app:tint="#1976D2" />
 
-                <TextView
-                    android:id="@+id/tvLabelAnteproyecto"
+                <LinearLayout
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="1 Entrega evaluacion"
-                    android:textColor="#1A202C"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"/>
+                    android:orientation="vertical">
 
-                <!-- MODIFICADO: Nuevo TextView que funciona como botón de fecha -->
-                <TextView
-                    android:id="@+id/btnFechaAnteproyecto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Asignar"
-                    android:textColor="#4299E1"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:drawableStart="@android:drawable/ic_menu_my_calendar"
-                    android:drawablePadding="6dp"
-                    app:drawableTint="#1976D2"
-                    android:gravity="center_vertical"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="8dp"
-                    android:layout_marginEnd="8dp"/>
+                    <TextView
+                        android:id="@+id/tvLabelAnteproyecto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1 Entrega evaluacion"
+                        android:textColor="#1A202C"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaAnteproyecto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textColor="#4299E1"
+                        android:textSize="14sp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnCalendarioAnteproyecto"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_menu_my_calendar"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    app:tint="#1976D2" />
 
                 <ImageView
                     android:id="@+id/btnGuardarAnteproyecto"
@@ -174,7 +187,9 @@
                     app:tint="#1976D2"
                     android:enabled="false"
                     android:alpha="0.5" />
+
             </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
         <!-- Card 2: Entrega Evaluacion -->
@@ -200,34 +215,43 @@
                     android:layout_marginEnd="16dp"
                     app:tint="#1976D2" />
 
-                <TextView
-                    android:id="@+id/tvLabelViabilidad"
+                <LinearLayout
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="2 Entrega de Evaluacion"
-                    android:textColor="#1A202C"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"/>
+                    android:orientation="vertical">
 
-                <!-- MODIFICADO: Nuevo TextView que funciona como botón de fecha -->
-                <TextView
-                    android:id="@+id/btnFechaViabilidad"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Asignar"
-                    android:textColor="#4299E1"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:drawableStart="@android:drawable/ic_menu_my_calendar"
-                    android:drawablePadding="6dp"
-                    app:drawableTint="#1976D2"
-                    android:gravity="center_vertical"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="8dp"
-                    android:layout_marginEnd="8dp"/>
+                    <TextView
+                        android:id="@+id/tvLabelViabilidad"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2 Entrega de Evaluacion"
+                        android:textColor="#1A202C"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaViabilidad"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textColor="#4299E1"
+                        android:textSize="14sp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnCalendarioViabilidad"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_menu_my_calendar"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    app:tint="#1976D2" />
 
                 <ImageView
                     android:id="@+id/btnGuardarViabilidad"
@@ -239,7 +263,9 @@
                     app:tint="#1976D2"
                     android:enabled="false"
                     android:alpha="0.5" />
+
             </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
         <!-- Card 3: Entrega de Resultado -->
@@ -265,34 +291,43 @@
                     android:layout_marginEnd="16dp"
                     app:tint="#1976D2" />
 
-                <TextView
-                    android:id="@+id/tvLabelModificacion"
+                <LinearLayout
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="3 Entrega de Resultado"
-                    android:textColor="#1A202C"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"/>
+                    android:orientation="vertical">
 
-                <!-- MODIFICADO: Nuevo TextView que funciona como botón de fecha -->
-                <TextView
-                    android:id="@+id/btnFechaModificacion"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Asignar"
-                    android:textColor="#4299E1"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:drawableStart="@android:drawable/ic_menu_my_calendar"
-                    android:drawablePadding="6dp"
-                    app:drawableTint="#1976D2"
-                    android:gravity="center_vertical"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="8dp"
-                    android:layout_marginEnd="8dp"/>
+                    <TextView
+                        android:id="@+id/tvLabelModificacion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3 Entrega de Resultado"
+                        android:textColor="#1A202C"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaModificacion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textColor="#4299E1"
+                        android:textSize="14sp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnCalendarioModificacion"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_menu_my_calendar"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    app:tint="#1976D2" />
 
                 <ImageView
                     android:id="@+id/btnGuardarModificacion"
@@ -304,7 +339,9 @@
                     app:tint="#1976D2"
                     android:enabled="false"
                     android:alpha="0.5" />
+
             </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
         <!-- Botón Cerrar -->

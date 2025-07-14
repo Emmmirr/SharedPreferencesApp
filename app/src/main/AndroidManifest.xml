@@ -50,4 +50,13 @@
 
     </application>
 
+    <!-- ✅ AÑADIR ESTE BLOQUE COMPLETO -->
+    <queries>
+        <!-- Permite que la app descubra visores de PDF -->
+        <intent>
+            <action android:name="android.content.Intent.ACTION_VIEW" />
+            <data android:mimeType="application/pdf" />
+        </intent>
+    </queries>
+
 </manifest>
