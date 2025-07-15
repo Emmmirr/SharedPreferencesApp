@@ -10,8 +10,10 @@ import org.json.JSONObject;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FileManager {
     private static final String TAG = "FileManager";
@@ -465,5 +467,29 @@ public class FileManager {
         }
 
         return null; // No encontrado
+    }
+
+    private boolean guardarListaCompleta(String nombreArchivo, List<JSONObject> lista) {
+        JSONArray jsonArray = new JSONArray(lista);
+        try (OutputStreamWriter writer = new OutputStreamWriter(context.openFileOutput(nombreArchivo, Context.MODE_PRIVATE))) {
+            writer.write(jsonArray.toString());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean eliminarRegistroLocalCalendario(String calendarioId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        // removeIf devuelve true si la lista fue modificada
+        boolean modificado = calendarios.removeIf(cal -> Objects.equals(cal.optString("id"), calendarioId));
+
+        if (modificado) {
+            // Guardar la lista actualizada (sin el elemento eliminado)
+            return guardarListaCompleta(CALENDARIOS_FILE, calendarios);
+        }
+        // No se encontró nada que borrar o hubo un error
+        return false;
     }
 }

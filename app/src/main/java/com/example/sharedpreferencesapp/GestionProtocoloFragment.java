@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,22 +20,32 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class GestionProtocoloFragment extends Fragment {
 
+    private static final String TAG = "GestionProtocoloFrag";
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
-    private FileManager fileManager;
+
+    // MODIFICADO: Se reemplaza FileManager por FirebaseManager
+    private FirebaseManager firebaseManager;
+
     private JSONObject protocoloPendiente;
 
+    // ... (Launcher sin cambios)
     private final ActivityResultLauncher<Intent> selectorCarpeta = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -55,7 +66,8 @@ public class GestionProtocoloFragment extends Fragment {
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
         Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
 
-        fileManager = new FileManager(requireContext());
+        // AÑADIDO: Inicializar FirebaseManager
+        firebaseManager = new FirebaseManager();
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
         cargarProtocolos();
@@ -63,11 +75,40 @@ public class GestionProtocoloFragment extends Fragment {
         return view;
     }
 
+    // MODIFICADO: Carga asíncrona de alumnos ANTES de mostrar el diálogo
     private void mostrarDialog(String protocoloId) {
+        firebaseManager.cargarAlumnos(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                ArrayList<String> alumnosDisplay = new ArrayList<>();
+                ArrayList<String> alumnosIds = new ArrayList<>();
+
+                for (QueryDocumentSnapshot alumno : task.getResult()) {
+                    String nombre = alumno.getString("nombre");
+                    String numControl = alumno.getString("numControl");
+                    alumnosDisplay.add(nombre + " (" + numControl + ")");
+                    alumnosIds.add(alumno.getId());
+                }
+
+                if (alumnosDisplay.isEmpty()) {
+                    Toast.makeText(getContext(), "Debe registrar al menos un alumno primero.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Una vez cargados los alumnos, construimos y mostramos el diálogo
+                construirYMostrarDialogo(protocoloId, alumnosDisplay, alumnosIds);
+
+            } else {
+                Toast.makeText(getContext(), "Error al cargar la lista de alumnos.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void construirYMostrarDialogo(String protocoloId, ArrayList<String> alumnosDisplay, ArrayList<String> alumnosIds) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_protocolo, null);
         builder.setView(dialogView);
 
+        // ... (resto del código del diálogo sin cambios lógicos, solo adaptación a los datos)
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
         Spinner spinnerAlumno = dialogView.findViewById(R.id.spinnerAlumno);
         EditText etNombreProyecto = dialogView.findViewById(R.id.etNombreProyecto);
@@ -84,51 +125,27 @@ public class GestionProtocoloFragment extends Fragment {
         EditText etMision = dialogView.findViewById(R.id.etMision);
         EditText etTitular = dialogView.findViewById(R.id.etTitular);
         EditText etFirmante = dialogView.findViewById(R.id.etFirmante);
-
-        // Nuevos campos de puesto
         EditText etPuestoTitular = dialogView.findViewById(R.id.etPuestoTitular);
         EditText etAsesorExterno = dialogView.findViewById(R.id.etAsesorExterno);
         EditText etPuestoAsesor = dialogView.findViewById(R.id.etPuestoAsesor);
         EditText etPuestoFirmante = dialogView.findViewById(R.id.etPuestoFirmante);
 
-        // Configurar spinner alumnos
-        ArrayList<String> alumnos = new ArrayList<>();
-        ArrayList<String> alumnosIds = new ArrayList<>();
-        List<JSONObject> alumnosData = fileManager.cargarAlumnos();
-
-        for (JSONObject alumno : alumnosData) {
-            try {
-                String nombre = alumno.optString("nombre", "");
-                String numControl = alumno.optString("numControl", "");
-                String id = alumno.getString("id");
-                alumnos.add(nombre + " (" + numControl + ")");
-                alumnosIds.add(id);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (alumnos.isEmpty()) {
-            alumnos.add("No hay alumnos registrados");
-            alumnosIds.add("");
-        }
-
-        ArrayAdapter<String> alumnosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, alumnos);
+        ArrayAdapter<String> alumnosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, alumnosDisplay);
         spinnerAlumno.setAdapter(alumnosAdapter);
 
-        // Configurar spinner banco de proyectos
         String[] bancos = {"Interdisciplinario", "Integradores", "Educacion dual"};
         ArrayAdapter<String> bancosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, bancos);
         spinnerBanco.setAdapter(bancosAdapter);
 
-        // Configurar spinner giro
         String[] giros = {"Industrial", "Servicios", "Publico", "Privado", "Otro"};
         ArrayAdapter<String> girosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, giros);
         spinnerGiro.setAdapter(girosAdapter);
 
-        // Si es edición, cargar datos
+        AlertDialog dialog = builder.create();
+
         if (protocoloId != null) {
             tvTitulo.setText("Editar Protocolo");
+            // MODIFICADO: cargar datos desde Firebase
             cargarDatosProtocolo(protocoloId, spinnerAlumno, etNombreProyecto, spinnerBanco,
                     etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
                     etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
@@ -136,69 +153,17 @@ public class GestionProtocoloFragment extends Fragment {
                     etPuestoAsesor, etPuestoFirmante, alumnosIds, bancos, giros);
         }
 
-        AlertDialog dialog = builder.create();
-
         dialogView.findViewById(R.id.btnGuardar).setOnClickListener(v -> {
             String proyecto = etNombreProyecto.getText().toString();
             String empresa = etNombreEmpresa.getText().toString();
 
-            if (!proyecto.isEmpty() && !empresa.isEmpty() && spinnerAlumno.getSelectedItemPosition() != -1 && !alumnosIds.get(spinnerAlumno.getSelectedItemPosition()).isEmpty()) {
-
-                try {
-                    JSONObject protocolo = new JSONObject();
-
-                    String finalProtocoloId = protocoloId;
-                    if (finalProtocoloId == null) {
-                        finalProtocoloId = "protocolo_" + System.currentTimeMillis();
-                    }
-
-                    // ⬅️ GUARDAR TODOS LOS DATOS CONVERTIDOS A MAYÚSCULAS SIN ACENTOS
-                    String alumnoId = alumnosIds.get(spinnerAlumno.getSelectedItemPosition());
-                    protocolo.put("id", finalProtocoloId);
-                    protocolo.put("alumnoId", alumnoId);
-                    protocolo.put("nombreProyecto", convertirAMayusculasSinAcentos(proyecto));
-                    protocolo.put("banco", spinnerBanco.getSelectedItem().toString());
-                    protocolo.put("asesor", convertirAMayusculasSinAcentos(etAsesor.getText().toString()));
-                    protocolo.put("nombreEmpresa", convertirAMayusculasSinAcentos(empresa));
-                    protocolo.put("giro", spinnerGiro.getSelectedItem().toString());
-                    protocolo.put("rfc", etRFC.getText().toString().toUpperCase());
-                    protocolo.put("domicilio", convertirAMayusculasSinAcentos(etDomicilio.getText().toString()));
-                    protocolo.put("colonia", convertirAMayusculasSinAcentos(etColonia.getText().toString()));
-                    protocolo.put("codigoPostal", etCodigoPostal.getText().toString());
-                    protocolo.put("ciudad", convertirAMayusculasSinAcentos(etCiudad.getText().toString()));
-                    protocolo.put("celular", etCelular.getText().toString());
-                    protocolo.put("mision", convertirAMayusculasSinAcentos(etMision.getText().toString()));
-                    protocolo.put("titular", convertirAMayusculasSinAcentos(etTitular.getText().toString()));
-                    protocolo.put("firmante", convertirAMayusculasSinAcentos(etFirmante.getText().toString()));
-
-                    // Nuevos campos
-                    protocolo.put("puestoTitular", convertirAMayusculasSinAcentos(etPuestoTitular.getText().toString()));
-                    protocolo.put("asesorExterno", convertirAMayusculasSinAcentos(etAsesorExterno.getText().toString()));
-                    protocolo.put("puestoAsesor", convertirAMayusculasSinAcentos(etPuestoAsesor.getText().toString()));
-                    protocolo.put("puestoFirmante", convertirAMayusculasSinAcentos(etPuestoFirmante.getText().toString()));
-
-                    // Guardar en archivo
-                    boolean exito;
-                    if (fileManager.buscarProtocoloPorId(finalProtocoloId) != null) {
-                        exito = fileManager.actualizarProtocolo(finalProtocoloId, protocolo);
-                    } else {
-                        exito = fileManager.agregarProtocolo(protocolo);
-                    }
-
-                    if (exito) {
-                        cargarProtocolos();
-                        dialog.dismiss();
-                        String mensaje = (protocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
-                        Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show();
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getContext(), "Error al procesar los datos", Toast.LENGTH_SHORT).show();
-                }
-
+            if (!proyecto.isEmpty() && !empresa.isEmpty() && spinnerAlumno.getSelectedItemPosition() != -1) {
+                // MODIFICADO: Guardar protocolo en Firebase
+                guardarProtocolo(protocoloId, alumnosIds.get(spinnerAlumno.getSelectedItemPosition()), etNombreProyecto, spinnerBanco,
+                        etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
+                        etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
+                        etTitular, etFirmante, etPuestoTitular, etAsesorExterno,
+                        etPuestoAsesor, etPuestoFirmante, dialog);
             } else {
                 Toast.makeText(getContext(), "Complete los campos obligatorios", Toast.LENGTH_SHORT).show();
             }
@@ -208,6 +173,7 @@ public class GestionProtocoloFragment extends Fragment {
         dialog.show();
     }
 
+    // MODIFICADO: Carga de datos desde Firebase
     private void cargarDatosProtocolo(String protocoloId, Spinner spinnerAlumno, EditText etNombreProyecto,
                                       Spinner spinnerBanco, EditText etAsesor, EditText etNombreEmpresa,
                                       Spinner spinnerGiro, EditText etRFC, EditText etDomicilio,
@@ -217,77 +183,116 @@ public class GestionProtocoloFragment extends Fragment {
                                       EditText etPuestoAsesor, EditText etPuestoFirmante,
                                       ArrayList<String> alumnosIds, String[] bancos, String[] giros) {
 
-        JSONObject protocolo = fileManager.buscarProtocoloPorId(protocoloId);
-        if (protocolo != null) {
-            try {
-                String alumnoId = protocolo.optString("alumnoId", "");
-                for (int i = 0; i < alumnosIds.size(); i++) {
-                    if (alumnosIds.get(i).equals(alumnoId)) {
-                        spinnerAlumno.setSelection(i);
-                        break;
+        firebaseManager.buscarProtocoloPorId(protocoloId, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                DocumentSnapshot protocolo = task.getResult();
+                if (protocolo.exists()) {
+                    String alumnoId = protocolo.getString("alumnoId");
+                    int alumnoPos = alumnosIds.indexOf(alumnoId);
+                    if (alumnoPos != -1) spinnerAlumno.setSelection(alumnoPos);
+
+                    etNombreProyecto.setText(protocolo.getString("nombreProyecto"));
+                    String banco = protocolo.getString("banco");
+                    for (int i = 0; i < bancos.length; i++) {
+                        if (bancos[i].equals(banco)) {
+                            spinnerBanco.setSelection(i);
+                            break;
+                        }
                     }
-                }
-
-                etNombreProyecto.setText(protocolo.optString("nombreProyecto", ""));
-
-                String banco = protocolo.optString("banco", "");
-                for (int i = 0; i < bancos.length; i++) {
-                    if (bancos[i].equals(banco)) {
-                        spinnerBanco.setSelection(i);
-                        break;
+                    etAsesor.setText(protocolo.getString("asesor"));
+                    etNombreEmpresa.setText(protocolo.getString("nombreEmpresa"));
+                    String giro = protocolo.getString("giro");
+                    for (int i = 0; i < giros.length; i++) {
+                        if (giros[i].equals(giro)) {
+                            spinnerGiro.setSelection(i);
+                            break;
+                        }
                     }
+                    etRFC.setText(protocolo.getString("rfc"));
+                    etDomicilio.setText(protocolo.getString("domicilio"));
+                    etColonia.setText(protocolo.getString("colonia"));
+                    etCodigoPostal.setText(protocolo.getString("codigoPostal"));
+                    etCiudad.setText(protocolo.getString("ciudad"));
+                    etCelular.setText(protocolo.getString("celular"));
+                    etMision.setText(protocolo.getString("mision"));
+                    etTitular.setText(protocolo.getString("titular"));
+                    etFirmante.setText(protocolo.getString("firmante"));
+                    etPuestoTitular.setText(protocolo.getString("puestoTitular"));
+                    etAsesorExterno.setText(protocolo.getString("asesorExterno"));
+                    etPuestoAsesor.setText(protocolo.getString("puestoAsesor"));
+                    etPuestoFirmante.setText(protocolo.getString("puestoFirmante"));
                 }
-
-                etAsesor.setText(protocolo.optString("asesor", ""));
-                etNombreEmpresa.setText(protocolo.optString("nombreEmpresa", ""));
-
-                String giro = protocolo.optString("giro", "");
-                for (int i = 0; i < giros.length; i++) {
-                    if (giros[i].equals(giro)) {
-                        spinnerGiro.setSelection(i);
-                        break;
-                    }
-                }
-
-                etRFC.setText(protocolo.optString("rfc", ""));
-                etDomicilio.setText(protocolo.optString("domicilio", ""));
-                etColonia.setText(protocolo.optString("colonia", ""));
-                etCodigoPostal.setText(protocolo.optString("codigoPostal", ""));
-                etCiudad.setText(protocolo.optString("ciudad", ""));
-                etCelular.setText(protocolo.optString("celular", ""));
-                etMision.setText(protocolo.optString("mision", ""));
-                etTitular.setText(protocolo.optString("titular", ""));
-                etFirmante.setText(protocolo.optString("firmante", ""));
-
-                // Cargar nuevos campos
-                etPuestoTitular.setText(protocolo.optString("puestoTitular", ""));
-                etAsesorExterno.setText(protocolo.optString("asesorExterno", ""));
-                etPuestoAsesor.setText(protocolo.optString("puestoAsesor", ""));
-                etPuestoFirmante.setText(protocolo.optString("puestoFirmante", ""));
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
+        });
     }
 
+    // MODIFICADO: Guardar protocolo en Firebase
+    private void guardarProtocolo(String protocoloId, String alumnoId, EditText etNombreProyecto, Spinner spinnerBanco,
+                                  EditText etAsesor, EditText etNombreEmpresa, Spinner spinnerGiro, EditText etRFC,
+                                  EditText etDomicilio, EditText etColonia, EditText etCodigoPostal, EditText etCiudad,
+                                  EditText etCelular, EditText etMision, EditText etTitular, EditText etFirmante,
+                                  EditText etPuestoTitular, EditText etAsesorExterno, EditText etPuestoAsesor,
+                                  EditText etPuestoFirmante, AlertDialog dialog) {
+
+        Map<String, Object> protocolo = new HashMap<>();
+        protocolo.put("alumnoId", alumnoId);
+        protocolo.put("nombreProyecto", convertirAMayusculasSinAcentos(etNombreProyecto.getText().toString()));
+        protocolo.put("banco", spinnerBanco.getSelectedItem().toString());
+        protocolo.put("asesor", convertirAMayusculasSinAcentos(etAsesor.getText().toString()));
+        protocolo.put("nombreEmpresa", convertirAMayusculasSinAcentos(etNombreEmpresa.getText().toString()));
+        protocolo.put("giro", spinnerGiro.getSelectedItem().toString());
+        protocolo.put("rfc", etRFC.getText().toString().toUpperCase());
+        protocolo.put("domicilio", convertirAMayusculasSinAcentos(etDomicilio.getText().toString()));
+        protocolo.put("colonia", convertirAMayusculasSinAcentos(etColonia.getText().toString()));
+        protocolo.put("codigoPostal", etCodigoPostal.getText().toString());
+        protocolo.put("ciudad", convertirAMayusculasSinAcentos(etCiudad.getText().toString()));
+        protocolo.put("celular", etCelular.getText().toString());
+        protocolo.put("mision", convertirAMayusculasSinAcentos(etMision.getText().toString()));
+        protocolo.put("titular", convertirAMayusculasSinAcentos(etTitular.getText().toString()));
+        protocolo.put("firmante", convertirAMayusculasSinAcentos(etFirmante.getText().toString()));
+        protocolo.put("puestoTitular", convertirAMayusculasSinAcentos(etPuestoTitular.getText().toString()));
+        protocolo.put("asesorExterno", convertirAMayusculasSinAcentos(etAsesorExterno.getText().toString()));
+        protocolo.put("puestoAsesor", convertirAMayusculasSinAcentos(etPuestoAsesor.getText().toString()));
+        protocolo.put("puestoFirmante", convertirAMayusculasSinAcentos(etPuestoFirmante.getText().toString()));
+
+        String finalProtocoloId = protocoloId;
+        firebaseManager.guardarProtocolo(finalProtocoloId, protocolo,
+                () -> { // onSuccess
+                    dialog.dismiss();
+                    cargarProtocolos();
+                    String mensaje = (finalProtocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
+                    Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
+                },
+                e -> { // onFailure
+                    Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // MODIFICADO: Carga de protocolos desde Firebase
     private void cargarProtocolos() {
         layoutProtocolos.removeAllViews();
+        tvNoProtocolos.setVisibility(View.VISIBLE);
 
-        List<JSONObject> protocolos = fileManager.cargarProtocolos();
-
-        if (protocolos.isEmpty()) {
-            tvNoProtocolos.setVisibility(View.VISIBLE);
-        } else {
-            tvNoProtocolos.setVisibility(View.GONE);
-
-            for (JSONObject protocolo : protocolos) {
-                crearCardProtocolo(protocolo);
+        firebaseManager.cargarProtocolos(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                if (task.getResult().isEmpty()) {
+                    tvNoProtocolos.setVisibility(View.VISIBLE);
+                } else {
+                    tvNoProtocolos.setVisibility(View.GONE);
+                    for (QueryDocumentSnapshot documento : task.getResult()) {
+                        crearCardProtocolo(documento);
+                    }
+                }
+            } else {
+                tvNoProtocolos.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Error al cargar protocolos.", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error cargando protocolos", task.getException());
             }
-        }
+        });
     }
 
-    private void crearCardProtocolo(JSONObject protocolo) {
+    // MODIFICADO: Parámetro es DocumentSnapshot y la carga del alumno es asíncrona.
+    private void crearCardProtocolo(DocumentSnapshot protocolo) {
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_protocolo, layoutProtocolos, false);
 
         TextView tvNombreProyecto = cardView.findViewById(R.id.tvNombreProyecto);
@@ -300,58 +305,66 @@ public class GestionProtocoloFragment extends Fragment {
         Button btnEditar = cardView.findViewById(R.id.btnEditar);
         Button btnEliminar = cardView.findViewById(R.id.btnEliminar);
 
-        try {
-            String protocoloId = protocolo.getString("id");
-            String nombreProyecto = protocolo.optString("nombreProyecto", "");
-            String alumnoId = protocolo.optString("alumnoId", "");
-            String empresa = protocolo.optString("nombreEmpresa", "");
-            String banco = protocolo.optString("banco", "");
-            String asesor = protocolo.optString("asesor", "");
-            String ciudad = protocolo.optString("ciudad", "");
+        String protocoloId = protocolo.getId();
+        String alumnoId = protocolo.getString("alumnoId");
 
-            JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
-            String nombreAlumno = "Sin alumno";
-            String numControl = "";
+        tvNombreProyecto.setText(protocolo.getString("nombreProyecto"));
+        tvEmpresa.setText("Empresa: " + protocolo.getString("nombreEmpresa"));
+        tvBanco.setText("Banco: " + protocolo.getString("banco"));
+        tvAsesor.setText("Asesor: " + protocolo.getString("asesor"));
+        tvCiudad.setText("Ciudad: " + protocolo.getString("ciudad"));
 
-            if (alumno != null) {
-                nombreAlumno = alumno.optString("nombre", "Sin alumno");
-                numControl = alumno.optString("numControl", "");
-            }
-
-            tvNombreProyecto.setText(nombreProyecto);
-            tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
-            tvEmpresa.setText("Empresa: " + empresa);
-            tvBanco.setText("Banco: " + banco);
-            tvAsesor.setText("Asesor: " + asesor);
-            tvCiudad.setText("Ciudad: " + ciudad);
-
-            btnPDF.setOnClickListener(v -> seleccionarUbicacionPDF(protocolo));
-
-            btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
-
-            btnEliminar.setOnClickListener(v -> {
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Eliminar Protocolo")
-                        .setMessage("¿Eliminar este protocolo?")
-                        .setPositiveButton("Eliminar", (dialog, which) -> {
-                            boolean exito = fileManager.eliminarProtocolo(protocoloId);
-                            if (exito) {
-                                cargarProtocolos();
-                                Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .setNegativeButton("Cancelar", null)
-                        .show();
+        // Cargar datos del alumno de forma asíncrona
+        if (alumnoId != null && !alumnoId.isEmpty()) {
+            firebaseManager.buscarAlumnoPorId(alumnoId, task -> {
+                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                    DocumentSnapshot alumno = task.getResult();
+                    String nombreAlumno = alumno.getString("nombre");
+                    String numControl = alumno.getString("numControl");
+                    tvAlumno.setText("Alumno: " + nombreAlumno + " (" + numControl + ")");
+                } else {
+                    tvAlumno.setText("Alumno: No encontrado");
+                }
             });
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } else {
+            tvAlumno.setText("Alumno: No asignado");
         }
+
+        btnPDF.setOnClickListener(v -> {
+            // Convertir DocumentSnapshot a JSONObject para mantener compatibilidad con tu generador de PDF
+            JSONObject protocoloJson = new JSONObject(protocolo.getData());
+            try {
+                protocoloJson.put("id", protocolo.getId());
+                seleccionarUbicacionPDF(protocoloJson);
+            } catch (JSONException e) {
+                Toast.makeText(getContext(), "Error al preparar datos para PDF", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnEditar.setOnClickListener(v -> mostrarDialog(protocoloId));
+
+        btnEliminar.setOnClickListener(v -> {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Eliminar Protocolo")
+                    .setMessage("¿Eliminar este protocolo?")
+                    .setPositiveButton("Eliminar", (dialog, which) -> {
+                        firebaseManager.eliminarProtocolo(protocoloId,
+                                () -> { // onSuccess
+                                    cargarProtocolos();
+                                    Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
+                                },
+                                e -> { // onFailure
+                                    Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
 
         layoutProtocolos.addView(cardView);
     }
+
+    // --- Métodos sin cambios funcionales ---
 
     private void seleccionarUbicacionPDF(JSONObject protocolo) {
         protocoloPendiente = protocolo;
@@ -377,6 +390,7 @@ public class GestionProtocoloFragment extends Fragment {
 
         new Thread(() -> {
             try {
+                // Asumo que PDFGeneratorExterno no necesita cambios para esta tarea
                 PDFGeneratorExterno pdfGenerator = new PDFGeneratorExterno(requireContext());
                 boolean exito = pdfGenerator.generarPDFProtocoloEnUri(protocolo, uri);
 
@@ -403,16 +417,11 @@ public class GestionProtocoloFragment extends Fragment {
         }).start();
     }
 
-    // CONVIERTE A MAYÚSCULAS Y QUITA ACENTOS
     private String convertirAMayusculasSinAcentos(String texto) {
         if (texto == null || texto.isEmpty()) {
             return "";
         }
-
-        // Convertir a mayúsculas
         String textoMayus = texto.toUpperCase();
-
-        // Quitar acentos y caracteres especiales
         textoMayus = textoMayus.replace("Á", "A")
                 .replace("É", "E")
                 .replace("Í", "I")
@@ -425,7 +434,6 @@ public class GestionProtocoloFragment extends Fragment {
                 .replace("Ì", "I")
                 .replace("Ò", "O")
                 .replace("Ù", "U")
-                // Remover caracteres problemáticos
                 .replace("Ã¡", "A")
                 .replace("Ã©", "E")
                 .replace("Ã­", "I")
