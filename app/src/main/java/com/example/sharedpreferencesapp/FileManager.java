@@ -10,13 +10,16 @@ import org.json.JSONObject;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FileManager {
     private static final String TAG = "FileManager";
     private static final String ALUMNOS_FILE = "alumnos.json";
     private static final String PROTOCOLOS_FILE = "protocolos.json";
+    private static final String CALENDARIOS_FILE = "calendarios.json";
 
     private Context context;
 
@@ -144,6 +147,82 @@ public class FileManager {
         return null;
     }
 
+    // ==================== MÉTODOS PARA CALENDARIOS ====================
+
+    public List<JSONObject> cargarCalendarios() {
+        return cargarDatosDesdeMemoriaInterna(CALENDARIOS_FILE);
+    }
+
+    public boolean guardarCalendarios(List<JSONObject> calendarios) {
+        return guardarDatosEnMemoriaInterna(CALENDARIOS_FILE, calendarios);
+    }
+
+    public boolean guardarCalendario(JSONObject calendario) {
+        List<JSONObject> calendarios = cargarCalendarios();
+
+        // Buscar si ya existe un calendario para este alumno
+        String alumnoId = calendario.optString("alumnoId", "");
+        for (int i = 0; i < calendarios.size(); i++) {
+            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
+                calendarios.set(i, calendario); // Actualizar existente
+                return guardarCalendarios(calendarios);
+            }
+        }
+
+        // Si no existe, agregar nuevo
+        calendarios.add(calendario);
+        return guardarCalendarios(calendarios);
+    }
+
+    public JSONObject buscarCalendarioPorAlumnoId(String alumnoId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        for (JSONObject calendario : calendarios) {
+            if (calendario.optString("alumnoId", "").equals(alumnoId)) {
+                return calendario;
+            }
+        }
+        return null;
+    }
+
+    public JSONObject buscarCalendarioPorId(String calendarioId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        for (JSONObject calendario : calendarios) {
+            try {
+                if (calendario.getString("id").equals(calendarioId)) {
+                    return calendario;
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "Error buscando calendario", e);
+            }
+        }
+        return null;
+    }
+
+    public boolean eliminarCalendario(String alumnoId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        for (int i = 0; i < calendarios.size(); i++) {
+            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
+                calendarios.remove(i);
+                return guardarCalendarios(calendarios);
+            }
+        }
+        return false;
+    }
+
+    public boolean eliminarRegistroLocalCalendario(String calendarioId) {
+        List<JSONObject> calendarios = cargarCalendarios();
+        boolean modificado = calendarios.removeIf(cal -> Objects.equals(cal.optString("id"), calendarioId));
+
+        if (modificado) {
+            return guardarListaCompleta(CALENDARIOS_FILE, calendarios);
+        }
+        return false;
+    }
+
+    public int contarCalendarios() {
+        return cargarCalendarios().size();
+    }
+
     // ==================== MÉTODOS PRIVADOS DE MEMORIA INTERNA ====================
 
     private List<JSONObject> cargarDatosDesdeMemoriaInterna(String nombreArchivo) {
@@ -151,7 +230,6 @@ public class FileManager {
         FileInputStream fis = null;
 
         try {
-            // Usar openFileInput para leer desde memoria interna
             fis = context.openFileInput(nombreArchivo);
 
             StringBuilder contenido = new StringBuilder();
@@ -187,7 +265,6 @@ public class FileManager {
         return datos;
     }
 
-    // ⬅️ MÉTODO CORREGIDO - Solo captura IOException
     private boolean guardarDatosEnMemoriaInterna(String nombreArchivo, List<JSONObject> datos) {
         FileOutputStream fos = null;
 
@@ -197,7 +274,6 @@ public class FileManager {
                 jsonArray.put(dato);
             }
 
-            // Usar openFileOutput para escribir en memoria interna
             fos = context.openFileOutput(nombreArchivo, Context.MODE_PRIVATE);
             fos.write(jsonArray.toString().getBytes());
 
@@ -218,6 +294,17 @@ public class FileManager {
         }
     }
 
+    private boolean guardarListaCompleta(String nombreArchivo, List<JSONObject> lista) {
+        JSONArray jsonArray = new JSONArray(lista);
+        try (OutputStreamWriter writer = new OutputStreamWriter(context.openFileOutput(nombreArchivo, Context.MODE_PRIVATE))) {
+            writer.write(jsonArray.toString());
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error guardando lista completa", e);
+            return false;
+        }
+    }
+
     // ==================== MÉTODOS DE UTILIDAD ====================
 
     public boolean eliminarArchivo(String nombreArchivo) {
@@ -232,13 +319,15 @@ public class FileManager {
     public void limpiarTodosLosArchivos() {
         boolean alumnosEliminados = eliminarArchivo(ALUMNOS_FILE);
         boolean protocolosEliminados = eliminarArchivo(PROTOCOLOS_FILE);
+        boolean calendariosEliminados = eliminarArchivo(CALENDARIOS_FILE);
 
-        Log.d(TAG, "Limpieza de archivos - Alumnos: " + alumnosEliminados + ", Protocolos: " + protocolosEliminados);
+        Log.d(TAG, "Limpieza de archivos - Alumnos: " + alumnosEliminados +
+                ", Protocolos: " + protocolosEliminados +
+                ", Calendarios: " + calendariosEliminados);
     }
 
     public boolean validarIntegridadDatos() {
         try {
-            // Validar alumnos
             List<JSONObject> alumnos = cargarAlumnos();
             for (JSONObject alumno : alumnos) {
                 if (!alumno.has("id") || !alumno.has("nombre")) {
@@ -247,7 +336,6 @@ public class FileManager {
                 }
             }
 
-            // Validar protocolos
             List<JSONObject> protocolos = cargarProtocolos();
             for (JSONObject protocolo : protocolos) {
                 if (!protocolo.has("id") || !protocolo.has("nombreProyecto")) {
@@ -348,6 +436,7 @@ public class FileManager {
             }
         }
     }
+
     public String exportarProtocolosATexto() {
         List<JSONObject> protocolos = cargarProtocolos();
         if (protocolos.isEmpty()) {
@@ -396,74 +485,5 @@ public class FileManager {
                 }
             }
         }
-    }
-
-    // ==================== MÉTODOS PARA CALENDARIOS ====================
-
-    private static final String CALENDARIOS_FILE = "calendarios.json";
-
-    public List<JSONObject> cargarCalendarios() {
-        return cargarDatosDesdeMemoriaInterna(CALENDARIOS_FILE);
-    }
-
-    public boolean guardarCalendarios(List<JSONObject> calendarios) {
-        return guardarDatosEnMemoriaInterna(CALENDARIOS_FILE, calendarios);
-    }
-
-    public boolean guardarCalendario(JSONObject calendario) {
-        List<JSONObject> calendarios = cargarCalendarios();
-
-        // Buscar si ya existe un calendario para este alumno
-        String alumnoId = calendario.optString("alumnoId", "");
-        for (int i = 0; i < calendarios.size(); i++) {
-            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
-                calendarios.set(i, calendario); // Actualizar existente
-                return guardarCalendarios(calendarios);
-            }
-        }
-
-        // Si no existe, agregar nuevo
-        calendarios.add(calendario);
-        return guardarCalendarios(calendarios);
-    }
-
-    public JSONObject buscarCalendarioPorAlumnoId(String alumnoId) {
-        List<JSONObject> calendarios = cargarCalendarios();
-        for (JSONObject calendario : calendarios) {
-            if (calendario.optString("alumnoId", "").equals(alumnoId)) {
-                return calendario;
-            }
-        }
-        return null;
-    }
-
-    public boolean eliminarCalendario(String alumnoId) {
-        List<JSONObject> calendarios = cargarCalendarios();
-        for (int i = 0; i < calendarios.size(); i++) {
-            if (calendarios.get(i).optString("alumnoId", "").equals(alumnoId)) {
-                calendarios.remove(i);
-                return guardarCalendarios(calendarios);
-            }
-        }
-        return false;
-    }
-
-    public int contarCalendarios() {
-        return cargarCalendarios().size();
-    }
-    public JSONObject buscarCalendarioPorId(String calendarioId) {
-        List<JSONObject> calendarios = cargarCalendarios();
-
-        for (JSONObject calendario : calendarios) {
-            try {
-                if (calendario.getString("id").equals(calendarioId)) {
-                    return calendario;
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return null; // No encontrado
     }
 }

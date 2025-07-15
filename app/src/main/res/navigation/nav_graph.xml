@@ -8,26 +8,38 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.sharedpreferencesapp.HomeFragment"
+        android:label="Inicio"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/gestionAlumnoFragment"
         android:name="com.example.sharedpreferencesapp.GestionAlumnoFragment"
+        android:label="Gestión de Alumnos"
         tools:layout="@layout/fragment_gestion_alumno" />
 
     <fragment
         android:id="@+id/gestionProtocoloFragment"
         android:name="com.example.sharedpreferencesapp.GestionProtocoloFragment"
+        android:label="Gestión de Protocolos"
         tools:layout="@layout/fragment_gestion_protocolo" />
 
     <fragment
         android:id="@+id/gestionCalendarioFragment"
         android:name="com.example.sharedpreferencesapp.GestionCalendarioFragment"
+        android:label="Gestión de Calendarios"
         tools:layout="@layout/fragment_gestion_calendario" />
 
     <fragment
         android:id="@+id/seguimientoFragment"
         android:name="com.example.sharedpreferencesapp.SeguimientoFragment"
+        android:label="Seguimiento"
         tools:layout="@layout/fragment_seguimiento" />
+
+    <!-- ⬅️ AÑADIDO: Fragment de Perfil -->
+    <fragment
+        android:id="@+id/perfilFragment"
+        android:name="com.example.sharedpreferencesapp.PerfilFragment"
+        android:label="Mi Perfil"
+        tools:layout="@layout/fragment_perfil" />
 
 </navigation>

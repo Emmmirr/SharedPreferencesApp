@@ -18,4 +18,13 @@
 
     <!-- Agregar el color lavender que falta -->
     <color name="lavender">#E6E6FA</color>
+
+    <!-- Colores adicionales para el sistema -->
+    <color name="primary">#4299E1</color>
+    <color name="primary_dark">#2B6CB0</color>
+    <color name="accent">#4299E1</color>
+
+    <!-- Colores para estados activo/inactivo -->
+    <color name="bottom_nav_active">#4299E1</color>
+    <color name="bottom_nav_inactive">#9CA3AF</color>
 </resources>

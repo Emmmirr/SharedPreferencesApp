@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.sharedpreferencesapp"
-    compileSdk = 36
+    compileSdk = 35  // ⬅️ CAMBIADO: De 34 a 35
 
     defaultConfig {
         applicationId = "com.example.sharedpreferencesapp"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34  // ⬅️ MANTENER: targetSdk puede ser diferente
         versionCode = 1
         versionName = "1.0"
 
@@ -36,7 +36,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -45,16 +44,16 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.fragment)
 
-    implementation("com.google.firebase:firebase-firestore") // ✅ AÑADIDA: Para la base de datos
-    implementation("com.google.firebase:firebase-storage") // ✅ AÑADIDA: Para guardar los PDFs
+    // Firebase dependencies
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-auth")
 
-    implementation("com.google.firebase:firebase-auth:22.3.1")
+    // Otras dependencias
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
     implementation("com.itextpdf:itext7-core:7.2.5")
-    //implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.material:material:1.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

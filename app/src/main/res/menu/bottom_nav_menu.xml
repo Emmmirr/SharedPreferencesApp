@@ -1,31 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-
-    <item
-        android:id="@+id/gestionAlumnoFragment"
-        android:icon="@drawable/person"
-        android:title="GestionAlumno" />
-
-    <item
-        android:id="@+id/gestionProtocoloFragment"
-        android:icon="@drawable/folder"
-        android:title="GestionProtocolo" />
-
     <item
         android:id="@+id/homeFragment"
-        android:icon="@drawable/home"
+        android:icon="@android:drawable/ic_menu_view"
         android:title="Inicio" />
 
     <item
-        android:id="@+id/gestionCalendarioFragment"
-        android:icon="@drawable/calendar"
-        android:title="GestionCalendario" />
+        android:id="@+id/gestionAlumnoFragment"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Alumnos" />
 
     <item
-        android:id="@+id/seguimientoFragment"
-        android:icon="@drawable/checklist"
-        android:title="Seguimiento" />
+        android:id="@+id/gestionProtocoloFragment"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="Protocolos" />
 
+    <item
+        android:id="@+id/gestionCalendarioFragment"
+        android:icon="@android:drawable/ic_menu_my_calendar"
+        android:title="Calendarios" />
+
+    <item
+        android:id="@+id/perfilFragment"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Perfil" />
 
 </menu>
