@@ -32,14 +32,18 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Fragment para gestionar el perfil de usuario
  * Versión completa con información personal detallada y manejo de errores
  *
+ * Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-07-16 15:56:46
+ * Current User's Login: anthonyllan
+ *
  * @author anthonyllan
- * @version 3.0
- * @since 2025-07-15
+ * @version 3.1
+ * @since 2025-07-16
  */
 public class PerfilFragment extends Fragment {
 
@@ -75,9 +79,19 @@ public class PerfilFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /**
+     * Obtiene la fecha y hora actual en formato UTC (YYYY-MM-DD HH:MM:SS)
+     * Current User's Login: anthonyllan
+     */
+    private String getCurrentDateTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return sdf.format(new java.util.Date());
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView iniciado por usuario: anthonyllan");
+        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] onCreateView iniciado por usuario: anthonyllan");
 
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
@@ -89,9 +103,9 @@ public class PerfilFragment extends Fragment {
             profileManager = new ProfileManager(requireContext());
             cargarPerfilUsuario();
 
-            Log.d(TAG, "PerfilFragment inicializado correctamente");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] PerfilFragment inicializado correctamente para anthonyllan");
         } catch (Exception e) {
-            Log.e(TAG, "Error inicializando PerfilFragment", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error inicializando PerfilFragment", e);
             Toast.makeText(getContext(), "Error al cargar el perfil", Toast.LENGTH_SHORT).show();
         }
 
@@ -118,9 +132,9 @@ public class PerfilFragment extends Fragment {
             btnChangePhoto = view.findViewById(R.id.btnChangePhoto);
             btnChangePassword = view.findViewById(R.id.btnChangePassword);
 
-            Log.d(TAG, "Todas las vistas inicializadas correctamente");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Todas las vistas inicializadas correctamente para anthonyllan");
         } catch (Exception e) {
-            Log.e(TAG, "Error inicializando vistas", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error inicializando vistas", e);
         }
     }
 
@@ -137,9 +151,9 @@ public class PerfilFragment extends Fragment {
                         }
                     }
             );
-            Log.d(TAG, "Image picker configurado correctamente");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Image picker configurado correctamente");
         } catch (Exception e) {
-            Log.e(TAG, "Error configurando image picker", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error configurando image picker", e);
         }
     }
 
@@ -163,9 +177,9 @@ public class PerfilFragment extends Fragment {
                 btnChangePassword.setOnClickListener(v -> mostrarDialogCambiarPassword());
             }
 
-            Log.d(TAG, "Event listeners configurados correctamente");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Event listeners configurados correctamente");
         } catch (Exception e) {
-            Log.e(TAG, "Error configurando event listeners", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error configurando event listeners", e);
         }
     }
 
@@ -174,7 +188,7 @@ public class PerfilFragment extends Fragment {
             SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
             String loginMethod = prefs.getString("loginMethod", "normal");
 
-            Log.d(TAG, "Cargando perfil para método: " + loginMethod + " - Usuario: anthonyllan");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Cargando perfil para método: " + loginMethod + " - Usuario: anthonyllan");
 
             if ("google".equals(loginMethod)) {
                 // Usuario de Google - usar ProfileManager
@@ -182,10 +196,10 @@ public class PerfilFragment extends Fragment {
                         profile -> {
                             currentProfile = profile;
                             actualizarVistasPerfil(profile);
-                            Log.d(TAG, "Perfil de Google cargado exitosamente para: " + profile.getEmail());
+                            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Perfil de Google cargado exitosamente para: " + profile.getEmail());
                         },
                         error -> {
-                            Log.e(TAG, "Error cargando perfil de Google", error);
+                            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error cargando perfil de Google", error);
                             mostrarPerfilUsuarioNormal();
                         }
                 );
@@ -194,7 +208,7 @@ public class PerfilFragment extends Fragment {
                 mostrarPerfilUsuarioNormal();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error cargando perfil de usuario", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error cargando perfil de usuario", e);
             mostrarPerfilUsuarioNormal();
         }
     }
@@ -205,7 +219,7 @@ public class PerfilFragment extends Fragment {
             String email = prefs.getString("email", prefs.getString("username", "anthonyllan@ejemplo.com"));
             String username = prefs.getString("username", "anthonyllan");
 
-            Log.d(TAG, "Mostrando perfil de usuario normal: " + email);
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Mostrando perfil de usuario normal: " + email);
 
             // Crear un perfil temporal para usuarios normales
             UserProfile tempProfile = new UserProfile();
@@ -233,14 +247,14 @@ public class PerfilFragment extends Fragment {
             currentProfile = tempProfile;
             actualizarVistasPerfil(tempProfile);
         } catch (Exception e) {
-            Log.e(TAG, "Error mostrando perfil usuario normal", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error mostrando perfil usuario normal", e);
         }
     }
 
     private void actualizarVistasPerfil(UserProfile profile) {
         try {
             if (profile == null) {
-                Log.w(TAG, "Profile es null, no se puede actualizar");
+                Log.w(TAG, "[UTC " + getCurrentDateTime() + "] Profile es null, no se puede actualizar");
                 return;
             }
 
@@ -289,9 +303,9 @@ public class PerfilFragment extends Fragment {
             // Cargar imagen de perfil desde almacenamiento local
             cargarImagenPerfil();
 
-            Log.d(TAG, "Vistas de perfil actualizadas para: " + profile.getFullName());
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Vistas de perfil actualizadas para: " + profile.getFullName());
         } catch (Exception e) {
-            Log.e(TAG, "Error actualizando vistas del perfil", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error actualizando vistas del perfil", e);
         }
     }
 
@@ -304,12 +318,12 @@ public class PerfilFragment extends Fragment {
 
             if (bitmap != null && ivProfileImage != null) {
                 ivProfileImage.setImageBitmap(bitmap);
-                Log.d(TAG, "Imagen de perfil cargada desde almacenamiento local");
+                Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Imagen de perfil cargada desde almacenamiento local");
             } else {
                 setImagenPorDefecto();
             }
         } catch (Exception e) {
-            Log.d(TAG, "No se encontró imagen de perfil, usando imagen por defecto");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] No se encontró imagen de perfil, usando imagen por defecto");
             setImagenPorDefecto();
         }
     }
@@ -325,7 +339,7 @@ public class PerfilFragment extends Fragment {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error estableciendo imagen por defecto", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error estableciendo imagen por defecto", e);
         }
     }
 
@@ -334,9 +348,9 @@ public class PerfilFragment extends Fragment {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
             imagePickerLauncher.launch(Intent.createChooser(intent, "Seleccionar imagen de perfil"));
-            Log.d(TAG, "Selector de imagen abierto");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Selector de imagen abierto para anthonyllan");
         } catch (Exception e) {
-            Log.e(TAG, "Error abriendo selector de imagen", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error abriendo selector de imagen", e);
             Toast.makeText(getContext(), "Error al abrir selector de imagen", Toast.LENGTH_SHORT).show();
         }
     }
@@ -361,11 +375,11 @@ public class PerfilFragment extends Fragment {
                     }
 
                     Toast.makeText(getContext(), "Imagen de perfil actualizada", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Imagen de perfil guardada exitosamente");
+                    Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Imagen de perfil guardada exitosamente para anthonyllan");
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error cargando imagen seleccionada", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error cargando imagen seleccionada", e);
             Toast.makeText(getContext(), "Error al cargar la imagen", Toast.LENGTH_SHORT).show();
         }
     }
@@ -389,7 +403,7 @@ public class PerfilFragment extends Fragment {
 
             return Bitmap.createScaledBitmap(bitmap, finalWidth, finalHeight, true);
         } catch (Exception e) {
-            Log.e(TAG, "Error redimensionando bitmap", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error redimensionando bitmap", e);
             return bitmap; // Devolver original si hay error
         }
     }
@@ -399,9 +413,9 @@ public class PerfilFragment extends Fragment {
             FileOutputStream fos = requireContext().openFileOutput(PROFILE_IMAGE_FILE, android.content.Context.MODE_PRIVATE);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.close();
-            Log.d(TAG, "Imagen guardada en almacenamiento local");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Imagen guardada en almacenamiento local");
         } catch (Exception e) {
-            Log.e(TAG, "Error guardando imagen localmente", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error guardando imagen localmente", e);
         }
     }
 
@@ -409,6 +423,8 @@ public class PerfilFragment extends Fragment {
         try {
             SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
             String loginMethod = prefs.getString("loginMethod", "normal");
+
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Iniciando cambio de contraseña para anthonyllan");
 
             if ("google".equals(loginMethod)) {
                 new AlertDialog.Builder(getContext())
@@ -434,7 +450,10 @@ public class PerfilFragment extends Fragment {
             AlertDialog dialog = builder.create();
 
             if (btnCancel != null) {
-                btnCancel.setOnClickListener(v -> dialog.dismiss());
+                btnCancel.setOnClickListener(v -> {
+                    Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Cambio de contraseña cancelado por anthonyllan");
+                    dialog.dismiss();
+                });
             }
 
             if (btnSave != null) {
@@ -471,14 +490,14 @@ public class PerfilFragment extends Fragment {
 
                     Toast.makeText(getContext(), "Contraseña actualizada exitosamente", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
-                    Log.d(TAG, "Contraseña actualizada para usuario: anthonyllan");
+                    Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Contraseña actualizada para usuario: anthonyllan");
                 });
             }
 
             dialog.show();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error mostrando diálogo cambiar contraseña", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error mostrando diálogo cambiar contraseña", e);
             Toast.makeText(getContext(), "Error al abrir el cambio de contraseña", Toast.LENGTH_SHORT).show();
         }
     }
@@ -488,7 +507,7 @@ public class PerfilFragment extends Fragment {
             SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE);
             String loginMethod = prefs.getString("loginMethod", "normal");
 
-            Log.d(TAG, "Método de login detectado: " + loginMethod + " - Usuario: anthonyllan");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Método de login detectado: " + loginMethod + " - Usuario: anthonyllan");
 
             if ("normal".equals(loginMethod)) {
                 mostrarDialogEditarPerfilNormal();
@@ -497,7 +516,7 @@ public class PerfilFragment extends Fragment {
 
             // Para usuarios de Google
             if (currentProfile == null) {
-                Log.e(TAG, "currentProfile es null, fallback a perfil normal");
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] currentProfile es null, fallback a perfil normal");
                 mostrarDialogEditarPerfilNormal();
                 return;
             }
@@ -511,18 +530,20 @@ public class PerfilFragment extends Fragment {
                 setupDialogEditarPerfilGoogle(builder, dialogView);
 
             } catch (Exception e) {
-                Log.e(TAG, "Error cargando dialog_editar_perfil para Google, usando simple", e);
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error cargando dialog_editar_perfil para Google, usando simple", e);
                 mostrarDialogEditarPerfilNormal();
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "Error general en mostrarDialogEditarPerfil", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error general en mostrarDialogEditarPerfil", e);
             Toast.makeText(getContext(), "Error al abrir el editor de perfil", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setupDialogEditarPerfilGoogle(AlertDialog.Builder builder, View dialogView) {
         try {
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Configurando diálogo Google para anthonyllan");
+
             // Inicializar vistas del diálogo
             EditText etFirstName = dialogView.findViewById(R.id.etFirstName);
             EditText etLastName = dialogView.findViewById(R.id.etLastName);
@@ -598,7 +619,10 @@ public class PerfilFragment extends Fragment {
             AlertDialog dialog = builder.create();
 
             if (btnCancel != null) {
-                btnCancel.setOnClickListener(v -> dialog.dismiss());
+                btnCancel.setOnClickListener(v -> {
+                    Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Edición Google cancelada por anthonyllan");
+                    dialog.dismiss();
+                });
             }
 
             if (btnSave != null) {
@@ -626,10 +650,10 @@ public class PerfilFragment extends Fragment {
                                         Toast.LENGTH_SHORT).show();
                                 actualizarVistasPerfil(currentProfile);
                                 dialog.dismiss();
-                                Log.d(TAG, "Perfil Google actualizado para: anthonyllan");
+                                Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Perfil Google actualizado para: anthonyllan");
                             },
                             error -> {
-                                Log.e(TAG, "Error actualizando perfil", error);
+                                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error actualizando perfil", error);
                                 Toast.makeText(getContext(), "Error actualizando perfil: " + error.getMessage(),
                                         Toast.LENGTH_SHORT).show();
                             }
@@ -640,20 +664,20 @@ public class PerfilFragment extends Fragment {
             dialog.show();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error en setupDialogEditarPerfilGoogle", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error en setupDialogEditarPerfilGoogle", e);
             Toast.makeText(getContext(), "Error configurando el diálogo", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void mostrarDialogEditarPerfilNormal() {
         try {
-            Log.d(TAG, "Mostrando diálogo de edición para usuario normal: anthonyllan");
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Mostrando diálogo de edición para usuario normal: anthonyllan");
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
             View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_editar_perfil_simple, null);
 
             if (dialogView == null) {
-                Log.e(TAG, "dialogView es null, no se pudo inflar el layout");
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] dialogView es null, no se pudo inflar el layout");
                 Toast.makeText(getContext(), "Error cargando el formulario", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -671,21 +695,25 @@ public class PerfilFragment extends Fragment {
             // Verificar que todas las vistas fueron encontradas
             if (etDisplayName == null || etFirstName == null || etLastName == null ||
                     etDateOfBirth == null || btnCancel == null || btnSave == null) {
-                Log.e(TAG, "Error: No se pudieron encontrar todas las vistas en dialog_editar_perfil_simple");
-                Log.e(TAG, "etDisplayName: " + (etDisplayName != null));
-                Log.e(TAG, "etFirstName: " + (etFirstName != null));
-                Log.e(TAG, "etLastName: " + (etLastName != null));
-                Log.e(TAG, "etDateOfBirth: " + (etDateOfBirth != null));
-                Log.e(TAG, "btnCancel: " + (btnCancel != null));
-                Log.e(TAG, "btnSave: " + (btnSave != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error: No se pudieron encontrar todas las vistas en dialog_editar_perfil_simple");
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] etDisplayName: " + (etDisplayName != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] etFirstName: " + (etFirstName != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] etLastName: " + (etLastName != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] etDateOfBirth: " + (etDateOfBirth != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] btnCancel: " + (btnCancel != null));
+                Log.e(TAG, "[UTC " + getCurrentDateTime() + "] btnSave: " + (btnSave != null));
                 Toast.makeText(getContext(), "Error al cargar el formulario de edición", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Todas las vistas del formulario encontradas correctamente");
+
             // Cargar datos actuales de forma segura
             if (currentProfile != null) {
-                if (currentProfile.getDisplayName() != null) {
+                if (currentProfile.getDisplayName() != null && !currentProfile.getDisplayName().isEmpty()) {
                     etDisplayName.setText(currentProfile.getDisplayName());
+                } else {
+                    etDisplayName.setText("anthonyllan");
                 }
                 if (currentProfile.getFirstName() != null) {
                     etFirstName.setText(currentProfile.getFirstName());
@@ -696,6 +724,8 @@ public class PerfilFragment extends Fragment {
                 if (currentProfile.getDateOfBirth() != null) {
                     etDateOfBirth.setText(currentProfile.getDateOfBirth());
                 }
+            } else {
+                etDisplayName.setText("anthonyllan");
             }
 
             // Configurar DatePicker para fecha de nacimiento
@@ -704,43 +734,56 @@ public class PerfilFragment extends Fragment {
 
             AlertDialog dialog = builder.create();
 
-            btnCancel.setOnClickListener(v -> dialog.dismiss());
+            btnCancel.setOnClickListener(v -> {
+                Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Diálogo cancelado por anthonyllan");
+                dialog.dismiss();
+            });
 
             btnSave.setOnClickListener(v -> {
-                String newDisplayName = etDisplayName.getText().toString().trim();
-                String firstName = etFirstName.getText().toString().trim();
-                String lastName = etLastName.getText().toString().trim();
-                String birthDate = etDateOfBirth.getText().toString().trim();
+                try {
+                    String newDisplayName = etDisplayName.getText().toString().trim();
+                    String firstName = etFirstName.getText().toString().trim();
+                    String lastName = etLastName.getText().toString().trim();
+                    String birthDate = etDateOfBirth.getText().toString().trim();
 
-                if (!newDisplayName.isEmpty()) {
-                    // Guardar en SharedPreferences para usuarios normales
-                    SharedPreferences profilePrefs = requireActivity().getSharedPreferences("UserProfilePrefs", android.content.Context.MODE_PRIVATE);
-                    profilePrefs.edit()
-                            .putString("normal_user_display_name", newDisplayName)
-                            .putString("normal_user_first_name", firstName)
-                            .putString("normal_user_last_name", lastName)
-                            .putString("normal_user_birth_date", birthDate)
-                            .putString("normal_user_email", currentProfile.getEmail())
-                            .apply();
+                    Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Guardando perfil para anthonyllan: " + newDisplayName);
 
-                    currentProfile.setDisplayName(newDisplayName);
-                    currentProfile.setFirstName(firstName);
-                    currentProfile.setLastName(lastName);
-                    currentProfile.setDateOfBirth(birthDate);
-                    actualizarVistasPerfil(currentProfile);
+                    if (!newDisplayName.isEmpty()) {
+                        // Guardar en SharedPreferences para usuarios normales
+                        SharedPreferences profilePrefs = requireActivity().getSharedPreferences("UserProfilePrefs", android.content.Context.MODE_PRIVATE);
+                        profilePrefs.edit()
+                                .putString("normal_user_display_name", newDisplayName)
+                                .putString("normal_user_first_name", firstName)
+                                .putString("normal_user_last_name", lastName)
+                                .putString("normal_user_birth_date", birthDate)
+                                .putString("normal_user_email", currentProfile != null ? currentProfile.getEmail() : "anthonyllan@ejemplo.com")
+                                .apply();
 
-                    Toast.makeText(getContext(), "Perfil actualizado exitosamente", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                    Log.d(TAG, "Perfil normal actualizado para: anthonyllan");
-                } else {
-                    Toast.makeText(getContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
+                        if (currentProfile != null) {
+                            currentProfile.setDisplayName(newDisplayName);
+                            currentProfile.setFirstName(firstName);
+                            currentProfile.setLastName(lastName);
+                            currentProfile.setDateOfBirth(birthDate);
+                            actualizarVistasPerfil(currentProfile);
+                        }
+
+                        Toast.makeText(getContext(), "Perfil actualizado exitosamente", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Perfil normal actualizado para: anthonyllan");
+                    } else {
+                        Toast.makeText(getContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error guardando perfil", e);
+                    Toast.makeText(getContext(), "Error guardando los cambios", Toast.LENGTH_SHORT).show();
                 }
             });
 
             dialog.show();
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Diálogo mostrado exitosamente para anthonyllan");
 
         } catch (Exception e) {
-            Log.e(TAG, "Error en mostrarDialogEditarPerfilNormal", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error en mostrarDialogEditarPerfilNormal", e);
             Toast.makeText(getContext(), "Error al mostrar el editor de perfil", Toast.LENGTH_SHORT).show();
         }
     }
@@ -755,7 +798,7 @@ public class PerfilFragment extends Fragment {
                     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                     calendar.setTime(sdf.parse(currentDate));
                 } catch (Exception e) {
-                    Log.e(TAG, "Error parseando fecha actual", e);
+                    Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error parseando fecha actual", e);
                 }
             }
 
@@ -765,7 +808,7 @@ public class PerfilFragment extends Fragment {
                         selectedDate.set(year, month, dayOfMonth);
                         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                         editText.setText(sdf.format(selectedDate.getTime()));
-                        Log.d(TAG, "Fecha seleccionada: " + sdf.format(selectedDate.getTime()));
+                        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Fecha seleccionada por anthonyllan: " + sdf.format(selectedDate.getTime()));
                     },
                     calendar.get(Calendar.YEAR),
                     calendar.get(Calendar.MONTH),
@@ -781,13 +824,15 @@ public class PerfilFragment extends Fragment {
             datePickerDialog.show();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error mostrando date picker", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error mostrando date picker", e);
             Toast.makeText(getContext(), "Error al abrir selector de fecha", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void mostrarDialogCerrarSesion() {
         try {
+            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Mostrando diálogo cerrar sesión para anthonyllan");
+
             new AlertDialog.Builder(getContext())
                     .setTitle("Cerrar Sesión")
                     .setMessage("¿Estás seguro que quieres cerrar sesión?")
@@ -813,10 +858,10 @@ public class PerfilFragment extends Fragment {
                             try {
                                 requireContext().deleteFile(PROFILE_IMAGE_FILE);
                             } catch (Exception e) {
-                                Log.d(TAG, "No se pudo eliminar imagen de perfil (normal si no existía)");
+                                Log.d(TAG, "[UTC " + getCurrentDateTime() + "] No se pudo eliminar imagen de perfil (normal si no existía)");
                             }
 
-                            Log.d(TAG, "Sesión cerrada para método: " + loginMethod + " - Usuario: anthonyllan");
+                            Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Sesión cerrada para método: " + loginMethod + " - Usuario: anthonyllan");
 
                             // Redirigir al LoginActivity
                             Intent intent = new Intent(getActivity(), LoginActivity.class);
@@ -827,32 +872,34 @@ public class PerfilFragment extends Fragment {
                                 getActivity().finish();
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, "Error cerrando sesión", e);
+                            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error cerrando sesión", e);
                             Toast.makeText(getContext(), "Error al cerrar sesión", Toast.LENGTH_SHORT).show();
                         }
                     })
-                    .setNegativeButton("Cancelar", null)
+                    .setNegativeButton("Cancelar", (dialog, which) -> {
+                        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] Cerrar sesión cancelado por anthonyllan");
+                    })
                     .show();
         } catch (Exception e) {
-            Log.e(TAG, "Error mostrando diálogo cerrar sesión", e);
+            Log.e(TAG, "[UTC " + getCurrentDateTime() + "] Error mostrando diálogo cerrar sesión", e);
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "PerfilFragment resumed - Usuario activo: anthonyllan");
+        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] PerfilFragment resumed - Usuario activo: anthonyllan");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.d(TAG, "PerfilFragment paused");
+        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] PerfilFragment paused - Usuario: anthonyllan");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "PerfilFragment destroyed");
+        Log.d(TAG, "[UTC " + getCurrentDateTime() + "] PerfilFragment destroyed - Usuario: anthonyllan");
     }
 }
