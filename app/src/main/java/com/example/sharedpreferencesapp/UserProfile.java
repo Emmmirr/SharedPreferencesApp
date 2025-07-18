@@ -32,15 +32,13 @@ public class UserProfile {
     private String emergencyContactPhone = "";
 
     // --- Fotografía del Usuario ---
+    // Este es el campo que usaremos para guardar la URL de Firebase Storage. ¡Ya está listo!
     private String profileImageUrl = "";
 
     // --- Metadatos ---
     private String createdAt = "";
     private String updatedAt = "";
     private boolean isProfileComplete = false;
-
-    // Dejé fuera los campos de dirección y profesionales por brevedad,
-    // pero si los tienes en tu layout, deberías añadirlos aquí también.
 
     // Constructor vacío requerido por Firestore
     public UserProfile() {}
@@ -110,12 +108,8 @@ public class UserProfile {
 
     // --- MÉTODOS DE LÓGICA ---
 
-    /**
-     * MÉTODO AÑADIDO: Calcula el porcentaje de completitud del perfil.
-     * @return un entero entre 0 y 100.
-     */
     public int getProfileCompleteness() {
-        int totalFields = 8; // Ajusta este número según los campos que consideres importantes
+        int totalFields = 8;
         int filledFields = 0;
         if (fullName != null && !fullName.isEmpty()) filledFields++;
         if (dateOfBirth != null && !dateOfBirth.isEmpty()) filledFields++;

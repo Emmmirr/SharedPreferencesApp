@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -38,7 +40,6 @@ public class FirebaseManager {
 
     // --- MÉTODOS PARA PERFILES DE USUARIO ---
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void buscarPerfilUsuarioPorId(String userId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).get().addOnCompleteListener(onCompleteListener);
     }
@@ -66,12 +67,10 @@ public class FirebaseManager {
 
     // --- MÉTODOS PARA ALUMNOS (adaptados a sub-colecciones) ---
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void cargarAlumnos(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).get().addOnCompleteListener(onCompleteListener);
     }
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void buscarAlumnoPorId(String userId, String alumnoId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).document(alumnoId).get().addOnCompleteListener(onCompleteListener);
     }
@@ -98,12 +97,10 @@ public class FirebaseManager {
 
     // --- MÉTODOS PARA PROTOCOLOS (adaptados a sub-colecciones) ---
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void cargarProtocolos(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).get().addOnCompleteListener(onCompleteListener);
     }
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void buscarProtocoloPorId(String userId, String protocoloId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).document(protocoloId).get().addOnCompleteListener(onCompleteListener);
     }
@@ -130,12 +127,10 @@ public class FirebaseManager {
 
     // --- MÉTODOS PARA CALENDARIOS (adaptados a sub-colecciones) ---
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void cargarCalendarios(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).get().addOnCompleteListener(onCompleteListener);
     }
 
-    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
     public void buscarCalendarioPorId(String userId, String calendarioId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
         db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).document(calendarioId).get().addOnCompleteListener(onCompleteListener);
     }
@@ -155,30 +150,64 @@ public class FirebaseManager {
 
 
     // --- MÉTODOS DE STORAGE ---
-    // (Estos no necesitan cambios)
 
-    public void subirArchivo(String userId, Uri fileUri, String folderName, Consumer<String> onResult, Consumer<Exception> onFailure) {
-        // Crea una ruta única para el archivo para evitar sobreescrituras
-        String fileName = System.currentTimeMillis() + "_" + fileUri.getLastPathSegment();
-        String rutaStorage = "user_files/" + userId + "/" + folderName + "/" + fileName;
-        StorageReference fileRef = storage.getReference().child(rutaStorage);
+    public void subirPdfStorage(String userId, String calendarioId, String campoPdfKey, Uri fileUri, OnSuccessListener<String> onSuccess, OnFailureListener onFailure) {
+        if (userId == null || calendarioId == null || fileUri == null) {
+            onFailure.onFailure(new IllegalArgumentException("UserID, CalendarioID o la URI del archivo no pueden ser nulos."));
+            return;
+        }
 
-        fileRef.putFile(fileUri)
-                .addOnSuccessListener(taskSnapshot ->
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri ->
-                                onResult.accept(uri.toString())
-                        )
-                )
-                .addOnFailureListener(onFailure::accept);
+        String path = COLLECTION_USER_PROFILES + "/" + userId + "/" + SUBCOLLECTION_CALENDARIOS + "/" + calendarioId + "/" + campoPdfKey + ".pdf";
+        StorageReference storageRef = storage.getReference(path);
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> onSuccess.onSuccess(uri.toString()))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
     }
 
-    public void subirPdfYObtenerUrl(String userId, Uri fileUri, String nombreCarpeta, Consumer<String> onResult, Consumer<Exception> onFailure) {
-        String rutaStorage = userId + "/" + nombreCarpeta + "/" + System.currentTimeMillis() + "_" + fileUri.getLastPathSegment();
-        StorageReference fileRef = storage.getReference().child(rutaStorage);
-        fileRef.putFile(fileUri)
-                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    onResult.accept(uri.toString());
-                }))
-                .addOnFailureListener(onFailure::accept);
+    public void subirFotoPerfil(String userId, Uri fileUri, OnSuccessListener<String> onSuccess, OnFailureListener onFailure) {
+        if (userId == null || fileUri == null) {
+            onFailure.onFailure(new IllegalArgumentException("UserID o la URI del archivo no pueden ser nulos."));
+            return;
+        }
+
+
+// CÓMO DEBE QUEDAR
+        String path = COLLECTION_USER_PROFILES + "/" + userId + "/foto_perfil/profile_picture.jpg";
+        StorageReference storageRef = storage.getReference(path);
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> onSuccess.onSuccess(uri.toString()))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+
+
+    }
+
+    public void subirCredencial(String userId, Uri fileUri, OnSuccessListener<String> onSuccess, OnFailureListener onFailure) {
+        if (userId == null || fileUri == null) {
+            onFailure.onFailure(new IllegalArgumentException("UserID o la URI del archivo no pueden ser nulos."));
+            return;
+        }
+
+        // Ruta predecible para la credencial.
+        // Ejemplo: user_profiles/{userId}/credential/credential_scan.jpg
+        String path = COLLECTION_USER_PROFILES + "/" + userId + "/credencial/credential_scan.jpg";
+        StorageReference storageRef = storage.getReference(path);
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> onSuccess.onSuccess(uri.toString()))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
     }
 }

@@ -46,7 +46,7 @@
                     android:textColor="#4299E1"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Nombre Completo -->
+                <!-- ... (Campos de Nombre, Fecha de Nacimiento, Género, CURP sin cambios) ... -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -61,7 +61,6 @@
                         android:inputType="textPersonName|textCapWords" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Fecha de Nacimiento -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -78,7 +77,6 @@
                         android:clickable="true" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Género -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -91,7 +89,6 @@
                     android:layout_height="48dp"
                     android:layout_marginBottom="12dp"/>
 
-                <!-- CURP -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -107,15 +104,38 @@
                         android:maxLength="18" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Botón Subir INE -->
-                <Button
-                    android:id="@+id/btnUploadIne"
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Subir Credencial de Elector"
-                    android:layout_marginBottom="12dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
 
-                <!-- Carrera -->
+                    <!-- Botón para Subir/Reemplazar Credencial -->
+                    <Button
+                        android:id="@+id/btnUploadIne"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Subir Credencial de Elector" />
+
+                    <!-- Botón para Ver Credencial (Inicialmente invisible) -->
+                    <ImageButton
+                        android:id="@+id/btnViewIne"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@android:drawable/ic_menu_view"
+                        android:contentDescription="Ver credencial"
+                        app:tint="#4299E1"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:layout_marginStart="8dp"
+                        android:visibility="gone" />  <!-- Importante: Empieza oculto -->
+
+                </LinearLayout>
+
+
+                <!-- ... (Campos de Carrera y Número de Control sin cambios) ... -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -128,7 +148,6 @@
                     android:layout_height="48dp"
                     android:layout_marginBottom="12dp"/>
 
-                <!-- Número de Control -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -145,7 +164,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Card de Información Médica y de Contacto -->
+        <!-- ... (Card de Información Médica y de Contacto sin cambios) ... -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -233,7 +252,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Botones de acción -->
+        <!-- ... (Botones de Cancelar y Guardar sin cambios) ... -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -6,8 +6,6 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -50,10 +49,7 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -63,25 +59,21 @@ import java.util.Locale;
 public class PerfilFragment extends Fragment {
 
     private static final String TAG = "PerfilFragment";
-    private static final String PROFILE_IMAGE_PREFIX = "profile_image_";
     private static final String KEY_CAMERA_URI = "key_camera_uri";
 
-    // Vistas
+    // Vistas y otros...
     private ImageView ivProfileImage;
     private TextView tvDisplayName, tvEmail, tvAuthMethod, tvProfileCompleteness;
     private TextView tvFullName, tvBirthDateAndAge, tvAccount, tvPasswordStatus;
     private Button btnEditProfile, btnLogout, btnChangePhoto, btnChangePassword, btnExportPdf;
     private ProgressBar progressCompleteness;
-
-    // Managers y estado
     private ProfileManager profileManager;
+    private FirebaseManager firebaseManager;
     private UserProfile currentProfile;
     private Uri cameraImageUri;
-
-    // Launchers
     private ActivityResultLauncher<Uri> cameraLauncher;
     private ActivityResultLauncher<String> galleryLauncher;
-    private ActivityResultLauncher<String> inePickerLauncher;
+    private ActivityResultLauncher<String[]> inePickerLauncher;
     private ActivityResultLauncher<Intent> pdfSaveLauncher;
 
     public PerfilFragment() {}
@@ -103,6 +95,7 @@ public class PerfilFragment extends Fragment {
         }
 
         initializeViews(view);
+        firebaseManager = new FirebaseManager();
         setupLaunchers();
         setupEventListeners();
 
@@ -135,7 +128,7 @@ public class PerfilFragment extends Fragment {
                 new ActivityResultContracts.TakePicture(),
                 isSuccess -> {
                     if (isSuccess && cameraImageUri != null) {
-                        copiarUriAAlmacenamientoInterno(cameraImageUri);
+                        subirYActualizarFotoDePerfil(cameraImageUri);
                     }
                 }
         );
@@ -144,16 +137,30 @@ public class PerfilFragment extends Fragment {
                 new ActivityResultContracts.GetContent(),
                 uri -> {
                     if (uri != null) {
-                        copiarUriAAlmacenamientoInterno(uri);
+                        try {
+                            final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                            requireContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                            subirYActualizarFotoDePerfil(uri);
+                        } catch (SecurityException e) {
+                            Log.e(TAG, "Error de permisos al seleccionar imagen de la galería.", e);
+                            Toast.makeText(getContext(), "No se pudo obtener permiso para leer la imagen.", Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
         );
 
         inePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
+                new ActivityResultContracts.OpenDocument(),
                 uri -> {
                     if (uri != null) {
-                        Toast.makeText(getContext(), "Subiendo credencial...", Toast.LENGTH_SHORT).show();
+                        try {
+                            final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                            requireContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                            subirYActualizarCredencial(uri);
+                        } catch (SecurityException e) {
+                            Log.e(TAG, "Error de permisos para la credencial", e);
+                            Toast.makeText(getContext(), "No se pudo obtener permiso para leer el archivo.", Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
         );
@@ -216,7 +223,62 @@ public class PerfilFragment extends Fragment {
         tvProfileCompleteness.setText("Perfil completado: " + completeness + "%");
         progressCompleteness.setProgress(completeness);
 
-        cargarImagenPerfilLocal();
+        cargarImagenPerfilDesdeUrl(profile);
+    }
+
+    private void subirYActualizarFotoDePerfil(Uri imageUri) {
+        if (currentProfile == null || firebaseManager == null) return;
+        Toast.makeText(getContext(), "Actualizando foto...", Toast.LENGTH_SHORT).show();
+        firebaseManager.subirFotoPerfil(
+                currentProfile.getUserId(),
+                imageUri,
+                downloadUrl -> {
+                    currentProfile.setProfileImageUrl(downloadUrl);
+                    profileManager.actualizarPerfilActual(currentProfile,
+                            () -> {
+                                Toast.makeText(getContext(), "Foto de perfil actualizada.", Toast.LENGTH_SHORT).show();
+                                if(getContext() != null) {
+                                    Picasso.get().load(downloadUrl).placeholder(R.drawable.user).into(ivProfileImage);
+                                }
+                            },
+                            error -> Toast.makeText(getContext(), "Error al guardar la URL de la foto.", Toast.LENGTH_SHORT).show()
+                    );
+                },
+                e -> {
+                    Toast.makeText(getContext(), "Error al subir la foto: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error al subir foto de perfil a Storage", e);
+                }
+        );
+    }
+
+    private void subirYActualizarCredencial(Uri fileUri) {
+        if (currentProfile == null || firebaseManager == null) return;
+        Toast.makeText(getContext(), "Subiendo credencial...", Toast.LENGTH_SHORT).show();
+        firebaseManager.subirCredencial(currentProfile.getUserId(), fileUri,
+                downloadUrl -> {
+                    currentProfile.setIneScanUrl(downloadUrl);
+                    Toast.makeText(getContext(), "Credencial lista. Pulse GUARDAR para confirmar.", Toast.LENGTH_LONG).show();
+                },
+                e -> {
+                    Toast.makeText(getContext(), "Error al subir la credencial: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error al subir credencial a Storage", e);
+                }
+        );
+    }
+
+
+    private void cargarImagenPerfilDesdeUrl(UserProfile profile) {
+        if (getContext() == null || profile == null) return;
+        String photoUrl = profile.getProfileImageUrl();
+        if (photoUrl != null && !photoUrl.isEmpty()) {
+            Picasso.get()
+                    .load(photoUrl)
+                    .placeholder(R.drawable.user)
+                    .error(R.drawable.user)
+                    .into(ivProfileImage);
+        } else {
+            ivProfileImage.setImageResource(R.drawable.user);
+        }
     }
 
     private void mostrarDialogElegirFoto() {
@@ -253,47 +315,6 @@ public class PerfilFragment extends Fragment {
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
-    private void copiarUriAAlmacenamientoInterno(Uri sourceUri) {
-        if (getContext() == null || currentProfile == null) return;
-        String fileName = getProfileImageFilename();
-        try (InputStream inputStream = getContext().getContentResolver().openInputStream(sourceUri);
-             FileOutputStream fos = getContext().openFileOutput(fileName, Context.MODE_PRIVATE)) {
-            if (inputStream == null) return;
-            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-            Bitmap resizedBitmap = redimensionarBitmap(bitmap, 400, 400);
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            ivProfileImage.setImageBitmap(resizedBitmap);
-            Toast.makeText(getContext(), "Foto de perfil actualizada.", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error al copiar la imagen", e);
-            Toast.makeText(getContext(), "No se pudo guardar la imagen.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void cargarImagenPerfilLocal() {
-        if (getContext() == null || currentProfile == null) return;
-        String fileName = getProfileImageFilename();
-        try {
-            File profileImageFile = new File(getContext().getFilesDir(), fileName);
-            if (profileImageFile.exists()) {
-                Bitmap bitmap = BitmapFactory.decodeFile(profileImageFile.getAbsolutePath());
-                ivProfileImage.setImageBitmap(bitmap);
-            } else {
-                ivProfileImage.setImageResource(R.drawable.user);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error al cargar imagen local", e);
-            ivProfileImage.setImageResource(R.drawable.user);
-        }
-    }
-
-    private String getProfileImageFilename() {
-        if (currentProfile == null || currentProfile.getUserId().isEmpty()) {
-            return PROFILE_IMAGE_PREFIX + "default.jpg";
-        }
-        return PROFILE_IMAGE_PREFIX + currentProfile.getUserId() + ".jpg";
-    }
-
     private void exportarPerfilAPDF() {
         if (currentProfile == null) {
             Toast.makeText(getContext(), "No hay datos de perfil para exportar.", Toast.LENGTH_SHORT).show();
@@ -313,9 +334,7 @@ public class PerfilFragment extends Fragment {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf, PageSize.A4);
             document.setMargins(36, 36, 36, 36);
-
             crearContenidoPdf(document, currentProfile);
-
             document.close();
             Toast.makeText(getContext(), "PDF guardado exitosamente.", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -324,43 +343,31 @@ public class PerfilFragment extends Fragment {
         }
     }
 
-    // --- MÉTODO DE PDF ESTILIZADO ---
     private void crearContenidoPdf(Document document, UserProfile profile) throws IOException {
-        // Definir fuentes y colores
         PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
         PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-        Color headerColor = new DeviceRgb(66, 153, 225); // Un azul similar al de tu app
+        Color headerColor = new DeviceRgb(66, 153, 225);
 
-        // Título Principal
         document.add(new Paragraph("Perfil de Usuario")
                 .setFont(boldFont).setFontSize(22).setFontColor(headerColor)
                 .setTextAlignment(TextAlignment.CENTER).setMarginBottom(20));
-
-        // Separador
         document.add(new LineSeparator(new SolidLine(1f)).setMarginBottom(15));
-
-        // --- SECCIONES ---
         document.add(createSectionHeader("Información Personal", boldFont));
         document.add(createProfileEntry("Nombre Completo:", profile.getFullName(), regularFont));
         document.add(createProfileEntry("Fecha de Nacimiento:", profile.getDateOfBirth(), regularFont));
         document.add(createProfileEntry("Edad:", profile.getAge() > 0 ? profile.getAge() + " años" : "No especificada", regularFont));
         document.add(createProfileEntry("Género:", profile.getGender(), regularFont));
         document.add(createProfileEntry("CURP:", profile.getCurp(), regularFont));
-
         document.add(createSectionHeader("Información Académica", boldFont));
         document.add(createProfileEntry("Carrera:", profile.getCareer(), regularFont));
         document.add(createProfileEntry("Número de Control:", profile.getControlNumber(), regularFont));
-
         document.add(createSectionHeader("Datos de Contacto", boldFont));
         document.add(createProfileEntry("Email:", profile.getEmail(), regularFont));
         document.add(createProfileEntry("Teléfono:", profile.getPhoneNumber(), regularFont));
         document.add(createProfileEntry("Contacto de Emergencia:", profile.getEmergencyContactName() + " - " + profile.getEmergencyContactPhone(), regularFont));
-
         document.add(createSectionHeader("Condiciones Médicas", boldFont));
         document.add(new Paragraph(profile.getMedicalConditions().isEmpty() ? "Ninguna especificada." : profile.getMedicalConditions())
                 .setFont(regularFont).setFontSize(11).setMarginBottom(5));
-
-        // Pie de página
         String dateTime = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
         document.add(new Paragraph("Generado el: " + dateTime)
                 .setFont(regularFont).setFontSize(8)
@@ -386,16 +393,18 @@ public class PerfilFragment extends Fragment {
     }
 
     private void mostrarDialogEditarPerfil() {
-        if (currentProfile == null) return;
+        if (currentProfile == null || getContext() == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_editar_perfil, null);
         builder.setView(dialogView);
 
+        // --- Obtener referencias a todas las vistas ---
         EditText etFullName = dialogView.findViewById(R.id.etFullName);
         EditText etDateOfBirth = dialogView.findViewById(R.id.etDateOfBirth);
         Spinner spinnerGender = dialogView.findViewById(R.id.spinnerGender);
         EditText etCurp = dialogView.findViewById(R.id.etCurp);
         Button btnUploadIne = dialogView.findViewById(R.id.btnUploadIne);
+        ImageButton btnViewIne = dialogView.findViewById(R.id.btnViewIne);
         Spinner spinnerCareer = dialogView.findViewById(R.id.spinnerCareer);
         EditText etControlNumber = dialogView.findViewById(R.id.etControlNumber);
         EditText etMedicalConditions = dialogView.findViewById(R.id.etMedicalConditions);
@@ -405,6 +414,21 @@ public class PerfilFragment extends Fragment {
         Button btnSave = dialogView.findViewById(R.id.btnSave);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
+        // --- Lógica de la sección de Credencial ---
+        String ineUrl = currentProfile.getIneScanUrl();
+        if (ineUrl != null && !ineUrl.isEmpty()) {
+            btnUploadIne.setText("Reemplazar Credencial");
+            btnViewIne.setVisibility(View.VISIBLE);
+            btnViewIne.setOnClickListener(v -> verDocumentoUrl(ineUrl));
+        } else {
+            btnUploadIne.setText("Subir Credencial");
+            btnViewIne.setVisibility(View.GONE);
+        }
+        btnUploadIne.setOnClickListener(v -> {
+            inePickerLauncher.launch(new String[]{"image/*", "application/pdf"});
+        });
+
+        // --- Llenar el resto del formulario ---
         String[] genders = {"", "Masculino", "Femenino", "Otro"};
         ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, genders);
         spinnerGender.setAdapter(genderAdapter);
@@ -425,7 +449,6 @@ public class PerfilFragment extends Fragment {
 
         etDateOfBirth.setOnClickListener(v -> mostrarDatePicker(etDateOfBirth));
         etDateOfBirth.setFocusable(false);
-        btnUploadIne.setOnClickListener(v -> inePickerLauncher.launch("image/*"));
 
         AlertDialog dialog = builder.create();
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -457,6 +480,25 @@ public class PerfilFragment extends Fragment {
             );
         });
         dialog.show();
+    }
+
+    // --- CORRECCIÓN 2: Método MODIFICADO para usar Google Docs Viewer ---
+    private void verDocumentoUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            Toast.makeText(getContext(), "No hay documento para visualizar.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            // Se "envuelve" la URL de Firebase en la URL del visor de Google Docs
+            // Esto fuerza la renderización en un visor web en lugar de una descarga directa.
+            String googleDocsUrl = "https://docs.google.com/gview?embedded=true&url=" + url;
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(googleDocsUrl));
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "No se pudo abrir el documento. Verifique tener un navegador web.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error al intentar ver documento URL: " + url, e);
+        }
     }
 
     private void mostrarDialogCerrarSesion() {
@@ -522,20 +564,5 @@ public class PerfilFragment extends Fragment {
         );
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
-    }
-
-    private Bitmap redimensionarBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        float ratioBitmap = (float) width / (float) height;
-        float ratioMax = (float) maxWidth / (float) maxHeight;
-        int finalWidth = maxWidth;
-        int finalHeight = maxHeight;
-        if (ratioMax > ratioBitmap) {
-            finalWidth = (int) ((float) maxHeight * ratioBitmap);
-        } else {
-            finalHeight = (int) ((float) maxWidth / ratioBitmap);
-        }
-        return Bitmap.createScaledBitmap(bitmap, finalWidth, finalHeight, true);
     }
 }

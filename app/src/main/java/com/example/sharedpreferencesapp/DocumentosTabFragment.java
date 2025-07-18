@@ -25,14 +25,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class DocumentosTabFragment extends Fragment {
 
@@ -41,11 +40,8 @@ public class DocumentosTabFragment extends Fragment {
     private TextView tvNoDocumentos;
 
     private FirebaseManager firebaseManager;
-    private FileManager fileManager;
 
-    // AÑADIDO: Variable para guardar el ID del usuario actual
     private String currentUserId;
-
     private String pendingUploadCalendarioId = null;
     private String pendingUploadCampoPdf = null;
 
@@ -56,42 +52,67 @@ public class DocumentosTabFragment extends Fragment {
                     try {
                         final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
                         requireContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
-                        guardarUriPdfLocalmente(pendingUploadCalendarioId, pendingUploadCampoPdf, uri.toString());
+
+                        Toast.makeText(getContext(), "Subiendo archivo...", Toast.LENGTH_LONG).show();
+
+                        // <<--- CORRECCIÓN: Guardamos las variables pendientes en locales para usarlas en los callbacks
+                        final String calendarioIdActual = pendingUploadCalendarioId;
+                        final String campoPdfActual = pendingUploadCampoPdf;
+
+                        firebaseManager.subirPdfStorage(
+                                currentUserId,
+                                calendarioIdActual,
+                                campoPdfActual,
+                                uri,
+                                downloadUrl -> {
+                                    guardarUrlEnFirestore(calendarioIdActual, campoPdfActual, downloadUrl);
+                                    // Limpiamos las variables aquí, DESPUÉS de usarlas
+                                    pendingUploadCalendarioId = null;
+                                    pendingUploadCampoPdf = null;
+                                },
+                                e -> {
+                                    Toast.makeText(getContext(), "Error al subir el archivo: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Log.e(TAG, "Error al subir a Storage", e);
+                                    // Limpiamos las variables también en caso de error
+                                    pendingUploadCalendarioId = null;
+                                    pendingUploadCampoPdf = null;
+                                }
+                        );
+
                     } catch (SecurityException e) {
-                        Log.e(TAG, "Error al tomar permisos", e);
-                        Toast.makeText(getContext(), "Error de permisos al seleccionar el archivo.", Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Error de permisos al seleccionar el archivo.", e);
+                        Toast.makeText(getContext(), "Error de permisos. No se pudo acceder al archivo seleccionado.", Toast.LENGTH_LONG).show();
+                        // Limpiamos en caso de error de permisos
+                        pendingUploadCalendarioId = null;
+                        pendingUploadCampoPdf = null;
                     }
+                } else {
+                    // Si algo era nulo desde el principio, limpiamos
+                    pendingUploadCalendarioId = null;
+                    pendingUploadCampoPdf = null;
                 }
-                pendingUploadCalendarioId = null;
-                pendingUploadCampoPdf = null;
             }
     );
+
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_documentos_tab, container, false);
-
         layoutDocumentos = view.findViewById(R.id.layoutDocumentosCalendarios);
         tvNoDocumentos = view.findViewById(R.id.tvNoDocumentosCalendarios);
-
         firebaseManager = new FirebaseManager();
-        fileManager = new FileManager(requireContext());
-
         return view;
     }
 
-    // AÑADIDO: onViewCreated para obtener el UID del usuario
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             this.currentUserId = user.getUid();
-            // Solo cargamos los documentos si tenemos un ID de usuario
             cargarCalendariosDocumentos();
         } else {
-            // Manejar caso de no estar logueado
             tvNoDocumentos.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
             tvNoDocumentos.setVisibility(View.VISIBLE);
         }
@@ -101,15 +122,12 @@ public class DocumentosTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // onResume es útil para refrescar si se cambia de pestaña,
-        // pero la carga inicial ahora depende de que onViewCreated obtenga el UID.
         if (currentUserId != null) {
             cargarCalendariosDocumentos();
         }
     }
 
     private void cargarCalendariosDocumentos() {
-        // Salvaguarda
         if (currentUserId == null) {
             Log.w(TAG, "Intento de cargar calendarios sin un UID de usuario.");
             return;
@@ -119,7 +137,6 @@ public class DocumentosTabFragment extends Fragment {
         tvNoDocumentos.setVisibility(View.VISIBLE);
         tvNoDocumentos.setText("No hay calendarios asignados.");
 
-        // MODIFICADO: Se pasa el ID del usuario
         firebaseManager.cargarCalendarios(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 if(task.getResult().isEmpty()){
@@ -138,7 +155,7 @@ public class DocumentosTabFragment extends Fragment {
     }
 
     private void crearCardDocumentos(DocumentSnapshot calendarioFirebase) {
-        if (currentUserId == null) return;
+        if (getContext() == null || currentUserId == null) return;
 
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_documentos_calendario, layoutDocumentos, false);
         TextView tvNombre = cardView.findViewById(R.id.tvNombreAlumnoDoc);
@@ -151,7 +168,6 @@ public class DocumentosTabFragment extends Fragment {
         String alumnoId = calendarioFirebase.getString("alumnoId");
 
         if (alumnoId != null) {
-            // MODIFICADO: Se pasa el ID del usuario
             firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
                 if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                     DocumentSnapshot alumno = task.getResult();
@@ -163,8 +179,6 @@ public class DocumentosTabFragment extends Fragment {
             });
         }
 
-        JSONObject calendarioLocal = fileManager.buscarCalendarioPorId(calendarioId);
-
         String[] camposPdfUri = {"pdfUriPrimeraEntrega", "pdfUriSegundaEntrega", "pdfUriResultado"};
         String[] camposFecha = {"fechaPrimeraEntrega", "fechaSegundaEntrega", "fechaResultado"};
         String[] camposLabel = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
@@ -174,11 +188,11 @@ public class DocumentosTabFragment extends Fragment {
             final String campoPdfKey = camposPdfUri[i];
             String label = calendarioFirebase.getString(camposLabel[i]) != null ? calendarioFirebase.getString(camposLabel[i]) : defaultLabels[i];
             String fechaLimiteString = calendarioFirebase.getString(camposFecha[i]);
-            String pdfUriString = (calendarioLocal != null) ? calendarioLocal.optString(campoPdfKey, "") : "";
+            String pdfUrlString = calendarioFirebase.getString(campoPdfKey);
 
             labels[i].setText(label);
             boolean isFechaVencida = haVencidoFecha(fechaLimiteString);
-            boolean isDocPrevioSubido = (i == 0) || (calendarioLocal != null && !calendarioLocal.optString(camposPdfUri[i - 1], "").isEmpty());
+            boolean isDocPrevioSubido = (i == 0) || (calendarioFirebase.getString(camposPdfUri[i - 1]) != null && !calendarioFirebase.getString(camposPdfUri[i - 1]).isEmpty());
 
             if (isDocPrevioSubido && !isFechaVencida) {
                 btnsSubir[i].setEnabled(true);
@@ -191,38 +205,36 @@ public class DocumentosTabFragment extends Fragment {
                 else btnsSubir[i].setText("Subir PDF");
             }
 
-            if (pdfUriString.isEmpty()) {
+            if (pdfUrlString == null || pdfUrlString.isEmpty()) {
                 btnsVer[i].setVisibility(View.GONE);
             } else {
                 btnsVer[i].setVisibility(View.VISIBLE);
-                btnsVer[i].setOnClickListener(v -> verPDF(pdfUriString));
+                btnsVer[i].setOnClickListener(v -> verPDF(pdfUrlString));
                 if (btnsSubir[i].isEnabled()) btnsSubir[i].setText("Reemplazar");
             }
         }
         layoutDocumentos.addView(cardView);
     }
 
-    private void guardarUriPdfLocalmente(String calendarioId, String campoPdfKey, String uriString) {
-        JSONObject calendario = fileManager.buscarCalendarioPorId(calendarioId);
-        if (calendario == null) {
-            calendario = new JSONObject();
-            try {
-                calendario.put("id", calendarioId);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return;
-            }
+    private void guardarUrlEnFirestore(String calendarioId, String campoPdfKey, String downloadUrl) {
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Error de sesión.", Toast.LENGTH_SHORT).show();
+            return;
         }
-        try {
-            calendario.put(campoPdfKey, uriString);
-            if (fileManager.guardarCalendario(calendario)) {
-                Toast.makeText(getContext(), "PDF guardado exitosamente.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), "Error al guardar la referencia del PDF.", Toast.LENGTH_SHORT).show();
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+        Map<String, Object> update = new HashMap<>();
+        update.put(campoPdfKey, downloadUrl);
+
+        firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, update,
+                () -> {
+                    Toast.makeText(getContext(), "Documento actualizado exitosamente.", Toast.LENGTH_SHORT).show();
+                    cargarCalendariosDocumentos();
+                },
+                e -> {
+                    Toast.makeText(getContext(), "Error al guardar la URL en la base de datos.", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Error al actualizar Firestore", e);
+                }
+        );
     }
 
     private boolean haVencidoFecha(String fechaLimiteString) {
@@ -250,22 +262,21 @@ public class DocumentosTabFragment extends Fragment {
         selectorPDF.launch(new String[]{"application/pdf"});
     }
 
-    private void verPDF(String uriString) {
-        if (uriString == null || uriString.isEmpty()) {
+    private void verPDF(String urlString) {
+        if (urlString == null || urlString.isEmpty()) {
             Toast.makeText(getContext(), "No hay documento para visualizar.", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            Uri uri = Uri.parse(uriString);
+            Uri uri = Uri.parse(urlString);
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, "application/pdf");
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setData(uri);
             startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(getContext(), "No se encontró una aplicación para abrir PDFs.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "No se encontró una aplicación para abrir este enlace (navegador o visor PDF).", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Log.e(TAG, "Error al intentar ver PDF: " + uriString, e);
-            Toast.makeText(getContext(), "No se pudo abrir el archivo. Puede que haya sido movido o eliminado.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error al intentar ver PDF: " + urlString, e);
+            Toast.makeText(getContext(), "No se pudo abrir el enlace.", Toast.LENGTH_LONG).show();
         }
     }
 }
