@@ -15,8 +15,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -35,8 +39,10 @@ public class GestionAlumnoFragment extends Fragment {
     private TextView tvNoAlumnos;
     private Button btnAgregarAlumno;
 
-    // MODIFICADO: Se reemplaza FileManager por FirebaseManager
     private FirebaseManager firebaseManager;
+
+    // AÑADIDO: Variable para guardar el ID del usuario actual
+    private String currentUserId;
 
     // Datos para los spinners (sin cambios)
     private final String[] SEXOS = {"Masculino", "Femenino", "Otro"};
@@ -61,22 +67,42 @@ public class GestionAlumnoFragment extends Fragment {
         tvNoAlumnos = view.findViewById(R.id.tvNoAlumnos);
         btnAgregarAlumno = view.findViewById(R.id.btnAgregarAlumno);
 
-        // AÑADIDO: Inicializar FirebaseManager
         firebaseManager = new FirebaseManager();
 
         btnAgregarAlumno.setOnClickListener(v -> mostrarFormularioAlumno(null));
 
-        cargarAlumnos();
-
         return view;
     }
 
-    private void cargarAlumnos() {
-        layoutAlumnos.removeAllViews();
-        tvNoAlumnos.setVisibility(View.VISIBLE); // Ocultar por defecto
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        // MODIFICADO: Cargar alumnos desde Firebase
-        firebaseManager.cargarAlumnos(task -> {
+        // Obtenemos el usuario actual aquí. Es el paso más importante.
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            this.currentUserId = user.getUid();
+            // Una vez que tenemos el ID, cargamos los datos del usuario.
+            cargarAlumnos();
+        } else {
+            // Si por alguna razón no hay usuario, bloqueamos la UI.
+            tvNoAlumnos.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
+            tvNoAlumnos.setVisibility(View.VISIBLE);
+            layoutAlumnos.setVisibility(View.GONE);
+            btnAgregarAlumno.setEnabled(false);
+        }
+    }
+
+    private void cargarAlumnos() {
+        // Salvaguarda para evitar crashes si el ID es nulo.
+        if (currentUserId == null) return;
+
+        layoutAlumnos.removeAllViews();
+        tvNoAlumnos.setText("No hay alumnos registrados.");
+        tvNoAlumnos.setVisibility(View.VISIBLE);
+
+        // MODIFICADO: Se pasa el ID del usuario al método.
+        firebaseManager.cargarAlumnos(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 if (task.getResult().isEmpty()) {
                     tvNoAlumnos.setVisibility(View.VISIBLE);
@@ -94,7 +120,6 @@ public class GestionAlumnoFragment extends Fragment {
         });
     }
 
-    // MODIFICADO: El parámetro ahora es un DocumentSnapshot de Firebase
     private void crearCardAlumno(DocumentSnapshot alumnoDoc) {
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_alumno, layoutAlumnos, false);
 
@@ -123,11 +148,15 @@ public class GestionAlumnoFragment extends Fragment {
     }
 
     private void mostrarFormularioAlumno(String alumnoId) {
-        // ... (El código de creación del diálogo no cambia)
+        // Salvaguarda de sesión
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Error: No se ha iniciado sesión.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_alumno, null);
         builder.setView(dialogView);
-
         AlertDialog dialog = builder.create();
 
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
@@ -150,7 +179,6 @@ public class GestionAlumnoFragment extends Fragment {
 
         if (alumnoId != null) {
             tvTitulo.setText("Editar Alumno");
-            // MODIFICADO: Cargar datos desde Firebase
             cargarDatosExistentes(alumnoId, etNombre, etCurp, etFechaNacimiento,
                     spinnerSexo, etNumControl, spinnerSemestre,
                     spinnerCarrera, etEspecialidad, etTelefono,
@@ -162,26 +190,25 @@ public class GestionAlumnoFragment extends Fragment {
         btnGuardar.setOnClickListener(v -> {
             if (validarFormulario(etNombre, etCurp, etFechaNacimiento, etNumControl,
                     etTelefono, etEmail)) {
-
-                // MODIFICADO: Guardar alumno en Firebase
                 guardarAlumno(alumnoId, etNombre, etCurp, etFechaNacimiento,
                         spinnerSexo, etNumControl, spinnerSemestre,
                         spinnerCarrera, etEspecialidad, etTelefono,
-                        etEmail, etDireccion, dialog); // Pasamos el dialog para cerrarlo on success
+                        etEmail, etDireccion, dialog);
             }
         });
 
         dialog.show();
     }
 
-    // MODIFICADO: Cargar datos desde Firebase. La lógica se mueve al listener.
     private void cargarDatosExistentes(String alumnoId, EditText etNombre, EditText etCurp,
                                        EditText etFechaNacimiento, Spinner spinnerSexo,
                                        EditText etNumControl, Spinner spinnerSemestre,
                                        Spinner spinnerCarrera, EditText etEspecialidad,
                                        EditText etTelefono, EditText etEmail, EditText etDireccion) {
+        if (currentUserId == null) return;
 
-        firebaseManager.buscarAlumnoPorId(alumnoId, task -> {
+        // MODIFICADO: Se pasa el ID del usuario
+        firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot alumno = task.getResult();
                 if (alumno.exists()) {
@@ -213,13 +240,12 @@ public class GestionAlumnoFragment extends Fragment {
         });
     }
 
-    // MODIFICADO: Guardar alumno en Firebase
     private void guardarAlumno(String alumnoId, EditText etNombre, EditText etCurp,
                                EditText etFechaNacimiento, Spinner spinnerSexo, EditText etNumControl,
                                Spinner spinnerSemestre, Spinner spinnerCarrera, EditText etEspecialidad,
                                EditText etTelefono, EditText etEmail, EditText etDireccion, AlertDialog dialog) {
+        if (currentUserId == null) return;
 
-        // Se convierte la data a un Map en lugar de JSONObject
         Map<String, Object> alumno = new HashMap<>();
         alumno.put("nombre", etNombre.getText().toString().trim());
         alumno.put("curp", etCurp.getText().toString().trim().toUpperCase());
@@ -233,13 +259,12 @@ public class GestionAlumnoFragment extends Fragment {
         alumno.put("email", etEmail.getText().toString().trim());
         alumno.put("direccion", etDireccion.getText().toString().trim());
 
-        // Llamada al método de FirebaseManager
-        String finalAlumnoId = alumnoId;
-        firebaseManager.guardarAlumno(finalAlumnoId, alumno,
+        // MODIFICADO: Se pasa el ID del usuario
+        firebaseManager.guardarAlumno(currentUserId, alumnoId, alumno,
                 () -> { // onSuccess
                     dialog.dismiss();
-                    cargarAlumnos(); // Refrescar la lista
-                    String mensaje = (finalAlumnoId == null) ? "Alumno agregado exitosamente" : "Alumno actualizado exitosamente";
+                    cargarAlumnos();
+                    String mensaje = (alumnoId == null) ? "Alumno agregado exitosamente" : "Alumno actualizado exitosamente";
                     Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
                 },
                 e -> { // onFailure
@@ -247,13 +272,15 @@ public class GestionAlumnoFragment extends Fragment {
                 });
     }
 
-    // MODIFICADO: Eliminar alumno de Firebase
     private void eliminarAlumno(String alumnoId) {
+        if (currentUserId == null) return;
+
         new AlertDialog.Builder(getContext())
                 .setTitle("Eliminar Alumno")
                 .setMessage("¿Está seguro de que desea eliminar este alumno?")
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    firebaseManager.eliminarAlumno(alumnoId,
+                    // MODIFICADO: Se pasa el ID del usuario
+                    firebaseManager.eliminarAlumno(currentUserId, alumnoId,
                             () -> { // onSuccess
                                 cargarAlumnos();
                                 Toast.makeText(getContext(), "Alumno eliminado", Toast.LENGTH_SHORT).show();
@@ -266,7 +293,7 @@ public class GestionAlumnoFragment extends Fragment {
                 .show();
     }
 
-    // --- Métodos de UI que no requieren cambios ---
+    // --- MÉTODOS DE UI (SIN CAMBIOS) ---
 
     private void configurarSpinners(Spinner spinnerSexo, Spinner spinnerSemestre, Spinner spinnerCarrera) {
         ArrayAdapter<String> sexoAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, SEXOS);
@@ -284,6 +311,7 @@ public class GestionAlumnoFragment extends Fragment {
 
     private void configurarDatePicker(EditText etFechaNacimiento) {
         etFechaNacimiento.setOnClickListener(v -> {
+            if (getContext() == null) return;
             Calendar calendar = Calendar.getInstance();
             String fechaActual = etFechaNacimiento.getText().toString();
             if (!fechaActual.isEmpty()) {
@@ -294,7 +322,6 @@ public class GestionAlumnoFragment extends Fragment {
                     // Si hay error, usar fecha actual
                 }
             }
-
             DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
                     (view, year, month, dayOfMonth) -> {
                         Calendar selectedDate = Calendar.getInstance();

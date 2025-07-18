@@ -22,7 +22,7 @@
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
-        <!-- Información Personal Card -->
+        <!-- Card de Información Personal y Académica -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -37,68 +37,31 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Título de sección -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📝 Información Personal"
+                    android:text="📝 Información Personal y Académica"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#4299E1"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Nombre -->
+                <!-- Nombre Completo -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:hint="Nombre"
+                    android:hint="Nombre completo (Apellidos Nombre)"
                     app:boxStrokeColor="#4299E1"
                     app:hintTextColor="#4299E1">
-
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etFirstName"
+                        android:id="@+id/etFullName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPersonName|textCapWords" />
-
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Apellido -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:hint="Apellido"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etLastName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPersonName|textCapWords" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Teléfono -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:hint="Teléfono"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etPhoneNumber"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="phone" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Fecha de nacimiento -->
+                <!-- Fecha de Nacimiento -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -106,7 +69,6 @@
                     android:hint="Fecha de Nacimiento (DD/MM/AAAA)"
                     app:boxStrokeColor="#4299E1"
                     app:hintTextColor="#4299E1">
-
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etDateOfBirth"
                         android:layout_width="match_parent"
@@ -114,7 +76,6 @@
                         android:inputType="none"
                         android:focusable="false"
                         android:clickable="true" />
-
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Género -->
@@ -122,122 +83,69 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Género"
-                    android:textSize="14sp"
-                    android:textColor="#4299E1"
-                    android:layout_marginBottom="8dp" />
-
+                    android:textColor="#4A5568"
+                    android:layout_marginTop="4dp"/>
                 <Spinner
                     android:id="@+id/spinnerGender"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- CURP -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:background="@android:drawable/spinner_background" />
+                    android:hint="CURP"
+                    app:boxStrokeColor="#4299E1"
+                    app:hintTextColor="#4299E1">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCurp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textCapCharacters"
+                        android:maxLength="18" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            </LinearLayout>
+                <!-- Botón Subir INE -->
+                <Button
+                    android:id="@+id/btnUploadIne"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Subir Credencial de Elector"
+                    android:layout_marginBottom="12dp"/>
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Información Profesional Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Título de sección -->
+                <!-- Carrera -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💼 Información Profesional"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#4299E1"
-                    android:layout_marginBottom="16dp" />
+                    android:text="Carrera"
+                    android:textColor="#4A5568"
+                    android:layout_marginTop="4dp"/>
+                <Spinner
+                    android:id="@+id/spinnerCareer"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"/>
 
-                <!-- Puesto de trabajo -->
+                <!-- Número de Control -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:hint="Puesto de Trabajo"
+                    android:hint="Número de Control"
                     app:boxStrokeColor="#4299E1"
                     app:hintTextColor="#4299E1">
-
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etJobTitle"
+                        android:id="@+id/etControlNumber"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textCapWords" />
-
+                        android:inputType="text" />
                 </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Departamento -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:hint="Departamento"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDepartment"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapWords" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Institución -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:hint="Institución/Empresa"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etInstitution"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapWords" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Biografía -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:hint="Biografía / Descripción"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etBio"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textMultiLine|textCapSentences"
-                        android:lines="3"
-                        android:maxLines="5"
-                        android:gravity="top" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
 
-        <!-- Información de Dirección Card -->
+        <!-- Card de Información Médica y de Contacto -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -252,124 +160,77 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Título de sección -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏠 Dirección"
+                    android:text="⚕️ Información Médica y de Contacto"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#4299E1"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Dirección -->
+                <!-- Condiciones Médicas -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:hint="Dirección"
+                    android:hint="Condiciones Médicas"
                     app:boxStrokeColor="#4299E1"
                     app:hintTextColor="#4299E1">
-
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etAddress"
+                        android:id="@+id/etMedicalConditions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textPostalAddress|textCapWords" />
-
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:minLines="2" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Row para Ciudad y Estado -->
-                <LinearLayout
+                <!-- Teléfono -->
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
-                    <!-- Ciudad -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                    android:layout_marginBottom="12dp"
+                    android:hint="Número de Teléfono"
+                    app:boxStrokeColor="#4299E1"
+                    app:hintTextColor="#4299E1">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPhoneNumber"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="8dp"
-                        android:hint="Ciudad"
-                        app:boxStrokeColor="#4299E1"
-                        app:hintTextColor="#4299E1">
+                        android:inputType="phone" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etCity"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapWords" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Estado -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:hint="Estado"
-                        app:boxStrokeColor="#4299E1"
-                        app:hintTextColor="#4299E1">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etState"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapWords" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                <!-- Row para País y Código Postal -->
-                <LinearLayout
+                <!-- Contacto de Emergencia - Nombre -->
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <!-- País -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                    android:layout_marginBottom="12dp"
+                    android:hint="Nombre de Contacto de Emergencia"
+                    app:boxStrokeColor="#4299E1"
+                    app:hintTextColor="#4299E1">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etEmergencyContactName"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="8dp"
-                        android:hint="País"
-                        app:boxStrokeColor="#4299E1"
-                        app:hintTextColor="#4299E1">
+                        android:inputType="textPersonName|textCapWords" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etCountry"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textCapWords" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Código Postal -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                <!-- Contacto de Emergencia - Teléfono -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:hint="Teléfono de Contacto de Emergencia"
+                    app:boxStrokeColor="#4299E1"
+                    app:hintTextColor="#4299E1">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etEmergencyContactPhone"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:hint="Código Postal"
-                        app:boxStrokeColor="#4299E1"
-                        app:hintTextColor="#4299E1">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etZipCode"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPostalAddress" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
+                        android:inputType="phone" />
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
 
         <!-- Botones de acción -->
@@ -379,31 +240,20 @@
             android:orientation="horizontal"
             android:gravity="end">
 
-            <!-- Botón Cancelar -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCancel"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:layout_marginEnd="12dp"
-                android:text="CANCELAR"
-                android:textColor="#718096"
-                app:strokeColor="#718096"
-                app:cornerRadius="8dp" />
+                android:text="CANCELAR" />
 
-            <!-- Botón Guardar -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="GUARDAR"
-                app:backgroundTint="#4299E1"
-                app:cornerRadius="8dp"
-                app:icon="@android:drawable/ic_menu_save"
-                app:iconGravity="start" />
-
+                android:text="GUARDAR" />
         </LinearLayout>
 
     </LinearLayout>
-
 </ScrollView>

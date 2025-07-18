@@ -18,8 +18,12 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -30,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -39,13 +42,16 @@ public class GestionProtocoloFragment extends Fragment {
     private static final String TAG = "GestionProtocoloFrag";
     private LinearLayout layoutProtocolos;
     private TextView tvNoProtocolos;
+    private Button btnAgregar;
 
-    // MODIFICADO: Se reemplaza FileManager por FirebaseManager
     private FirebaseManager firebaseManager;
+    private FileManager fileManager; // Mantenido para el generador de PDF
+
+    // AÑADIDO: Variable para guardar el ID del usuario actual
+    private String currentUserId;
 
     private JSONObject protocoloPendiente;
 
-    // ... (Launcher sin cambios)
     private final ActivityResultLauncher<Intent> selectorCarpeta = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -64,20 +70,39 @@ public class GestionProtocoloFragment extends Fragment {
 
         layoutProtocolos = view.findViewById(R.id.layoutProtocolos);
         tvNoProtocolos = view.findViewById(R.id.tvNoProtocolos);
-        Button btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
+        btnAgregar = view.findViewById(R.id.btnAgregarProtocolo);
 
-        // AÑADIDO: Inicializar FirebaseManager
         firebaseManager = new FirebaseManager();
+        fileManager = new FileManager(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialog(null));
-        cargarProtocolos();
 
         return view;
     }
 
-    // MODIFICADO: Carga asíncrona de alumnos ANTES de mostrar el diálogo
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            this.currentUserId = user.getUid();
+            cargarProtocolos();
+        } else {
+            tvNoProtocolos.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
+            tvNoProtocolos.setVisibility(View.VISIBLE);
+            layoutProtocolos.setVisibility(View.GONE);
+            btnAgregar.setEnabled(false);
+        }
+    }
+
     private void mostrarDialog(String protocoloId) {
-        firebaseManager.cargarAlumnos(task -> {
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Error de sesión.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        firebaseManager.cargarAlumnos(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 ArrayList<String> alumnosDisplay = new ArrayList<>();
                 ArrayList<String> alumnosIds = new ArrayList<>();
@@ -94,7 +119,6 @@ public class GestionProtocoloFragment extends Fragment {
                     return;
                 }
 
-                // Una vez cargados los alumnos, construimos y mostramos el diálogo
                 construirYMostrarDialogo(protocoloId, alumnosDisplay, alumnosIds);
 
             } else {
@@ -108,7 +132,6 @@ public class GestionProtocoloFragment extends Fragment {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_protocolo, null);
         builder.setView(dialogView);
 
-        // ... (resto del código del diálogo sin cambios lógicos, solo adaptación a los datos)
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
         Spinner spinnerAlumno = dialogView.findViewById(R.id.spinnerAlumno);
         EditText etNombreProyecto = dialogView.findViewById(R.id.etNombreProyecto);
@@ -129,6 +152,8 @@ public class GestionProtocoloFragment extends Fragment {
         EditText etAsesorExterno = dialogView.findViewById(R.id.etAsesorExterno);
         EditText etPuestoAsesor = dialogView.findViewById(R.id.etPuestoAsesor);
         EditText etPuestoFirmante = dialogView.findViewById(R.id.etPuestoFirmante);
+        Button btnGuardar = dialogView.findViewById(R.id.btnGuardar);
+        Button btnCancelar = dialogView.findViewById(R.id.btnCancelar);
 
         ArrayAdapter<String> alumnosAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, alumnosDisplay);
         spinnerAlumno.setAdapter(alumnosAdapter);
@@ -145,7 +170,6 @@ public class GestionProtocoloFragment extends Fragment {
 
         if (protocoloId != null) {
             tvTitulo.setText("Editar Protocolo");
-            // MODIFICADO: cargar datos desde Firebase
             cargarDatosProtocolo(protocoloId, spinnerAlumno, etNombreProyecto, spinnerBanco,
                     etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
                     etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
@@ -153,12 +177,11 @@ public class GestionProtocoloFragment extends Fragment {
                     etPuestoAsesor, etPuestoFirmante, alumnosIds, bancos, giros);
         }
 
-        dialogView.findViewById(R.id.btnGuardar).setOnClickListener(v -> {
+        btnGuardar.setOnClickListener(v -> {
             String proyecto = etNombreProyecto.getText().toString();
             String empresa = etNombreEmpresa.getText().toString();
 
             if (!proyecto.isEmpty() && !empresa.isEmpty() && spinnerAlumno.getSelectedItemPosition() != -1) {
-                // MODIFICADO: Guardar protocolo en Firebase
                 guardarProtocolo(protocoloId, alumnosIds.get(spinnerAlumno.getSelectedItemPosition()), etNombreProyecto, spinnerBanco,
                         etAsesor, etNombreEmpresa, spinnerGiro, etRFC, etDomicilio,
                         etColonia, etCodigoPostal, etCiudad, etCelular, etMision,
@@ -169,11 +192,10 @@ public class GestionProtocoloFragment extends Fragment {
             }
         });
 
-        dialogView.findViewById(R.id.btnCancelar).setOnClickListener(v -> dialog.dismiss());
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 
-    // MODIFICADO: Carga de datos desde Firebase
     private void cargarDatosProtocolo(String protocoloId, Spinner spinnerAlumno, EditText etNombreProyecto,
                                       Spinner spinnerBanco, EditText etAsesor, EditText etNombreEmpresa,
                                       Spinner spinnerGiro, EditText etRFC, EditText etDomicilio,
@@ -182,8 +204,9 @@ public class GestionProtocoloFragment extends Fragment {
                                       EditText etFirmante, EditText etPuestoTitular, EditText etAsesorExterno,
                                       EditText etPuestoAsesor, EditText etPuestoFirmante,
                                       ArrayList<String> alumnosIds, String[] bancos, String[] giros) {
+        if (currentUserId == null) return;
 
-        firebaseManager.buscarProtocoloPorId(protocoloId, task -> {
+        firebaseManager.buscarProtocoloPorId(currentUserId, protocoloId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot protocolo = task.getResult();
                 if (protocolo.exists()) {
@@ -226,13 +249,13 @@ public class GestionProtocoloFragment extends Fragment {
         });
     }
 
-    // MODIFICADO: Guardar protocolo en Firebase
     private void guardarProtocolo(String protocoloId, String alumnoId, EditText etNombreProyecto, Spinner spinnerBanco,
                                   EditText etAsesor, EditText etNombreEmpresa, Spinner spinnerGiro, EditText etRFC,
                                   EditText etDomicilio, EditText etColonia, EditText etCodigoPostal, EditText etCiudad,
                                   EditText etCelular, EditText etMision, EditText etTitular, EditText etFirmante,
                                   EditText etPuestoTitular, EditText etAsesorExterno, EditText etPuestoAsesor,
                                   EditText etPuestoFirmante, AlertDialog dialog) {
+        if (currentUserId == null) return;
 
         Map<String, Object> protocolo = new HashMap<>();
         protocolo.put("alumnoId", alumnoId);
@@ -255,25 +278,25 @@ public class GestionProtocoloFragment extends Fragment {
         protocolo.put("puestoAsesor", convertirAMayusculasSinAcentos(etPuestoAsesor.getText().toString()));
         protocolo.put("puestoFirmante", convertirAMayusculasSinAcentos(etPuestoFirmante.getText().toString()));
 
-        String finalProtocoloId = protocoloId;
-        firebaseManager.guardarProtocolo(finalProtocoloId, protocolo,
-                () -> { // onSuccess
+        firebaseManager.guardarProtocolo(currentUserId, protocoloId, protocolo,
+                () -> {
                     dialog.dismiss();
                     cargarProtocolos();
-                    String mensaje = (finalProtocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
+                    String mensaje = (protocoloId == null) ? "Protocolo agregado" : "Protocolo actualizado";
                     Toast.makeText(getContext(), mensaje, Toast.LENGTH_SHORT).show();
                 },
-                e -> { // onFailure
-                    Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show();
-                });
+                e -> Toast.makeText(getContext(), "Error al guardar el protocolo", Toast.LENGTH_SHORT).show()
+        );
     }
 
-    // MODIFICADO: Carga de protocolos desde Firebase
     private void cargarProtocolos() {
+        if (currentUserId == null) return;
+
         layoutProtocolos.removeAllViews();
+        tvNoProtocolos.setText("No hay protocolos registrados.");
         tvNoProtocolos.setVisibility(View.VISIBLE);
 
-        firebaseManager.cargarProtocolos(task -> {
+        firebaseManager.cargarProtocolos(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 if (task.getResult().isEmpty()) {
                     tvNoProtocolos.setVisibility(View.VISIBLE);
@@ -291,8 +314,9 @@ public class GestionProtocoloFragment extends Fragment {
         });
     }
 
-    // MODIFICADO: Parámetro es DocumentSnapshot y la carga del alumno es asíncrona.
     private void crearCardProtocolo(DocumentSnapshot protocolo) {
+        if (currentUserId == null) return;
+
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_protocolo, layoutProtocolos, false);
 
         TextView tvNombreProyecto = cardView.findViewById(R.id.tvNombreProyecto);
@@ -314,9 +338,8 @@ public class GestionProtocoloFragment extends Fragment {
         tvAsesor.setText("Asesor: " + protocolo.getString("asesor"));
         tvCiudad.setText("Ciudad: " + protocolo.getString("ciudad"));
 
-        // Cargar datos del alumno de forma asíncrona
         if (alumnoId != null && !alumnoId.isEmpty()) {
-            firebaseManager.buscarAlumnoPorId(alumnoId, task -> {
+            firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
                 if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                     DocumentSnapshot alumno = task.getResult();
                     String nombreAlumno = alumno.getString("nombre");
@@ -331,7 +354,6 @@ public class GestionProtocoloFragment extends Fragment {
         }
 
         btnPDF.setOnClickListener(v -> {
-            // Convertir DocumentSnapshot a JSONObject para mantener compatibilidad con tu generador de PDF
             JSONObject protocoloJson = new JSONObject(protocolo.getData());
             try {
                 protocoloJson.put("id", protocolo.getId());
@@ -348,14 +370,13 @@ public class GestionProtocoloFragment extends Fragment {
                     .setTitle("Eliminar Protocolo")
                     .setMessage("¿Eliminar este protocolo?")
                     .setPositiveButton("Eliminar", (dialog, which) -> {
-                        firebaseManager.eliminarProtocolo(protocoloId,
-                                () -> { // onSuccess
+                        firebaseManager.eliminarProtocolo(currentUserId, protocoloId,
+                                () -> {
                                     cargarProtocolos();
                                     Toast.makeText(getContext(), "Protocolo eliminado", Toast.LENGTH_SHORT).show();
                                 },
-                                e -> { // onFailure
-                                    Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show();
-                                });
+                                e -> Toast.makeText(getContext(), "Error al eliminar el protocolo", Toast.LENGTH_SHORT).show()
+                        );
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
@@ -363,8 +384,6 @@ public class GestionProtocoloFragment extends Fragment {
 
         layoutProtocolos.addView(cardView);
     }
-
-    // --- Métodos sin cambios funcionales ---
 
     private void seleccionarUbicacionPDF(JSONObject protocolo) {
         protocoloPendiente = protocolo;
@@ -389,12 +408,12 @@ public class GestionProtocoloFragment extends Fragment {
         Toast.makeText(getContext(), "📄 Generando PDF...", Toast.LENGTH_SHORT).show();
 
         new Thread(() -> {
+            if (getActivity() == null) return;
             try {
-                // Asumo que PDFGeneratorExterno no necesita cambios para esta tarea
                 PDFGeneratorExterno pdfGenerator = new PDFGeneratorExterno(requireContext());
                 boolean exito = pdfGenerator.generarPDFProtocoloEnUri(protocolo, uri);
 
-                requireActivity().runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (exito) {
                         String mensaje = "✅ PDF guardado exitosamente";
                         Toast.makeText(getContext(), mensaje, Toast.LENGTH_LONG).show();
@@ -410,7 +429,7 @@ public class GestionProtocoloFragment extends Fragment {
                 });
 
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     Toast.makeText(getContext(), "❌ Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }

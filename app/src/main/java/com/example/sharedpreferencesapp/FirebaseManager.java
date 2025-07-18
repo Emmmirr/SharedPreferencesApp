@@ -27,155 +27,24 @@ public class FirebaseManager {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final FirebaseStorage storage = FirebaseStorage.getInstance();
 
-    // Nombres de las colecciones
-    private static final String COLLECTION_ALUMNOS = "alumnos";
-    private static final String COLLECTION_PROTOCOLOS = "protocolos";
-    private static final String COLLECTION_CALENDARIOS = "calendarios";
+    // Colección principal para los perfiles de usuario
     private static final String COLLECTION_USER_PROFILES = "user_profiles";
 
-    // --- Métodos para Alumnos (Sin cambios) ---
+    // Nombres de las SUB-COLECCIONES que existirán dentro de cada documento de usuario
+    private static final String SUBCOLLECTION_ALUMNOS = "alumnos";
+    private static final String SUBCOLLECTION_PROTOCOLOS = "protocolos";
+    private static final String SUBCOLLECTION_CALENDARIOS = "calendarios";
 
-    public CollectionReference getAlumnosCollection() {
-        return db.collection(COLLECTION_ALUMNOS);
+
+    // --- MÉTODOS PARA PERFILES DE USUARIO ---
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void buscarPerfilUsuarioPorId(String userId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).get().addOnCompleteListener(onCompleteListener);
     }
 
-    public void cargarAlumnos(Consumer<Task<QuerySnapshot>> onCompleteListener) {
-        getAlumnosCollection().get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void buscarAlumnoPorId(String alumnoId, Consumer<Task<DocumentSnapshot>> onCompleteListener) {
-        getAlumnosCollection().document(alumnoId).get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void guardarAlumno(String alumnoId, Map<String, Object> alumnoData, Runnable onSuccess, Consumer<Exception> onFailure) {
-        DocumentReference docRef;
-        if (alumnoId == null || alumnoId.isEmpty()) {
-            docRef = getAlumnosCollection().document(); // Firestore genera un ID único
-        } else {
-            docRef = getAlumnosCollection().document(alumnoId);
-        }
-        alumnoData.put("id", docRef.getId());
-        docRef.set(alumnoData)
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    public void eliminarAlumno(String alumnoId, Runnable onSuccess, Consumer<Exception> onFailure) {
-        getAlumnosCollection().document(alumnoId).delete()
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    // --- Métodos para Protocolos (Sin cambios) ---
-
-    public CollectionReference getProtocolosCollection() {
-        return db.collection(COLLECTION_PROTOCOLOS);
-    }
-
-    public void cargarProtocolos(Consumer<Task<QuerySnapshot>> onCompleteListener) {
-        getProtocolosCollection().get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void buscarProtocoloPorId(String protocoloId, Consumer<Task<DocumentSnapshot>> onCompleteListener) {
-        getProtocolosCollection().document(protocoloId).get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void guardarProtocolo(String protocoloId, Map<String, Object> protocoloData, Runnable onSuccess, Consumer<Exception> onFailure) {
-        DocumentReference docRef;
-        if (protocoloId == null || protocoloId.isEmpty()) {
-            docRef = getProtocolosCollection().document(); // Firestore genera un ID
-        } else {
-            docRef = getProtocolosCollection().document(protocoloId);
-        }
-        protocoloData.put("id", docRef.getId());
-        docRef.set(protocoloData)
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    public void eliminarProtocolo(String protocoloId, Runnable onSuccess, Consumer<Exception> onFailure) {
-        getProtocolosCollection().document(protocoloId).delete()
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    // --- Métodos para Calendarios ---
-
-    public void cargarCalendarios(Consumer<Task<QuerySnapshot>> onCompleteListener) {
-        db.collection(COLLECTION_CALENDARIOS).get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void buscarCalendarioPorId(String calendarioId, Consumer<Task<DocumentSnapshot>> onCompleteListener) {
-        db.collection(COLLECTION_CALENDARIOS).document(calendarioId).get().addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    public void guardarCalendarioCompleto(String calendarioId, Map<String, Object> calendarioData, Runnable onSuccess) {
-        db.collection(COLLECTION_CALENDARIOS).document(calendarioId)
-                .set(calendarioData)
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(e -> Log.w(TAG, "Error guardando calendario", e));
-    }
-
-    public void actualizarCalendario(String calendarioId, Map<String, Object> updates, Runnable onSuccess) {
-        db.collection(COLLECTION_CALENDARIOS).document(calendarioId)
-                .update(updates)
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(e -> Log.w(TAG, "Error actualizando calendario", e));
-    }
-
-    public void guardarOActualizarCalendario(String calendarioId, Map<String, Object> calendarioData, Runnable onSuccess, Consumer<Exception> onFailure) {
-        db.collection(COLLECTION_CALENDARIOS).document(calendarioId)
-                .set(calendarioData, SetOptions.merge())
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    public void eliminarCalendario(String calendarioId, Runnable onSuccess, Consumer<Exception> onFailure) {
-        db.collection(COLLECTION_CALENDARIOS).document(calendarioId).delete()
-                .addOnSuccessListener(aVoid -> onSuccess.run())
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    // --- NUEVOS MÉTODOS PARA PERFILES DE USUARIO ---
-
-    /**
-     * Carga todos los perfiles de usuario activos
-     */
-    public void cargarPerfilesUsuario(Consumer<Task<QuerySnapshot>> onCompleteListener) {
-        db.collection(COLLECTION_USER_PROFILES)
-                .whereEqualTo("isActive", true)
-                .get()
-                .addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    /**
-     * Busca un perfil de usuario por ID
-     */
-    public void buscarPerfilUsuarioPorId(String userId, Consumer<Task<DocumentSnapshot>> onCompleteListener) {
-        db.collection(COLLECTION_USER_PROFILES)
-                .document(userId)
-                .get()
-                .addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    /**
-     * Busca un perfil de usuario por email
-     */
-    public void buscarPerfilUsuarioPorEmail(String email, Consumer<Task<QuerySnapshot>> onCompleteListener) {
-        db.collection(COLLECTION_USER_PROFILES)
-                .whereEqualTo("email", email)
-                .whereEqualTo("isActive", true)
-                .get()
-                .addOnCompleteListener(onCompleteListener::accept);
-    }
-
-    /**
-     * Guarda o actualiza un perfil de usuario
-     */
     public void guardarPerfilUsuario(String userId, Map<String, Object> perfilData, Runnable onSuccess, Consumer<Exception> onFailure) {
-        // Actualizar timestamp
         perfilData.put("updatedAt", String.valueOf(System.currentTimeMillis()));
-
         db.collection(COLLECTION_USER_PROFILES)
                 .document(userId)
                 .set(perfilData, SetOptions.merge())
@@ -183,14 +52,10 @@ public class FirebaseManager {
                 .addOnFailureListener(onFailure::accept);
     }
 
-    /**
-     * Crea un nuevo perfil de usuario
-     */
     public void crearPerfilUsuario(UserProfile profile, Runnable onSuccess, Consumer<Exception> onFailure) {
         Map<String, Object> perfilData = profile.toMap();
         perfilData.put("createdAt", String.valueOf(System.currentTimeMillis()));
         perfilData.put("updatedAt", String.valueOf(System.currentTimeMillis()));
-
         db.collection(COLLECTION_USER_PROFILES)
                 .document(profile.getUserId())
                 .set(perfilData)
@@ -198,54 +63,117 @@ public class FirebaseManager {
                 .addOnFailureListener(onFailure::accept);
     }
 
-    /**
-     * Desactiva un perfil de usuario (soft delete)
-     */
-    public void desactivarPerfilUsuario(String userId, Runnable onSuccess, Consumer<Exception> onFailure) {
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("isActive", false);
-        updates.put("updatedAt", String.valueOf(System.currentTimeMillis()));
 
-        db.collection(COLLECTION_USER_PROFILES)
-                .document(userId)
-                .update(updates)
+    // --- MÉTODOS PARA ALUMNOS (adaptados a sub-colecciones) ---
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void cargarAlumnos(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void buscarAlumnoPorId(String userId, String alumnoId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).document(alumnoId).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    public void guardarAlumno(String userId, String alumnoId, Map<String, Object> alumnoData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        DocumentReference docRef;
+        if (alumnoId == null || alumnoId.isEmpty()) {
+            docRef = db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).document();
+        } else {
+            docRef = db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).document(alumnoId);
+        }
+        alumnoData.put("id", docRef.getId());
+        docRef.set(alumnoData)
                 .addOnSuccessListener(aVoid -> onSuccess.run())
                 .addOnFailureListener(onFailure::accept);
     }
 
-    /**
-     * Sube una imagen de perfil al Storage
-     */
-    public void subirImagenPerfil(Uri imageUri, String userId, Consumer<String> onResult, Consumer<Exception> onFailure) {
-        String rutaStorage = "profile_images/" + userId + "_" + System.currentTimeMillis() + ".jpg";
-        StorageReference imageRef = storage.getReference().child(rutaStorage);
+    public void eliminarAlumno(String userId, String alumnoId, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_ALUMNOS).document(alumnoId).delete()
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
 
-        imageRef.putFile(imageUri)
+
+    // --- MÉTODOS PARA PROTOCOLOS (adaptados a sub-colecciones) ---
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void cargarProtocolos(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void buscarProtocoloPorId(String userId, String protocoloId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).document(protocoloId).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    public void guardarProtocolo(String userId, String protocoloId, Map<String, Object> protocoloData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        DocumentReference docRef;
+        if (protocoloId == null || protocoloId.isEmpty()) {
+            docRef = db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).document();
+        } else {
+            docRef = db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).document(protocoloId);
+        }
+        protocoloData.put("id", docRef.getId());
+        docRef.set(protocoloData)
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
+
+    public void eliminarProtocolo(String userId, String protocoloId, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_PROTOCOLOS).document(protocoloId).delete()
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
+
+
+    // --- MÉTODOS PARA CALENDARIOS (adaptados a sub-colecciones) ---
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void cargarCalendarios(String userId, OnCompleteListener<QuerySnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    // CORREGIDO: Se cambia Consumer<Task<...>> por OnCompleteListener<...>
+    public void buscarCalendarioPorId(String userId, String calendarioId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).document(calendarioId).get().addOnCompleteListener(onCompleteListener);
+    }
+
+    public void guardarOActualizarCalendario(String userId, String calendarioId, Map<String, Object> calendarioData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).document(calendarioId)
+                .set(calendarioData, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
+
+    public void eliminarCalendario(String userId, String calendarioId, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES).document(userId).collection(SUBCOLLECTION_CALENDARIOS).document(calendarioId).delete()
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
+
+
+    // --- MÉTODOS DE STORAGE ---
+    // (Estos no necesitan cambios)
+
+    public void subirArchivo(String userId, Uri fileUri, String folderName, Consumer<String> onResult, Consumer<Exception> onFailure) {
+        // Crea una ruta única para el archivo para evitar sobreescrituras
+        String fileName = System.currentTimeMillis() + "_" + fileUri.getLastPathSegment();
+        String rutaStorage = "user_files/" + userId + "/" + folderName + "/" + fileName;
+        StorageReference fileRef = storage.getReference().child(rutaStorage);
+
+        fileRef.putFile(fileUri)
                 .addOnSuccessListener(taskSnapshot ->
-                        imageRef.getDownloadUrl().addOnSuccessListener(uri ->
+                        fileRef.getDownloadUrl().addOnSuccessListener(uri ->
                                 onResult.accept(uri.toString())
                         )
                 )
                 .addOnFailureListener(onFailure::accept);
     }
 
-    /**
-     * Verifica si un email ya está registrado
-     */
-    public void verificarEmailExistente(String email, Consumer<Boolean> onResult, Consumer<Exception> onFailure) {
-        db.collection(COLLECTION_USER_PROFILES)
-                .whereEqualTo("email", email)
-                .whereEqualTo("isActive", true)
-                .get()
-                .addOnSuccessListener(querySnapshot ->
-                        onResult.accept(!querySnapshot.isEmpty())
-                )
-                .addOnFailureListener(onFailure::accept);
-    }
-
-    // --- Métodos de Storage (Sin cambios) ---
-
-    public void subirPdfYObtenerUrl(Uri fileUri, String rutaStorage, Consumer<String> onResult, Consumer<Exception> onFailure) {
+    public void subirPdfYObtenerUrl(String userId, Uri fileUri, String nombreCarpeta, Consumer<String> onResult, Consumer<Exception> onFailure) {
+        String rutaStorage = userId + "/" + nombreCarpeta + "/" + System.currentTimeMillis() + "_" + fileUri.getLastPathSegment();
         StorageReference fileRef = storage.getReference().child(rutaStorage);
         fileRef.putFile(fileUri)
                 .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {

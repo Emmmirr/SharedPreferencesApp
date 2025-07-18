@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -40,6 +42,9 @@ public class DocumentosTabFragment extends Fragment {
 
     private FirebaseManager firebaseManager;
     private FileManager fileManager;
+
+    // AÑADIDO: Variable para guardar el ID del usuario actual
+    private String currentUserId;
 
     private String pendingUploadCalendarioId = null;
     private String pendingUploadCampoPdf = null;
@@ -76,19 +81,46 @@ public class DocumentosTabFragment extends Fragment {
         return view;
     }
 
+    // AÑADIDO: onViewCreated para obtener el UID del usuario
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            this.currentUserId = user.getUid();
+            // Solo cargamos los documentos si tenemos un ID de usuario
+            cargarCalendariosDocumentos();
+        } else {
+            // Manejar caso de no estar logueado
+            tvNoDocumentos.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
+            tvNoDocumentos.setVisibility(View.VISIBLE);
+        }
+    }
+
+
     @Override
     public void onResume() {
         super.onResume();
-        // Esta llamada es la correcta y la que debe permanecer.
-        // Se ejecuta cada vez que el fragmento se vuelve visible, refrescando la UI.
-        cargarCalendariosDocumentos();
+        // onResume es útil para refrescar si se cambia de pestaña,
+        // pero la carga inicial ahora depende de que onViewCreated obtenga el UID.
+        if (currentUserId != null) {
+            cargarCalendariosDocumentos();
+        }
     }
 
     private void cargarCalendariosDocumentos() {
-        layoutDocumentos.removeAllViews();
-        tvNoDocumentos.setVisibility(View.GONE);
+        // Salvaguarda
+        if (currentUserId == null) {
+            Log.w(TAG, "Intento de cargar calendarios sin un UID de usuario.");
+            return;
+        }
 
-        firebaseManager.cargarCalendarios(task -> {
+        layoutDocumentos.removeAllViews();
+        tvNoDocumentos.setVisibility(View.VISIBLE);
+        tvNoDocumentos.setText("No hay calendarios asignados.");
+
+        // MODIFICADO: Se pasa el ID del usuario
+        firebaseManager.cargarCalendarios(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 if(task.getResult().isEmpty()){
                     tvNoDocumentos.setVisibility(View.VISIBLE);
@@ -106,6 +138,8 @@ public class DocumentosTabFragment extends Fragment {
     }
 
     private void crearCardDocumentos(DocumentSnapshot calendarioFirebase) {
+        if (currentUserId == null) return;
+
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_documentos_calendario, layoutDocumentos, false);
         TextView tvNombre = cardView.findViewById(R.id.tvNombreAlumnoDoc);
         TextView tvNumControl = cardView.findViewById(R.id.tvNumControlDoc);
@@ -117,7 +151,8 @@ public class DocumentosTabFragment extends Fragment {
         String alumnoId = calendarioFirebase.getString("alumnoId");
 
         if (alumnoId != null) {
-            firebaseManager.buscarAlumnoPorId(alumnoId, task -> {
+            // MODIFICADO: Se pasa el ID del usuario
+            firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
                 if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                     DocumentSnapshot alumno = task.getResult();
                     tvNombre.setText(alumno.getString("nombre"));
@@ -182,10 +217,6 @@ public class DocumentosTabFragment extends Fragment {
             calendario.put(campoPdfKey, uriString);
             if (fileManager.guardarCalendario(calendario)) {
                 Toast.makeText(getContext(), "PDF guardado exitosamente.", Toast.LENGTH_SHORT).show();
-
-                // CORRECCIÓN: Se elimina la siguiente línea. onResume() se encargará de esto.
-                // cargarCalendariosDocumentos();
-
             } else {
                 Toast.makeText(getContext(), "Error al guardar la referencia del PDF.", Toast.LENGTH_SHORT).show();
             }

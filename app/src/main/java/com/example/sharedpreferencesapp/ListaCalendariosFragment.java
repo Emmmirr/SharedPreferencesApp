@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -46,9 +48,11 @@ public class ListaCalendariosFragment extends Fragment {
     private LinearLayout layoutCalendarios;
     private TextView tvNoCalendarios;
 
-    // MODIFICADO: Se añade FirebaseManager y se mantiene FileManager para ciertas operaciones.
     private FirebaseManager firebaseManager;
-    private FileManager fileManager; // Mantenido para PDFGenerator y búsqueda de alumnos para PDF.
+    private FileManager fileManager;
+
+    // AÑADIDO: Variable para guardar el ID del usuario actual
+    private String currentUserId;
 
     private JSONObject calendarioPendiente;
     private String calendarioActualId = null;
@@ -78,19 +82,37 @@ public class ListaCalendariosFragment extends Fragment {
         tvNoCalendarios = view.findViewById(R.id.tvNoCalendarios);
         Button btnAgregar = view.findViewById(R.id.btnAgregarCalendario);
 
-        // AÑADIDO: Inicialización de Managers
         firebaseManager = new FirebaseManager();
         fileManager = new FileManager(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialogCalendario(null));
-        cargarCalendarios();
 
         return view;
     }
 
-    // MODIFICADO: Ahora carga los alumnos de Firebase antes de mostrar el diálogo
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            this.currentUserId = user.getUid();
+            cargarCalendarios();
+        } else {
+            tvNoCalendarios.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
+            tvNoCalendarios.setVisibility(View.VISIBLE);
+            layoutCalendarios.setVisibility(View.GONE);
+            view.findViewById(R.id.btnAgregarCalendario).setEnabled(false);
+        }
+    }
+
     private void mostrarDialogCalendario(String calendarioId) {
-        firebaseManager.cargarAlumnos(task -> {
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Error de sesión.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        firebaseManager.cargarAlumnos(currentUserId, task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
                 Toast.makeText(getContext(), "Error al cargar alumnos.", Toast.LENGTH_SHORT).show();
                 return;
@@ -99,7 +121,7 @@ public class ListaCalendariosFragment extends Fragment {
             ArrayList<String> alumnosDisplay = new ArrayList<>();
             ArrayList<String> alumnosIds = new ArrayList<>();
             alumnosDisplay.add("Selecciona un alumno...");
-            alumnosIds.add(null); // Placeholder para el prompt
+            alumnosIds.add(null);
 
             for (QueryDocumentSnapshot alumnoDoc : task.getResult()) {
                 alumnosDisplay.add(alumnoDoc.getString("nombre") + " (" + alumnoDoc.getString("numControl") + ")");
@@ -120,7 +142,6 @@ public class ListaCalendariosFragment extends Fragment {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_calendario, null);
         builder.setView(dialogView);
 
-        // --- Bindeo de Vistas (sin cambios) ---
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
         Spinner spinnerAlumno = dialogView.findViewById(R.id.spinnerAlumno);
         TextView tvNombreAlumnoSeleccionado = dialogView.findViewById(R.id.tvNombreAlumnoSeleccionado);
@@ -152,7 +173,6 @@ public class ListaCalendariosFragment extends Fragment {
         alumnosAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerAlumno.setAdapter(alumnosAdapter);
 
-        // --- Listeners (lógica interna modificada para Firebase) ---
         for (int i = 0; i < iconosCalendario.length; i++) {
             final int indice = i;
             iconosCalendario[i].setOnClickListener(v -> {
@@ -200,12 +220,12 @@ public class ListaCalendariosFragment extends Fragment {
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
                 if (position > 0) {
                     alumnoActualId = alumnosIds.get(position);
-                    calendarioActualId = "calendario_" + alumnoActualId; // ID predecible
+                    calendarioActualId = "calendario_" + alumnoActualId;
                     cargarDatosCalendarioExistenteFirebase(fechasTemp, textViewsFecha, iconosGuardar, textViewsLabel, defaultLabels);
                 } else {
                     alumnoActualId = null;
                     calendarioActualId = null;
-                    cargarDatosCalendarioExistenteFirebase(fechasTemp, textViewsFecha, iconosGuardar, textViewsLabel, defaultLabels); // Limpia la UI
+                    cargarDatosCalendarioExistenteFirebase(fechasTemp, textViewsFecha, iconosGuardar, textViewsLabel, defaultLabels);
                 }
             }
             @Override
@@ -226,9 +246,8 @@ public class ListaCalendariosFragment extends Fragment {
         dialog.show();
     }
 
-    // MODIFICADO: Guarda o actualiza un campo de fecha en Firebase
     private void guardarFechaIndividualFirebase(String[] fechasTemp, int indice, String nombreCampoFecha, SimpleDateFormat formatoFecha) {
-        if (this.alumnoActualId == null) {
+        if (currentUserId == null || this.alumnoActualId == null) {
             Toast.makeText(getContext(), "Error: No se ha seleccionado un alumno.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -242,7 +261,7 @@ public class ListaCalendariosFragment extends Fragment {
         data.put(nombreCampoFecha, fechasTemp[indice]);
         data.put("fechaCreacion", formatoFecha.format(new Date()));
 
-        firebaseManager.guardarOActualizarCalendario(calendarioId, data,
+        firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, data,
                 () -> {
                     Toast.makeText(getContext(), "Fecha guardada exitosamente", Toast.LENGTH_SHORT).show();
                     cargarCalendarios();
@@ -250,8 +269,8 @@ public class ListaCalendariosFragment extends Fragment {
                 e -> Toast.makeText(getContext(), "Error al guardar la fecha: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    // MODIFICADO: Actualiza un campo de label en Firebase
     private void mostrarDialogEditarLabelFirebase(TextView textViewLabel, String calendarioId, String campoLabelKey) {
+        // Este método no necesita userId explícitamente porque actualizarCalendario ya no existe y usamos guardarOActualizar
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Editar Nombre de la Actividad");
         final EditText input = new EditText(getContext());
@@ -266,25 +285,33 @@ public class ListaCalendariosFragment extends Fragment {
             }
             Map<String, Object> update = new HashMap<>();
             update.put(campoLabelKey, nuevoLabel);
-            firebaseManager.actualizarCalendario(calendarioId, update, () -> {
-                textViewLabel.setText(nuevoLabel);
-                cargarCalendarios();
-                Toast.makeText(getContext(), "Nombre actualizado", Toast.LENGTH_SHORT).show();
-            });
+
+            firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, update,
+                    () -> {
+                        textViewLabel.setText(nuevoLabel);
+                        cargarCalendarios();
+                        Toast.makeText(getContext(), "Nombre actualizado", Toast.LENGTH_SHORT).show();
+                    },
+                    e -> Toast.makeText(getContext(), "Error al actualizar.", Toast.LENGTH_SHORT).show()
+            );
         });
         builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
-    // MODIFICADO: Carga la lista de calendarios desde Firebase
     private void cargarCalendarios() {
+        if (currentUserId == null) return;
+
         layoutCalendarios.removeAllViews();
-        tvNoCalendarios.setVisibility(View.GONE);
-        firebaseManager.cargarCalendarios(task -> {
+        tvNoCalendarios.setText("No hay calendarios registrados.");
+        tvNoCalendarios.setVisibility(View.VISIBLE);
+
+        firebaseManager.cargarCalendarios(currentUserId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 if(task.getResult().isEmpty()){
                     tvNoCalendarios.setVisibility(View.VISIBLE);
                 } else {
+                    tvNoCalendarios.setVisibility(View.GONE);
                     for (QueryDocumentSnapshot calendarioDoc : task.getResult()) {
                         crearCardCalendario(calendarioDoc);
                     }
@@ -296,8 +323,9 @@ public class ListaCalendariosFragment extends Fragment {
         });
     }
 
-    // MODIFICADO: Crea una card a partir de un DocumentSnapshot de Firebase
     private void crearCardCalendario(DocumentSnapshot calendario) {
+        if (currentUserId == null) return;
+
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_calendario, layoutCalendarios, false);
         TextView tvNombreAlumno = cardView.findViewById(R.id.tvNombreAlumno);
         TextView tvNumControl = cardView.findViewById(R.id.tvNumControl);
@@ -312,9 +340,8 @@ public class ListaCalendariosFragment extends Fragment {
         String calendarioId = calendario.getId();
         String alumnoId = calendario.getString("alumnoId");
 
-        // Carga asíncrona de los datos del alumno
         if (alumnoId != null) {
-            firebaseManager.buscarAlumnoPorId(alumnoId, task -> {
+            firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
                 if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                     DocumentSnapshot alumno = task.getResult();
                     tvNombreAlumno.setText(limpiarTextoVista(alumno.getString("nombre")));
@@ -342,7 +369,6 @@ public class ListaCalendariosFragment extends Fragment {
         tvFechaCreacion.setText("Creado: " + limpiarTextoVista(calendario.getString("fechaCreacion")));
 
         btnPDF.setOnClickListener(v -> {
-            // Convierte el DocumentSnapshot a JSONObject para mantener la compatibilidad del generador PDF
             JSONObject calJson = new JSONObject(calendario.getData());
             seleccionarUbicacionPDF(calJson);
         });
@@ -350,9 +376,9 @@ public class ListaCalendariosFragment extends Fragment {
         btnEliminar.setOnClickListener(v -> new AlertDialog.Builder(getContext())
                 .setTitle("Eliminar Calendario").setMessage("¿Eliminar este calendario?")
                 .setPositiveButton("Eliminar", (dialog, which) -> {
-                    firebaseManager.eliminarCalendario(calendarioId,
+                    firebaseManager.eliminarCalendario(currentUserId, calendarioId,
                             () -> {
-                                fileManager.eliminarRegistroLocalCalendario(calendarioId); // Elimina archivo local de URIs de PDF
+                                fileManager.eliminarRegistroLocalCalendario(calendarioId);
                                 cargarCalendarios();
                                 Toast.makeText(getContext(), "Calendario eliminado", Toast.LENGTH_SHORT).show();
                             },
@@ -362,17 +388,16 @@ public class ListaCalendariosFragment extends Fragment {
         layoutCalendarios.addView(cardView);
     }
 
-    // --- MÉTODOS AUXILIARES (Lógica de UI o adaptados a Firebase) ---
-
     private void cargarDatosCalendarioParaEdicionFirebase(String calendarioId, Spinner spinnerAlumno, TextView tvNombreAlumnoSeleccionado) {
-        firebaseManager.buscarCalendarioPorId(calendarioId, task -> {
+        if (currentUserId == null) return;
+        firebaseManager.buscarCalendarioPorId(currentUserId, calendarioId, task -> {
             if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                 DocumentSnapshot calendario = task.getResult();
                 String alumnoId = calendario.getString("alumnoId");
                 this.alumnoActualId = alumnoId;
                 this.calendarioActualId = calendarioId;
 
-                firebaseManager.buscarAlumnoPorId(alumnoId, alumnoTask -> {
+                firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, alumnoTask -> {
                     if(alumnoTask.isSuccessful() && alumnoTask.getResult() != null && alumnoTask.getResult().exists()){
                         DocumentSnapshot alumno = alumnoTask.getResult();
                         tvNombreAlumnoSeleccionado.setText(alumno.getString("nombre") + "\nNo. Control: " + alumno.getString("numControl"));
@@ -386,6 +411,7 @@ public class ListaCalendariosFragment extends Fragment {
 
     private void cargarDatosCalendarioExistenteFirebase(String[] fechasTemp, TextView[] textViewsFecha, ImageView[] iconosGuardar,
                                                         TextView[] textViewsLabel, String[] defaultLabels) {
+        if (currentUserId == null) return;
         for (int i = 0; i < textViewsFecha.length; i++) {
             fechasTemp[i] = "";
             textViewsFecha[i].setText("Fecha: Sin asignar");
@@ -397,7 +423,7 @@ public class ListaCalendariosFragment extends Fragment {
         }
         if (calendarioActualId == null) return;
 
-        firebaseManager.buscarCalendarioPorId(calendarioActualId, task -> {
+        firebaseManager.buscarCalendarioPorId(currentUserId, calendarioActualId, task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot calendario = task.getResult();
                 if (calendario.exists()) {
@@ -420,21 +446,22 @@ public class ListaCalendariosFragment extends Fragment {
     }
 
     private void borrarTodasLasFechasFirebase(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar) {
-        if (calendarioActualId == null) return;
+        if (currentUserId == null || calendarioActualId == null) return;
         Map<String, Object> updates = new HashMap<>();
         updates.put("fechaPrimeraEntrega", "");
         updates.put("fechaSegundaEntrega", "");
         updates.put("fechaResultado", "");
 
-        firebaseManager.actualizarCalendario(calendarioActualId, updates, () -> {
+        firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioActualId, updates, () -> {
             Toast.makeText(getContext(), "Todas las fechas han sido eliminadas", Toast.LENGTH_SHORT).show();
             cargarDatosCalendarioExistenteFirebase(fechasTemp, textViews, iconosGuardar, textViews, new String[]{"1 Entrega", "2 Entrega", "Resultado"});
             cargarCalendarios();
-        });
+        }, e -> Toast.makeText(getContext(), "Error al borrar fechas.", Toast.LENGTH_SHORT).show());
     }
 
     private void mostrarDatePickerIndividualIcono(int indice, String[] fechasTemp, TextView[] textViews,
                                                   ImageView[] iconosGuardar, SimpleDateFormat formatoFecha, String fechaMinima) {
+        if (getContext() == null) return;
         Calendar calendar = Calendar.getInstance();
         if (fechaMinima != null && !fechaMinima.isEmpty()) {
             try {
@@ -447,7 +474,7 @@ public class ListaCalendariosFragment extends Fragment {
                 }
             } catch (ParseException e) { e.printStackTrace(); }
         }
-        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+        DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), (view, year, month, dayOfMonth) -> {
             Calendar selectedDate = Calendar.getInstance();
             selectedDate.set(year, month, dayOfMonth);
             if (esFindeSemana(selectedDate)) {
@@ -527,31 +554,42 @@ public class ListaCalendariosFragment extends Fragment {
     }
 
     private void seleccionarUbicacionPDF(JSONObject calendario) {
+        if (currentUserId == null) return;
+
         calendarioPendiente = calendario;
         String alumnoId = calendario.optString("alumnoId", "");
-        // Se usa fileManager para buscar el alumno para el nombre del archivo PDF
-        JSONObject alumno = fileManager.buscarAlumnoPorId(alumnoId);
-        String nombreAlumno = alumno != null ? alumno.optString("nombre", "Calendario") : "Calendario";
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String nombreArchivo = "Calendario_" + nombreAlumno.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".pdf";
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/pdf");
-        intent.putExtra(Intent.EXTRA_TITLE, nombreArchivo);
-        try {
-            selectorCarpeta.launch(intent);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
-        }
+
+        // El fileManager local no tiene noción de usuarios, así que no podemos usarlo para buscar al alumno
+        // directamente. En su lugar, obtenemos el nombre del alumno desde Firestore.
+        firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
+            String nombreAlumno = "Calendario";
+            if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                nombreAlumno = task.getResult().getString("nombre");
+            }
+
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String nombreArchivo = "Calendario_" + nombreAlumno.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".pdf";
+
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/pdf");
+            intent.putExtra(Intent.EXTRA_TITLE, nombreArchivo);
+            try {
+                selectorCarpeta.launch(intent);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Error al abrir selector de archivos", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void generarPDFEnUbicacion(JSONObject calendario, Uri uri) {
+        if (getActivity() == null) return;
         Toast.makeText(getContext(), "Generando PDF...", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             try {
                 PDFGeneratorCalendario pdfGenerator = new PDFGeneratorCalendario(requireContext());
                 boolean exito = pdfGenerator.generarPDFCalendarioEnUri(calendario, uri);
-                requireActivity().runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (exito) {
                         Toast.makeText(getContext(), "PDF de calendario guardado exitosamente", Toast.LENGTH_LONG).show();
                         new AlertDialog.Builder(getContext())
@@ -565,7 +603,7 @@ public class ListaCalendariosFragment extends Fragment {
                     }
                 });
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }).start();
     }

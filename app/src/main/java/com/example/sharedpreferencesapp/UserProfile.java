@@ -1,230 +1,195 @@
 package com.example.sharedpreferencesapp;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Modelo de datos para el perfil de usuario
- *
- * @author anthonyllan
- * @version 1.0
- * @since 2025-07-15
+ * Clase POJO (Plain Old Java Object) que representa el perfil de un usuario.
+ * Contiene todos los campos necesarios para la nueva sección de perfil.
  */
 public class UserProfile {
 
-    // Campos obligatorios
-    private String userId;
-    private String email;
-    private String displayName;
-    private String authMethod; // "normal", "google"
+    // --- Datos de Identificación (Esenciales) ---
+    private String userId = "";
+    private String email = "";
+    private String displayName = "";
+    private String authMethod = "";
 
-    // Campos del perfil (opcionales)
-    private String firstName;
-    private String lastName;
-    private String phoneNumber;
-    private String profileImageUrl;
-    private String jobTitle;
-    private String department;
-    private String institution;
-    private String bio;
-    private String dateOfBirth;
-    private String gender;
-    private String address;
-    private String city;
-    private String state;
-    private String country;
-    private String zipCode;
+    // --- Información Personal ---
+    private String fullName = "";
+    private String dateOfBirth = "";
+    private String gender = "";
+    private String curp = "";
+    private String ineScanUrl = "";
+    private String career = "";
+    private String controlNumber = "";
+    private String medicalConditions = "";
 
-    // Metadatos
-    private String createdAt;
-    private String updatedAt;
-    private boolean isActive;
-    private boolean isProfileComplete;
+    // --- Datos de Contacto ---
+    private String phoneNumber = "";
+    private String emergencyContactName = "";
+    private String emergencyContactPhone = "";
 
-    // Constructores
-    public UserProfile() {
-        // Constructor vacío requerido para Firebase
-    }
+    // --- Fotografía del Usuario ---
+    private String profileImageUrl = "";
 
+    // --- Metadatos ---
+    private String createdAt = "";
+    private String updatedAt = "";
+    private boolean isProfileComplete = false;
+
+    // Dejé fuera los campos de dirección y profesionales por brevedad,
+    // pero si los tienes en tu layout, deberías añadirlos aquí también.
+
+    // Constructor vacío requerido por Firestore
+    public UserProfile() {}
+
+    // Constructor para un nuevo perfil
     public UserProfile(String userId, String email, String displayName, String authMethod) {
         this.userId = userId;
         this.email = email;
         this.displayName = displayName;
         this.authMethod = authMethod;
-        this.isActive = true;
-        this.isProfileComplete = false;
         this.createdAt = String.valueOf(System.currentTimeMillis());
-        this.updatedAt = String.valueOf(System.currentTimeMillis());
     }
 
-    // Getters y Setters
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    // --- Métodos de Conversión para Firestore ---
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public static UserProfile fromMap(Map<String, Object> map) {
+        UserProfile profile = new UserProfile();
+        if (map == null) return profile;
 
-    public String getDisplayName() { return displayName; }
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
+        profile.userId = (String) map.getOrDefault("userId", "");
+        profile.email = (String) map.getOrDefault("email", "");
+        profile.displayName = (String) map.getOrDefault("displayName", "");
+        profile.authMethod = (String) map.getOrDefault("authMethod", "");
+        profile.fullName = (String) map.getOrDefault("fullName", "");
+        profile.dateOfBirth = (String) map.getOrDefault("dateOfBirth", "");
+        profile.gender = (String) map.getOrDefault("gender", "");
+        profile.curp = (String) map.getOrDefault("curp", "");
+        profile.ineScanUrl = (String) map.getOrDefault("ineScanUrl", "");
+        profile.career = (String) map.getOrDefault("career", "");
+        profile.controlNumber = (String) map.getOrDefault("controlNumber", "");
+        profile.medicalConditions = (String) map.getOrDefault("medicalConditions", "");
+        profile.phoneNumber = (String) map.getOrDefault("phoneNumber", "");
+        profile.emergencyContactName = (String) map.getOrDefault("emergencyContactName", "");
+        profile.emergencyContactPhone = (String) map.getOrDefault("emergencyContactPhone", "");
+        profile.profileImageUrl = (String) map.getOrDefault("profileImageUrl", "");
+        profile.createdAt = (String) map.getOrDefault("createdAt", "");
+        profile.updatedAt = (String) map.getOrDefault("updatedAt", "");
+        profile.isProfileComplete = (Boolean) map.getOrDefault("isProfileComplete", false);
 
-    public String getAuthMethod() { return authMethod; }
-    public void setAuthMethod(String authMethod) { this.authMethod = authMethod; }
+        return profile;
+    }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
-
-    public String getPhoneNumber() { return phoneNumber; }
-    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
-
-    public String getProfileImageUrl() { return profileImageUrl; }
-    public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
-
-    public String getJobTitle() { return jobTitle; }
-    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
-
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
-
-    public String getInstitution() { return institution; }
-    public void setInstitution(String institution) { this.institution = institution; }
-
-    public String getBio() { return bio; }
-    public void setBio(String bio) { this.bio = bio; }
-
-    public String getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
-
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
-
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-
-    public String getCity() { return city; }
-    public void setCity(String city) { this.city = city; }
-
-    public String getState() { return state; }
-    public void setState(String state) { this.state = state; }
-
-    public String getCountry() { return country; }
-    public void setCountry(String country) { this.country = country; }
-
-    public String getZipCode() { return zipCode; }
-    public void setZipCode(String zipCode) { this.zipCode = zipCode; }
-
-    public String getCreatedAt() { return createdAt; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-
-    public String getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
-
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
-
-    public boolean isProfileComplete() { return isProfileComplete; }
-    public void setProfileComplete(boolean profileComplete) { isProfileComplete = profileComplete; }
-
-    /**
-     * Convierte el perfil a un Map para Firebase
-     */
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
         map.put("userId", userId);
         map.put("email", email);
         map.put("displayName", displayName);
         map.put("authMethod", authMethod);
-        map.put("firstName", firstName);
-        map.put("lastName", lastName);
-        map.put("phoneNumber", phoneNumber);
-        map.put("profileImageUrl", profileImageUrl);
-        map.put("jobTitle", jobTitle);
-        map.put("department", department);
-        map.put("institution", institution);
-        map.put("bio", bio);
+        map.put("fullName", fullName);
         map.put("dateOfBirth", dateOfBirth);
         map.put("gender", gender);
-        map.put("address", address);
-        map.put("city", city);
-        map.put("state", state);
-        map.put("country", country);
-        map.put("zipCode", zipCode);
+        map.put("curp", curp);
+        map.put("ineScanUrl", ineScanUrl);
+        map.put("career", career);
+        map.put("controlNumber", controlNumber);
+        map.put("medicalConditions", medicalConditions);
+        map.put("phoneNumber", phoneNumber);
+        map.put("emergencyContactName", emergencyContactName);
+        map.put("emergencyContactPhone", emergencyContactPhone);
+        map.put("profileImageUrl", profileImageUrl);
         map.put("createdAt", createdAt);
         map.put("updatedAt", updatedAt);
-        map.put("isActive", isActive);
         map.put("isProfileComplete", isProfileComplete);
+
         return map;
     }
 
-    /**
-     * Crea un UserProfile desde un Map de Firebase
-     */
-    public static UserProfile fromMap(Map<String, Object> map) {
-        UserProfile profile = new UserProfile();
-        profile.setUserId((String) map.get("userId"));
-        profile.setEmail((String) map.get("email"));
-        profile.setDisplayName((String) map.get("displayName"));
-        profile.setAuthMethod((String) map.get("authMethod"));
-        profile.setFirstName((String) map.get("firstName"));
-        profile.setLastName((String) map.get("lastName"));
-        profile.setPhoneNumber((String) map.get("phoneNumber"));
-        profile.setProfileImageUrl((String) map.get("profileImageUrl"));
-        profile.setJobTitle((String) map.get("jobTitle"));
-        profile.setDepartment((String) map.get("department"));
-        profile.setInstitution((String) map.get("institution"));
-        profile.setBio((String) map.get("bio"));
-        profile.setDateOfBirth((String) map.get("dateOfBirth"));
-        profile.setGender((String) map.get("gender"));
-        profile.setAddress((String) map.get("address"));
-        profile.setCity((String) map.get("city"));
-        profile.setState((String) map.get("state"));
-        profile.setCountry((String) map.get("country"));
-        profile.setZipCode((String) map.get("zipCode"));
-        profile.setCreatedAt((String) map.get("createdAt"));
-        profile.setUpdatedAt((String) map.get("updatedAt"));
-        profile.setActive(Boolean.TRUE.equals(map.get("isActive")));
-        profile.setProfileComplete(Boolean.TRUE.equals(map.get("isProfileComplete")));
-        return profile;
-    }
+    // --- MÉTODOS DE LÓGICA ---
 
     /**
-     * Obtiene el nombre completo del usuario
+     * MÉTODO AÑADIDO: Calcula el porcentaje de completitud del perfil.
+     * @return un entero entre 0 y 100.
      */
-    public String getFullName() {
-        if (firstName != null && lastName != null && !firstName.isEmpty() && !lastName.isEmpty()) {
-            return firstName + " " + lastName;
-        } else if (displayName != null && !displayName.isEmpty()) {
-            return displayName;
-        } else {
-            return email != null ? email : "Usuario";
+    public int getProfileCompleteness() {
+        int totalFields = 8; // Ajusta este número según los campos que consideres importantes
+        int filledFields = 0;
+        if (fullName != null && !fullName.isEmpty()) filledFields++;
+        if (dateOfBirth != null && !dateOfBirth.isEmpty()) filledFields++;
+        if (gender != null && !gender.isEmpty()) filledFields++;
+        if (curp != null && !curp.isEmpty()) filledFields++;
+        if (career != null && !career.isEmpty()) filledFields++;
+        if (controlNumber != null && !controlNumber.isEmpty()) filledFields++;
+        if (phoneNumber != null && !phoneNumber.isEmpty()) filledFields++;
+        if (emergencyContactName != null && !emergencyContactName.isEmpty()) filledFields++;
+
+        if (totalFields == 0) return 100;
+        return (filledFields * 100) / totalFields;
+    }
+
+    public int getAge() {
+        if (dateOfBirth == null || dateOfBirth.isEmpty()) return 0;
+        try {
+            String[] parts = dateOfBirth.split("/");
+            int day = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]) - 1;
+            int year = Integer.parseInt(parts[2]);
+
+            Calendar dob = Calendar.getInstance();
+            dob.set(year, month, day);
+            Calendar today = Calendar.getInstance();
+
+            int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+            if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+                age--;
+            }
+            return age;
+        } catch (Exception e) {
+            return 0;
         }
     }
 
-    /**
-     * Calcula el porcentaje de completitud del perfil
-     */
-    public int getProfileCompleteness() {
-        int totalFields = 15; // Campos principales del perfil
-        int completedFields = 0;
+    // --- Getters y Setters ---
 
-        if (firstName != null && !firstName.isEmpty()) completedFields++;
-        if (lastName != null && !lastName.isEmpty()) completedFields++;
-        if (phoneNumber != null && !phoneNumber.isEmpty()) completedFields++;
-        if (profileImageUrl != null && !profileImageUrl.isEmpty()) completedFields++;
-        if (jobTitle != null && !jobTitle.isEmpty()) completedFields++;
-        if (department != null && !department.isEmpty()) completedFields++;
-        if (institution != null && !institution.isEmpty()) completedFields++;
-        if (bio != null && !bio.isEmpty()) completedFields++;
-        if (dateOfBirth != null && !dateOfBirth.isEmpty()) completedFields++;
-        if (gender != null && !gender.isEmpty()) completedFields++;
-        if (address != null && !address.isEmpty()) completedFields++;
-        if (city != null && !city.isEmpty()) completedFields++;
-        if (state != null && !state.isEmpty()) completedFields++;
-        if (country != null && !country.isEmpty()) completedFields++;
-        if (zipCode != null && !zipCode.isEmpty()) completedFields++;
-
-        return (completedFields * 100) / totalFields;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public String getAuthMethod() { return authMethod; }
+    public void setAuthMethod(String authMethod) { this.authMethod = authMethod; }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+    public String getCurp() { return curp; }
+    public void setCurp(String curp) { this.curp = curp; }
+    public String getIneScanUrl() { return ineScanUrl; }
+    public void setIneScanUrl(String ineScanUrl) { this.ineScanUrl = ineScanUrl; }
+    public String getCareer() { return career; }
+    public void setCareer(String career) { this.career = career; }
+    public String getControlNumber() { return controlNumber; }
+    public void setControlNumber(String controlNumber) { this.controlNumber = controlNumber; }
+    public String getMedicalConditions() { return medicalConditions; }
+    public void setMedicalConditions(String medicalConditions) { this.medicalConditions = medicalConditions; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public String getEmergencyContactName() { return emergencyContactName; }
+    public void setEmergencyContactName(String emergencyContactName) { this.emergencyContactName = emergencyContactName; }
+    public String getEmergencyContactPhone() { return emergencyContactPhone; }
+    public void setEmergencyContactPhone(String emergencyContactPhone) { this.emergencyContactPhone = emergencyContactPhone; }
+    public String getProfileImageUrl() { return profileImageUrl; }
+    public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    public boolean isProfileComplete() { return isProfileComplete; }
+    public void setProfileComplete(boolean profileComplete) { this.isProfileComplete = profileComplete; }
 }

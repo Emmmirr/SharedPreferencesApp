@@ -50,10 +50,12 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-auth")
 
+    implementation("com.squareup.picasso:picasso:2.71828")
+    implementation("com.itextpdf:itext7-core:7.2.5")
     // Otras dependencias
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
-    implementation("com.itextpdf:itext7-core:7.2.5")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
