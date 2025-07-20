@@ -253,7 +253,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card de completitud del perfil (ESTA CARD NO ESTABA EN TU XML PERO LA DEJÉ PORQUE TU JAVA LA USA) -->
+        <!-- Card de completitud del perfil -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

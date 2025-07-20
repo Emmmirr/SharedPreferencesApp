@@ -51,6 +51,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLEncoder; // AÑADIDO: Import necesario para la codificación
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -490,16 +491,25 @@ public class PerfilFragment extends Fragment {
         }
         try {
             // Se "envuelve" la URL de Firebase en la URL del visor de Google Docs
-            // Esto fuerza la renderización en un visor web en lugar de una descarga directa.
-            String googleDocsUrl = "https://docs.google.com/gview?embedded=true&url=" + url;
+            // para forzar la renderización del PDF en un visor web.
+            String encodedUrl = URLEncoder.encode(url, "UTF-8");
+            String googleDocsUrl = "https://docs.google.com/gview?embedded=true&url=" + encodedUrl;
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(googleDocsUrl));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(getContext(), "No se pudo abrir el documento. Verifique tener un navegador web.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Error al intentar ver documento URL: " + url, e);
+            // Si falla el visor de Google, intentamos abrirlo directamente (para imágenes)
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+            } catch (Exception e2) {
+                Toast.makeText(getContext(), "No se pudo abrir el documento. Verifique tener un navegador web.", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Error al intentar ver documento URL: " + url, e2);
+            }
         }
     }
+
 
     private void mostrarDialogCerrarSesion() {
         new AlertDialog.Builder(getContext())
