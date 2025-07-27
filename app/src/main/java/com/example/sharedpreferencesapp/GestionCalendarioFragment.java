@@ -13,6 +13,8 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 public class GestionCalendarioFragment extends Fragment {
 
+    // Ya no necesitamos el método newInstance ni la constante ARG_TAB_TO_OPEN aquí.
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -38,5 +40,16 @@ public class GestionCalendarioFragment extends Fragment {
                 tab.setIcon(android.R.drawable.ic_menu_upload);
             }
         }).attach();
+
+        // --- INICIO DE CÓDIGO MODIFICADO ---
+        // Leemos los argumentos que nos pasó el NavController desde la MainActivity
+        if (getArguments() != null) {
+            // El nombre del argumento ("TAB_TO_OPEN") debe coincidir con el usado en MainActivity
+            int tabToOpen = getArguments().getInt("TAB_TO_OPEN", -1);
+            if (tabToOpen != -1) {
+                viewPager.post(() -> viewPager.setCurrentItem(tabToOpen, false));
+            }
+        }
+        // --- FIN DE CÓDIGO MODIFICADO ---
     }
 }

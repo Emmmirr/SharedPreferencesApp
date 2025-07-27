@@ -1,10 +1,14 @@
 package com.example.sharedpreferencesapp;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,7 +34,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.ParseException;
@@ -50,10 +53,9 @@ public class ListaCalendariosFragment extends Fragment {
 
     private FirebaseManager firebaseManager;
     private FileManager fileManager;
+    private AlarmScheduler alarmScheduler;
 
-    // AÑADIDO: Variable para guardar el ID del usuario actual
     private String currentUserId;
-
     private JSONObject calendarioPendiente;
     private String calendarioActualId = null;
     private String alumnoActualId = null;
@@ -71,6 +73,7 @@ public class ListaCalendariosFragment extends Fragment {
     );
 
     public ListaCalendariosFragment() {
+        // Constructor público vacío requerido
     }
 
     @Nullable
@@ -84,6 +87,7 @@ public class ListaCalendariosFragment extends Fragment {
 
         firebaseManager = new FirebaseManager();
         fileManager = new FileManager(requireContext());
+        alarmScheduler = new AlarmScheduler(requireContext());
 
         btnAgregar.setOnClickListener(v -> mostrarDialogCalendario(null));
 
@@ -94,6 +98,9 @@ public class ListaCalendariosFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Se verifica si la app tiene permiso para programar alarmas exactas (necesario en Android 12+)
+        checkAndRequestExactAlarmPermission();
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             this.currentUserId = user.getUid();
@@ -103,6 +110,27 @@ public class ListaCalendariosFragment extends Fragment {
             tvNoCalendarios.setVisibility(View.VISIBLE);
             layoutCalendarios.setVisibility(View.GONE);
             view.findViewById(R.id.btnAgregarCalendario).setEnabled(false);
+        }
+    }
+
+    /**
+     * Verifica el permiso para programar alarmas exactas. Si no está concedido,
+     * muestra un diálogo para guiar al usuario a la pantalla de ajustes.
+     */
+    private void checkAndRequestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms()) {
+                new AlertDialog.Builder(getContext())
+                        .setTitle("Permiso Necesario")
+                        .setMessage("Para poder enviarte recordatorios de tus fechas de entrega, la aplicación necesita permiso para programar alarmas. Serás dirigido a los ajustes para activarlo.")
+                        .setPositiveButton("Ir a Ajustes", (dialog, which) -> {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                            startActivity(intent);
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+            }
         }
     }
 
@@ -191,7 +219,7 @@ public class ListaCalendariosFragment extends Fragment {
                     Toast.makeText(getContext(), "Primero selecciona un alumno", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                guardarFechaIndividualFirebase(fechasTemp, indice, nombresCamposFecha[indice], formatoFecha);
+                guardarFechaIndividualFirebase(fechasTemp, indice, nombresCamposFecha[indice], formatoFecha, textViewsLabel[indice].getText().toString());
             });
         }
         for(int i = 0; i < textViewsLabel.length; i++) {
@@ -212,7 +240,7 @@ public class ListaCalendariosFragment extends Fragment {
             new AlertDialog.Builder(getContext())
                     .setTitle("Borrar Fechas").setMessage("¿Estás seguro que quieres eliminar todas las fechas?")
                     .setIcon(R.drawable.libro)
-                    .setPositiveButton("Sí, Borrar", (dialog, which) -> borrarTodasLasFechasFirebase(fechasTemp, textViewsFecha, iconosGuardar))
+                    .setPositiveButton("Sí, Borrar", (dialog, which) -> borrarTodasLasFechasFirebase(fechasTemp, textViewsFecha, iconosGuardar, textViewsLabel, defaultLabels))
                     .setNegativeButton("Cancelar", null).show();
         });
         spinnerAlumno.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
@@ -246,7 +274,7 @@ public class ListaCalendariosFragment extends Fragment {
         dialog.show();
     }
 
-    private void guardarFechaIndividualFirebase(String[] fechasTemp, int indice, String nombreCampoFecha, SimpleDateFormat formatoFecha) {
+    private void guardarFechaIndividualFirebase(String[] fechasTemp, int indice, String nombreCampoFecha, SimpleDateFormat formatoFecha, String label) {
         if (currentUserId == null || this.alumnoActualId == null) {
             Toast.makeText(getContext(), "Error: No se ha seleccionado un alumno.", Toast.LENGTH_SHORT).show();
             return;
@@ -264,13 +292,20 @@ public class ListaCalendariosFragment extends Fragment {
         firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, data,
                 () -> {
                     Toast.makeText(getContext(), "Fecha guardada exitosamente", Toast.LENGTH_SHORT).show();
+
+                    String[] camposPdf = {"pdfUriPrimeraEntrega", "pdfUriSegundaEntrega", "pdfUriResultado"};
+
+                    // Se cancela cualquier alarma previa para esta fecha y se programa una nueva.
+                    // Se pasa el 'indice' para asegurar un requestCode único.
+                    alarmScheduler.cancelAlarmsForDate(calendarioId, indice);
+                    alarmScheduler.scheduleAlarmsForDate(currentUserId, calendarioId, fechasTemp[indice], label, camposPdf[indice], indice);
+
                     cargarCalendarios();
                 },
                 e -> Toast.makeText(getContext(), "Error al guardar la fecha: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void mostrarDialogEditarLabelFirebase(TextView textViewLabel, String calendarioId, String campoLabelKey) {
-        // Este método no necesita userId explícitamente porque actualizarCalendario ya no existe y usamos guardarOActualizar
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Editar Nombre de la Actividad");
         final EditText input = new EditText(getContext());
@@ -324,7 +359,7 @@ public class ListaCalendariosFragment extends Fragment {
     }
 
     private void crearCardCalendario(DocumentSnapshot calendario) {
-        if (currentUserId == null) return;
+        if (currentUserId == null || getContext() == null) return;
 
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_calendario, layoutCalendarios, false);
         TextView tvNombreAlumno = cardView.findViewById(R.id.tvNombreAlumno);
@@ -373,17 +408,25 @@ public class ListaCalendariosFragment extends Fragment {
             seleccionarUbicacionPDF(calJson);
         });
         btnEditar.setOnClickListener(v -> mostrarDialogCalendario(calendarioId));
-        btnEliminar.setOnClickListener(v -> new AlertDialog.Builder(getContext())
-                .setTitle("Eliminar Calendario").setMessage("¿Eliminar este calendario?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-                    firebaseManager.eliminarCalendario(currentUserId, calendarioId,
-                            () -> {
-                                fileManager.eliminarRegistroLocalCalendario(calendarioId);
-                                cargarCalendarios();
-                                Toast.makeText(getContext(), "Calendario eliminado", Toast.LENGTH_SHORT).show();
-                            },
-                            e -> Toast.makeText(getContext(), "Error al eliminar: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                }).setNegativeButton("Cancelar", null).show());
+        btnEliminar.setOnClickListener(v -> {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Eliminar Calendario").setMessage("¿Eliminar este calendario?")
+                    .setPositiveButton("Eliminar", (dialog, which) -> {
+
+                        // Al eliminar un calendario, se cancelan todas sus alarmas asociadas.
+                        for (int i = 0; i < 3; i++) {
+                            alarmScheduler.cancelAlarmsForDate(calendarioId, i);
+                        }
+
+                        firebaseManager.eliminarCalendario(currentUserId, calendarioId,
+                                () -> {
+                                    fileManager.eliminarRegistroLocalCalendario(calendarioId);
+                                    cargarCalendarios();
+                                    Toast.makeText(getContext(), "Calendario eliminado", Toast.LENGTH_SHORT).show();
+                                },
+                                e -> Toast.makeText(getContext(), "Error al eliminar: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }).setNegativeButton("Cancelar", null).show();
+        });
 
         layoutCalendarios.addView(cardView);
     }
@@ -445,7 +488,7 @@ public class ListaCalendariosFragment extends Fragment {
         });
     }
 
-    private void borrarTodasLasFechasFirebase(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar) {
+    private void borrarTodasLasFechasFirebase(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar, TextView[] textViewsLabel, String[] defaultLabels) {
         if (currentUserId == null || calendarioActualId == null) return;
         Map<String, Object> updates = new HashMap<>();
         updates.put("fechaPrimeraEntrega", "");
@@ -454,7 +497,13 @@ public class ListaCalendariosFragment extends Fragment {
 
         firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioActualId, updates, () -> {
             Toast.makeText(getContext(), "Todas las fechas han sido eliminadas", Toast.LENGTH_SHORT).show();
-            cargarDatosCalendarioExistenteFirebase(fechasTemp, textViews, iconosGuardar, textViews, new String[]{"1 Entrega", "2 Entrega", "Resultado"});
+
+            // Al borrar las fechas, también se cancelan todas las alarmas asociadas.
+            for (int i = 0; i < 3; i++) {
+                alarmScheduler.cancelAlarmsForDate(calendarioActualId, i);
+            }
+
+            cargarDatosCalendarioExistenteFirebase(fechasTemp, textViews, iconosGuardar, textViewsLabel, defaultLabels);
             cargarCalendarios();
         }, e -> Toast.makeText(getContext(), "Error al borrar fechas.", Toast.LENGTH_SHORT).show());
     }
@@ -559,8 +608,6 @@ public class ListaCalendariosFragment extends Fragment {
         calendarioPendiente = calendario;
         String alumnoId = calendario.optString("alumnoId", "");
 
-        // El fileManager local no tiene noción de usuarios, así que no podemos usarlo para buscar al alumno
-        // directamente. En su lugar, obtenemos el nombre del alumno desde Firestore.
         firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
             String nombreAlumno = "Calendario";
             if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {

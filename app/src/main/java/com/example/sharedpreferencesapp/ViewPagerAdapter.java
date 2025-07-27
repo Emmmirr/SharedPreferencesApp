@@ -14,14 +14,18 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        if (position == 1){
-            return new SignupTabFragment();
+        switch (position) {
+            case 1:
+                return new SignupTabFragment(); // Registro admin (existente)
+            case 2:
+                return new StudentTabFragment(); // Nuevo tab para estudiantes
+            default:
+                return new LoginTabFragment(); // Login admin (existente)
         }
-        return new LoginTabFragment();
     }
 
     @Override
     public int getItemCount() {
-        return 2;
+        return 3; // Ahora tenemos 3 pestañas
     }
 }

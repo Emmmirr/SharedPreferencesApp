@@ -40,6 +40,8 @@ public class UserProfile {
     private String updatedAt = "";
     private boolean isProfileComplete = false;
 
+    private String userType = ""; // "admin" o "student"
+
     // Constructor vacío requerido por Firestore
     public UserProfile() {}
 
@@ -77,6 +79,7 @@ public class UserProfile {
         profile.createdAt = (String) map.getOrDefault("createdAt", "");
         profile.updatedAt = (String) map.getOrDefault("updatedAt", "");
         profile.isProfileComplete = (Boolean) map.getOrDefault("isProfileComplete", false);
+        profile.userType = (String) map.getOrDefault("userType", "");
 
         return profile;
     }
@@ -102,6 +105,7 @@ public class UserProfile {
         map.put("createdAt", createdAt);
         map.put("updatedAt", updatedAt);
         map.put("isProfileComplete", isProfileComplete);
+        map.put("userType", userType);
 
         return map;
     }
@@ -186,4 +190,8 @@ public class UserProfile {
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
     public boolean isProfileComplete() { return isProfileComplete; }
     public void setProfileComplete(boolean profileComplete) { this.isProfileComplete = profileComplete; }
+
+    // Añadir su getter y setter
+    public String getUserType() { return userType; }
+    public void setUserType(String userType) { this.userType = userType; }
 }

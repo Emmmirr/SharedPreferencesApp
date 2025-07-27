@@ -21,10 +21,27 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ProfileManager profileManager;
+    private NavController navController; // <-- CAMBIO: Hacemos el NavController una variable de instancia
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // AÑADIDO: Verificar tipo de usuario antes de cargar la UI
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
+        String userType = prefs.getString("userType", "admin");
+
+        // Si está logueado y es estudiante, redirigir a StudentMainActivity
+        if (isLoggedIn && "student".equals(userType)) {
+            Log.d(TAG, "Usuario tipo estudiante detectado, redirigiendo a StudentMainActivity");
+            Intent studentIntent = new Intent(MainActivity.this, StudentMainActivity.class);
+            startActivity(studentIntent);
+            finish();
+            return;
+        }
+
+        // Continuar con el flujo normal para administradores
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -40,6 +57,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Verificar y crear perfil si es necesario
         verificarYCrearPerfil();
+
+        // --- INICIO DE CÓDIGO MODIFICADO ---
+        // Después de configurar la navegación, procesamos el intent de la notificación.
+        handleIntent(getIntent());
+        // --- FIN DE CÓDIGO MODIFICADO ---
     }
 
     private void setupNavegacion() {
@@ -47,14 +69,44 @@ public class MainActivity extends AppCompatActivity {
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
 
         if (navHostFragment != null) {
-            NavigationUI.setupWithNavController(
-                    bottomNavigationView,
-                    navHostFragment.getNavController()
-            );
+            // --- CAMBIO: Guardamos la referencia al NavController ---
+            navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(bottomNavigationView, navController);
         } else {
             Log.e(TAG, "NavHostFragment no encontrado");
         }
     }
+
+    // --- INICIO DE CÓDIGO AÑADIDO ---
+    /**
+     * Este método se llama cuando la actividad se inicia con un nuevo Intent (como el de una notificación).
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // Procesamos el nuevo intent si la actividad ya estaba abierta.
+        handleIntent(intent);
+    }
+
+    /**
+     * Procesa el Intent para ver si contiene la instrucción de navegar a una pestaña.
+     * @param intent El Intent que inició o trajo al frente la actividad.
+     */
+    private void handleIntent(Intent intent) {
+        if (intent != null) {
+            int tabToOpen = intent.getIntExtra("NAVIGATE_TO_TAB", -1);
+            if (tabToOpen != -1 && navController != null) {
+                // Creamos un Bundle para pasar los argumentos al fragmento de destino.
+                Bundle args = new Bundle();
+                args.putInt("TAB_TO_OPEN", tabToOpen);
+
+                // Navegamos al destino que contiene el ViewPager (GestionCalendarioFragment).
+                // Asegúrate de que el ID en tu nav_graph.xml sea 'gestionCalendarioFragment'.
+                navController.navigate(R.id.gestionCalendarioFragment, args);
+            }
+        }
+    }
+    // --- FIN DE CÓDIGO AÑADIDO ---
 
     private void verificarYCrearPerfil() {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
@@ -62,11 +114,17 @@ public class MainActivity extends AppCompatActivity {
         String loginMethod = prefs.getString("loginMethod", "");
         String email = prefs.getString("email", "");
         String username = prefs.getString("username", "");
+        String userType = prefs.getString("userType", "admin"); // AÑADIDO: Obtener tipo de usuario
 
-        Log.d(TAG, "Verificando perfil - LoggedIn: " + isLoggedIn + ", Method: " + loginMethod + ", Email: " + email);
+        Log.d(TAG, "Verificando perfil - LoggedIn: " + isLoggedIn + ", Method: " + loginMethod + ", Email: " + email + ", UserType: " + userType);
 
         if (isLoggedIn && !email.isEmpty()) {
-            // Solo crear perfil para usuarios normales (no Google, porque ya se crea en el login)
+            // MODIFICADO: Verificar que solo se cree perfil para administradores
+            if ("student".equals(userType)) {
+                Log.d(TAG, "Usuario estudiante detectado, no se requiere crear perfil en MainActivity");
+                return;
+            }
+
             if ("normal".equals(loginMethod)) {
                 crearPerfilUsuarioNormal(email, username);
             } else {
@@ -79,9 +137,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void crearPerfilUsuarioNormal(String email, String displayName) {
         Log.d(TAG, "Creando perfil para usuario normal: " + email);
-
-        // Para usuarios normales, crear un perfil básico
-        // Como no tienen Firebase Auth, usamos un perfil simplificado
         SharedPreferences prefs = getSharedPreferences("UserProfilePrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString("normal_user_email", email);
@@ -89,23 +144,27 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("normal_user_auth_method", "normal");
         editor.putLong("normal_user_created_at", System.currentTimeMillis());
         editor.apply();
-
         Log.d(TAG, "Perfil básico creado para usuario normal: " + displayName);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Verificar si el usuario sigue logueado
         SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
+        String userType = prefs.getString("userType", "admin"); // AÑADIDO: Obtener tipo de usuario
 
         if (!isLoggedIn) {
-            // Si no está logueado, redirigir al login
             Log.d(TAG, "Usuario no logueado, redirigiendo al login");
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
+            finish();
+        }
+        // AÑADIDO: Verificar si es estudiante en onResume también
+        else if ("student".equals(userType)) {
+            Log.d(TAG, "Usuario tipo estudiante detectado en onResume, redirigiendo a StudentMainActivity");
+            Intent studentIntent = new Intent(MainActivity.this, StudentMainActivity.class);
+            startActivity(studentIntent);
             finish();
         }
     }

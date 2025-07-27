@@ -29,9 +29,16 @@ public class LoginActivity extends AppCompatActivity {
         // Verificar si ya está logueado
         SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
+        String userType = prefs.getString("userType", "admin"); // Por defecto asumimos admin
 
         if (isLoggedIn) {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            Intent intent;
+            if ("student".equals(userType)) {
+                intent = new Intent(LoginActivity.this, StudentMainActivity.class);
+            } else {
+                intent = new Intent(LoginActivity.this, MainActivity.class);
+            }
+            startActivity(intent);
             finish();
             return;
         }
@@ -42,8 +49,9 @@ public class LoginActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tab_layout);
         viewPager2 = findViewById(R.id.view_pager);
 
-        tabLayout.addTab(tabLayout.newTab().setText("Login"));
-        tabLayout.addTab(tabLayout.newTab().setText("Signup"));
+        tabLayout.addTab(tabLayout.newTab().setText("Admin"));
+        tabLayout.addTab(tabLayout.newTab().setText("Registro Admin"));
+        tabLayout.addTab(tabLayout.newTab().setText("Estudiante")); // Nueva pestaña
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         adapter = new ViewPagerAdapter(fragmentManager, getLifecycle());

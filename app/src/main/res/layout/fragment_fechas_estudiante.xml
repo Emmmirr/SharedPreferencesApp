@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F8FF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTituloCalendario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gestión de Calendario"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cronograma de Residencia"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/btnBorrarFechas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BORRAR FECHAS"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#FF5252"/>
+        </LinearLayout>
+
+        <!-- Primera Entrega -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEntrega1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#D4E6F1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:tint="#3498DB"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1 Entrega evaluación"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaEntrega1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textSize="14sp"
+                        android:textStyle="italic"/>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnFechaEntrega1"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_my_calendar"
+                    android:backgroundTint="#3498DB"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btnDocEntrega1"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_upload"
+                    android:backgroundTint="#3498DB"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Segunda Entrega -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEntrega2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#D4E6F1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:tint="#3498DB"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="2 Entrega de Evaluación"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaEntrega2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textSize="14sp"
+                        android:textStyle="italic"/>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnFechaEntrega2"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_my_calendar"
+                    android:backgroundTint="#3498DB"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btnDocEntrega2"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_upload"
+                    android:backgroundTint="#3498DB"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Tercera Entrega -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEntrega3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#D4E6F1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:tint="#3498DB"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="3 Entrega de Resultado"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvFechaEntrega3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha: Sin asignar"
+                        android:textSize="14sp"
+                        android:textStyle="italic"/>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnFechaEntrega3"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_my_calendar"
+                    android:backgroundTint="#3498DB"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btnDocEntrega3"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:drawable/ic_menu_upload"
+                    android:backgroundTint="#3498DB"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <Button
+            android:id="@+id/btnCerrar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CERRAR"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:backgroundTint="#9E9E9E"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+</ScrollView>
