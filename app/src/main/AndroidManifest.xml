@@ -2,7 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permiso para ejecutar alarmas exactas (crítico para AlarmManager) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
+    <!-- Permiso para que el receptor se inicie con el dispositivo (para reprogramar alarmas) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Permiso para mostrar notificaciones (necesario desde Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Permisos existentes -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -69,6 +76,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Receptor para las alarmas programadas -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Receptor para el reinicio del dispositivo -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.permission.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
