@@ -19,14 +19,16 @@ import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 public class FirebaseManager {
 
     private static final String TAG = "FirebaseManager";
-    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    public final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final FirebaseStorage storage = FirebaseStorage.getInstance();
 
     // Colección principal para los perfiles de usuario
@@ -210,4 +212,97 @@ public class FirebaseManager {
                 })
                 .addOnFailureListener(onFailure);
     }
+
+    // Añadir estos métodos a tu clase FirebaseManager existente
+
+    /**
+     * Carga los estudiantes que han elegido al maestro actual como supervisor
+     */
+    public void cargarEstudiantesAsignados(String maestroId, OnCompleteListener<QuerySnapshot> listener) {
+        db.collection("user_profiles") // Cambiado a user_profiles según tu estructura
+                .whereEqualTo("supervisorId", maestroId)
+                .whereEqualTo("userType", "student")
+                .get()
+                .addOnCompleteListener(listener);
+    }
+
+    /**
+     * Actualiza el estado de aprobación de un estudiante
+     */
+    public void actualizarEstadoAprobacionEstudiante(String estudianteId, boolean aprobado,
+                                                     OnSuccessListener<Void> onSuccess,
+                                                     OnFailureListener onFailure) {
+        db.collection("user_profiles") // Cambiado a user_profiles según tu estructura
+                .document(estudianteId)
+                .update("isApproved", aprobado)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Rechaza un estudiante eliminando su asignación a un maestro
+     */
+    public void rechazarEstudiante(String estudianteId, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("supervisorId", "");
+        updates.put("supervisorName", "");
+
+        db.collection("user_profiles") // Cambiado a user_profiles según tu estructura
+                .document(estudianteId)
+                .update(updates)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    // Añadir estos métodos a tu clase FirebaseManager existente
+
+    /**
+     * Carga los estudiantes que han sido aprobados por el maestro
+     */
+    public void cargarEstudiantesAprobados(String maestroId, OnCompleteListener<QuerySnapshot> listener) {
+        db.collection("user_profiles")
+                .whereEqualTo("supervisorId", maestroId)
+                .whereEqualTo("isApproved", true)
+                .get()
+                .addOnCompleteListener(listener);
+    }
+
+    /**
+     * Busca protocolos por ID de estudiante
+     */
+    public void buscarProtocolosPorEstudiante(String estudianteId, OnCompleteListener<QuerySnapshot> listener) {
+        // Primero necesitamos encontrar los IDs de los alumnos del estudiante
+        db.collection("alumnos")
+                .whereEqualTo("estudianteId", estudianteId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                        List<String> alumnoIds = new ArrayList<>();
+                        for (DocumentSnapshot doc : task.getResult().getDocuments()) {
+                            alumnoIds.add(doc.getId());
+                        }
+
+                        // Ahora buscamos los protocolos que usan estos IDs de alumno
+                        if (!alumnoIds.isEmpty()) {
+                            db.collection("protocolos")
+                                    .whereIn("alumnoId", alumnoIds)
+                                    .get()
+                                    .addOnCompleteListener(listener);
+                        } else {
+                            // Si no hay IDs de alumno, devuelve una lista vacía
+                            db.collection("protocolos")
+                                    .whereEqualTo("alumnoId", "no_existe")
+                                    .get()
+                                    .addOnCompleteListener(listener);
+                        }
+                    } else {
+                        // Si el estudiante no tiene alumnos, intentamos buscar protocolos directamente asociados a él
+                        db.collection("protocolos")
+                                .whereEqualTo("estudianteId", estudianteId)
+                                .get()
+                                .addOnCompleteListener(listener);
+                    }
+                });
+    }
+
 }

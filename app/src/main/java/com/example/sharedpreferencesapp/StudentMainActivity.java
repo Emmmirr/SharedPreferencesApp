@@ -74,10 +74,10 @@ public class StudentMainActivity extends AppCompatActivity implements Navigation
         // Configurar header del navigation drawer
         setupNavHeader();
 
-        // Cargar fragment inicial (Home)
+        // Cargar fragment inicial (StudentHomeFragment)
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
+                    .replace(R.id.fragment_container, new StudentHomeFragment())
                     .commit();
             navigationView.setCheckedItem(R.id.nav_home);
         }
@@ -140,7 +140,7 @@ public class StudentMainActivity extends AppCompatActivity implements Navigation
         int itemId = item.getItemId();
 
         if (itemId == R.id.nav_home) {
-            selectedFragment = new HomeFragment();
+            selectedFragment = new StudentHomeFragment(); // Cambiado a StudentHomeFragment
         } else if (itemId == R.id.nav_perfil) {
             selectedFragment = new PerfilFragment();
         } else if (itemId == R.id.nav_carga_academica) {

@@ -134,16 +134,34 @@ public class SignupTabFragment extends Fragment {
                         Log.d(TAG, "createUserWithEmail:success");
                         FirebaseUser user = auth.getCurrentUser();
 
+                        // Crear un objeto UserProfile con userType="admin"
+                        UserProfile newProfile = new UserProfile(
+                                user.getUid(),
+                                email,
+                                email,
+                                "email"
+                        );
+                        newProfile.setUserType("admin");
+
                         // Después de crear el usuario en Auth, crea su perfil en Firestore
                         profileManager.crearOVerificarPerfil(user, email, "email",
                                 () -> { // onSuccess
-                                    Toast.makeText(getContext(), "Registro exitoso.", Toast.LENGTH_SHORT).show();
-                                    guardarSesionLocalYRedirigir(email, email, "email");
+                                    // Actualizar con el userType específico
+                                    profileManager.actualizarPerfilActual(newProfile,
+                                            () -> {
+                                                Toast.makeText(getContext(), "Registro exitoso como Administrador", Toast.LENGTH_SHORT).show();
+                                                guardarSesionLocalYRedirigir(email, email, "email", "admin");
+                                            },
+                                            e -> {
+                                                Log.e(TAG, "Error actualizando perfil", e);
+                                                Toast.makeText(getContext(), "Error creando perfil: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                guardarSesionLocalYRedirigir(email, email, "email", "admin");
+                                            });
                                 },
                                 e -> { // onFailure
                                     Log.e(TAG, "Error creando perfil en Firestore", e);
                                     Toast.makeText(getContext(), "Registro exitoso (error al crear perfil).", Toast.LENGTH_SHORT).show();
-                                    guardarSesionLocalYRedirigir(email, email, "email");
+                                    guardarSesionLocalYRedirigir(email, email, "email", "admin");
                                 });
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -175,14 +193,32 @@ public class SignupTabFragment extends Fragment {
                     if (task.isSuccessful()) {
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
+                            // Crear un objeto UserProfile con userType="admin" para Google
+                            UserProfile newProfile = new UserProfile(
+                                    user.getUid(),
+                                    user.getEmail(),
+                                    user.getDisplayName() != null ? user.getDisplayName() : user.getEmail(),
+                                    "google"
+                            );
+                            newProfile.setUserType("admin");
+
                             // Después de autenticar con Google, crea/verifica su perfil en Firestore
                             profileManager.crearOVerificarPerfil(user, user.getDisplayName(), "google",
                                     () -> { // onSuccess
-                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google");
+                                        // Actualizar con el userType específico
+                                        profileManager.actualizarPerfilActual(newProfile,
+                                                () -> {
+                                                    Toast.makeText(getContext(), "Registro exitoso como Administrador", Toast.LENGTH_SHORT).show();
+                                                    guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                                },
+                                                e -> {
+                                                    Log.e(TAG, "Error actualizando perfil", e);
+                                                    guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                                });
                                     },
                                     e -> { // onFailure
                                         Log.e(TAG, "Error creando/verificando perfil de Google", e);
-                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google");
+                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
                                     });
                         }
                     } else {
@@ -192,7 +228,7 @@ public class SignupTabFragment extends Fragment {
                 });
     }
 
-    private void guardarSesionLocalYRedirigir(String username, String email, String method) {
+    private void guardarSesionLocalYRedirigir(String username, String email, String method, String userType) {
         if (getActivity() == null) return;
         SharedPreferences prefs = getActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -200,6 +236,7 @@ public class SignupTabFragment extends Fragment {
         editor.putString("username", username);
         editor.putString("email", email);
         editor.putString("loginMethod", method);
+        editor.putString("userType", userType); // Guardar el tipo de usuario (admin)
         editor.apply();
 
         redirigirAMainActivity();

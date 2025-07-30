@@ -55,6 +55,7 @@ dependencies {
     // Otras dependencias
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
 
 
     testImplementation(libs.junit)

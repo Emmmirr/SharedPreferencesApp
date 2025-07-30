@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivEstudiantePerfil"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/user"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circular_image_background"
+            android:padding="2dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvEstudianteNombre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="Nombre del Estudiante" />
+
+            <TextView
+                android:id="@+id/tvEstudianteEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="correo@example.com"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvEstudianteNumControl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Núm. Control: 12345678"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvEstudianteCarrera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Carrera: Ingeniería en Sistemas"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutBotonesAccion"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btnAprobarEstudiante"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Aprobar"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4CAF50"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnRechazarEstudiante"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Rechazar"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#F44336"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Layout para estudiantes ya aprobados -->
+        <LinearLayout
+            android:id="@+id/layoutEstadoAprobado"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="APROBADO"
+                android:textColor="#4CAF50"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/btnVerProtocolo"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Ver Protocolo"
+                android:layout_marginTop="8dp"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

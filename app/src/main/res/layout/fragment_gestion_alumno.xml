@@ -1,67 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#F7FAFC"
-    android:padding="16dp"
-    tools:context=".GestionAlumnoFragment">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Gestión de Alumnos"
-        android:textColor="#1A202C"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-condensed"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnAgregarAlumno"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="20dp"
-        android:background="#4299E1"
-        android:text="AGREGAR ALUMNO"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+        <!-- Sección de estudiantes pendientes de aprobación -->
+        <TextView
+            android:id="@+id/tvEstudiantesPendientesTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:text="Estudiantes Pendientes de Aprobación"
+            android:layout_marginBottom="8dp"/>
 
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnAgregarAlumno">
+        <LinearLayout
+            android:id="@+id/layoutEstudiantesPendientes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvNoEstudiantesPendientes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No hay estudiantes pendientes de aprobación."
+            android:gravity="center"
+            android:padding="16dp"
+            android:visibility="gone"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDDDDD"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Sección de estudiantes aprobados -->
+        <TextView
+            android:id="@+id/tvEstudiantesAprobadosTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:text="Estudiantes Aprobados"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/layoutEstudiantesAprobados"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvNoEstudiantesAprobados"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No hay estudiantes aprobados."
+            android:gravity="center"
+            android:padding="16dp"
+            android:visibility="gone"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDDDDD"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Sección de alumnos (existente) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:text="Gestión de Alumnos"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnAgregarAlumno"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Agregar Alumno" />
 
         <LinearLayout
             android:id="@+id/layoutAlumnos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvNoAlumnos"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
-                android:gravity="center"
-                android:text="No hay alumnos registrados"
-                android:textColor="#718096"
-                android:textSize="16sp" />
-
+            android:orientation="vertical"
+            android:layout_marginTop="8dp">
         </LinearLayout>
 
-    </ScrollView>
+        <TextView
+            android:id="@+id/tvNoAlumnos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No hay alumnos registrados."
+            android:gravity="center"
+            android:padding="16dp"
+            android:visibility="gone"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</ScrollView>

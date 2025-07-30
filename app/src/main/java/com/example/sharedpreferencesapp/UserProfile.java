@@ -42,6 +42,11 @@ public class UserProfile {
 
     private String userType = ""; // "admin" o "student"
 
+    // --- Datos de relación maestro-alumno ---
+    private String supervisorId = ""; // ID del maestro supervisor
+    private String supervisorName = ""; // Nombre del maestro para mostrar
+    private boolean isApproved = false; // Indica si el maestro ha aprobado al alumno
+
     // Constructor vacío requerido por Firestore
     public UserProfile() {}
 
@@ -81,6 +86,11 @@ public class UserProfile {
         profile.isProfileComplete = (Boolean) map.getOrDefault("isProfileComplete", false);
         profile.userType = (String) map.getOrDefault("userType", "");
 
+        // Nuevos campos añadidos
+        profile.supervisorId = (String) map.getOrDefault("supervisorId", "");
+        profile.supervisorName = (String) map.getOrDefault("supervisorName", "");
+        profile.isApproved = (Boolean) map.getOrDefault("isApproved", false);
+
         return profile;
     }
 
@@ -106,6 +116,11 @@ public class UserProfile {
         map.put("updatedAt", updatedAt);
         map.put("isProfileComplete", isProfileComplete);
         map.put("userType", userType);
+
+        // Nuevos campos añadidos
+        map.put("supervisorId", supervisorId);
+        map.put("supervisorName", supervisorName);
+        map.put("isApproved", isApproved);
 
         return map;
     }
@@ -190,8 +205,14 @@ public class UserProfile {
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
     public boolean isProfileComplete() { return isProfileComplete; }
     public void setProfileComplete(boolean profileComplete) { this.isProfileComplete = profileComplete; }
-
-    // Añadir su getter y setter
     public String getUserType() { return userType; }
     public void setUserType(String userType) { this.userType = userType; }
+
+    // Nuevos getters y setters
+    public String getSupervisorId() { return supervisorId; }
+    public void setSupervisorId(String supervisorId) { this.supervisorId = supervisorId; }
+    public String getSupervisorName() { return supervisorName; }
+    public void setSupervisorName(String supervisorName) { this.supervisorName = supervisorName; }
+    public boolean isApproved() { return isApproved; }
+    public void setApproved(boolean approved) { isApproved = approved; }
 }

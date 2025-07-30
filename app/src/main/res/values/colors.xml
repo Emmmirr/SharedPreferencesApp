@@ -36,4 +36,9 @@
     <color name="green_200">#FF4CAF50</color>
     <color name="green_500">#FF2E7D32</color>
 
+    <!-- Colores para estados de solicitud -->
+    <color name="approved_bg">#E3F2FD</color> <!-- Azul claro -->
+    <color name="pending_bg">#FFF3E0</color> <!-- Naranja claro -->
+    <color name="error_bg">#FFEBEE</color> <!-- Rojo claro -->
+
 </resources>

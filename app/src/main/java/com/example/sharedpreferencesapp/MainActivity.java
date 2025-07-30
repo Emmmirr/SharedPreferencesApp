@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 args.putInt("TAB_TO_OPEN", tabToOpen);
 
                 // Navegamos al destino que contiene el ViewPager (GestionCalendarioFragment).
-                // Asegúrate de que el ID en tu nav_graph.xml sea 'gestionCalendarioFragment'.
                 navController.navigate(R.id.gestionCalendarioFragment, args);
             }
         }

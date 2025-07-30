@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -23,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -35,13 +37,23 @@ import java.util.regex.Pattern;
 public class GestionAlumnoFragment extends Fragment {
 
     private static final String TAG = "GestionAlumnoFragment";
+
+    // Sección alumnos (existente)
     private LinearLayout layoutAlumnos;
     private TextView tvNoAlumnos;
     private Button btnAgregarAlumno;
 
+    // Sección estudiantes pendientes (nueva)
+    private LinearLayout layoutEstudiantesPendientes;
+    private TextView tvNoEstudiantesPendientes;
+
+    // Sección estudiantes aprobados (nueva)
+    private LinearLayout layoutEstudiantesAprobados;
+    private TextView tvNoEstudiantesAprobados;
+
     private FirebaseManager firebaseManager;
 
-    // AÑADIDO: Variable para guardar el ID del usuario actual
+    // Variable para guardar el ID del usuario actual
     private String currentUserId;
 
     // Datos para los spinners (sin cambios)
@@ -63,9 +75,16 @@ public class GestionAlumnoFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_gestion_alumno, container, false);
 
+        // Inicializar vistas existentes
         layoutAlumnos = view.findViewById(R.id.layoutAlumnos);
         tvNoAlumnos = view.findViewById(R.id.tvNoAlumnos);
         btnAgregarAlumno = view.findViewById(R.id.btnAgregarAlumno);
+
+        // Inicializar nuevas vistas
+        layoutEstudiantesPendientes = view.findViewById(R.id.layoutEstudiantesPendientes);
+        tvNoEstudiantesPendientes = view.findViewById(R.id.tvNoEstudiantesPendientes);
+        layoutEstudiantesAprobados = view.findViewById(R.id.layoutEstudiantesAprobados);
+        tvNoEstudiantesAprobados = view.findViewById(R.id.tvNoEstudiantesAprobados);
 
         firebaseManager = new FirebaseManager();
 
@@ -82,8 +101,9 @@ public class GestionAlumnoFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             this.currentUserId = user.getUid();
-            // Una vez que tenemos el ID, cargamos los datos del usuario.
+            // Una vez que tenemos el ID, cargamos los datos
             cargarAlumnos();
+            cargarEstudiantesAsignados();
         } else {
             // Si por alguna razón no hay usuario, bloqueamos la UI.
             tvNoAlumnos.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
@@ -120,6 +140,195 @@ public class GestionAlumnoFragment extends Fragment {
         });
     }
 
+    private void cargarEstudiantesAsignados() {
+        if (currentUserId == null) return;
+
+        // Limpiar los layouts
+        layoutEstudiantesPendientes.removeAllViews();
+        layoutEstudiantesAprobados.removeAllViews();
+        tvNoEstudiantesPendientes.setVisibility(View.VISIBLE);
+        tvNoEstudiantesAprobados.setVisibility(View.VISIBLE);
+
+        Log.d(TAG, "Iniciando carga de estudiantes asignados para maestro ID: " + currentUserId);
+
+        // Cargar estudiantes asignados
+        firebaseManager.cargarEstudiantesAsignados(currentUserId, task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Log.d(TAG, "Consulta exitosa, documentos encontrados: " + task.getResult().size());
+                boolean hayPendientes = false;
+                boolean hayAprobados = false;
+
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    UserProfile estudiante = UserProfile.fromMap(document.getData());
+                    Log.d(TAG, "Estudiante encontrado: " + estudiante.getDisplayName() +
+                            ", ID: " + estudiante.getUserId() +
+                            ", Aprobado: " + estudiante.isApproved());
+
+                    // Separar estudiantes por su estado de aprobación
+                    if (estudiante.isApproved()) {
+                        hayAprobados = true;
+                        crearCardEstudianteAprobado(estudiante);
+                    } else {
+                        hayPendientes = true;
+                        crearCardEstudiantePendiente(estudiante);
+                    }
+                }
+
+                // Mostrar u ocultar mensajes según corresponda
+                tvNoEstudiantesPendientes.setVisibility(hayPendientes ? View.GONE : View.VISIBLE);
+                tvNoEstudiantesAprobados.setVisibility(hayAprobados ? View.GONE : View.VISIBLE);
+            } else {
+                Log.e(TAG, "Error al cargar estudiantes asignados", task.getException());
+                Toast.makeText(getContext(), "Error al cargar estudiantes asignados.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void crearCardEstudiantePendiente(UserProfile estudiante) {
+        if (getContext() == null) return;
+
+        View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_estudiante_asignado, layoutEstudiantesPendientes, false);
+
+        // Referencias a vistas
+        ImageView ivPerfil = cardView.findViewById(R.id.ivEstudiantePerfil);
+        TextView tvNombre = cardView.findViewById(R.id.tvEstudianteNombre);
+        TextView tvEmail = cardView.findViewById(R.id.tvEstudianteEmail);
+        TextView tvNumControl = cardView.findViewById(R.id.tvEstudianteNumControl);
+        TextView tvCarrera = cardView.findViewById(R.id.tvEstudianteCarrera);
+        LinearLayout layoutBotones = cardView.findViewById(R.id.layoutBotonesAccion);
+        LinearLayout layoutEstadoAprobado = cardView.findViewById(R.id.layoutEstadoAprobado);
+        Button btnAprobar = cardView.findViewById(R.id.btnAprobarEstudiante);
+        Button btnRechazar = cardView.findViewById(R.id.btnRechazarEstudiante);
+
+        // Configurar visibilidad
+        layoutBotones.setVisibility(View.VISIBLE);
+        layoutEstadoAprobado.setVisibility(View.GONE);
+
+        // Establecer datos del estudiante
+        String nombre = estudiante.getFullName().isEmpty() ? estudiante.getDisplayName() : estudiante.getFullName();
+        tvNombre.setText(nombre);
+        tvEmail.setText(estudiante.getEmail());
+        tvNumControl.setText("Núm. Control: " + estudiante.getControlNumber());
+        tvCarrera.setText("Carrera: " + estudiante.getCareer());
+
+        // Cargar imagen de perfil
+        if (estudiante.getProfileImageUrl() != null && !estudiante.getProfileImageUrl().isEmpty()) {
+            Picasso.get()
+                    .load(estudiante.getProfileImageUrl())
+                    .placeholder(R.drawable.user)
+                    .error(R.drawable.user)
+                    .into(ivPerfil);
+        }
+
+        // Configurar botones
+        btnAprobar.setOnClickListener(v -> {
+            aprobarEstudiante(estudiante);
+        });
+
+        btnRechazar.setOnClickListener(v -> {
+            rechazarEstudiante(estudiante);
+        });
+
+        // Añadir tarjeta al layout
+        layoutEstudiantesPendientes.addView(cardView);
+    }
+
+    private void crearCardEstudianteAprobado(UserProfile estudiante) {
+        if (getContext() == null) return;
+
+        View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_estudiante_asignado, layoutEstudiantesAprobados, false);
+
+        // Referencias a vistas
+        ImageView ivPerfil = cardView.findViewById(R.id.ivEstudiantePerfil);
+        TextView tvNombre = cardView.findViewById(R.id.tvEstudianteNombre);
+        TextView tvEmail = cardView.findViewById(R.id.tvEstudianteEmail);
+        TextView tvNumControl = cardView.findViewById(R.id.tvEstudianteNumControl);
+        TextView tvCarrera = cardView.findViewById(R.id.tvEstudianteCarrera);
+        LinearLayout layoutBotones = cardView.findViewById(R.id.layoutBotonesAccion);
+        LinearLayout layoutEstadoAprobado = cardView.findViewById(R.id.layoutEstadoAprobado);
+        Button btnVerProtocolo = cardView.findViewById(R.id.btnVerProtocolo);
+
+        // Configurar visibilidad
+        layoutBotones.setVisibility(View.GONE);
+        layoutEstadoAprobado.setVisibility(View.VISIBLE);
+
+        // Establecer datos del estudiante
+        String nombre = estudiante.getFullName().isEmpty() ? estudiante.getDisplayName() : estudiante.getFullName();
+        tvNombre.setText(nombre);
+        tvEmail.setText(estudiante.getEmail());
+        tvNumControl.setText("Núm. Control: " + estudiante.getControlNumber());
+        tvCarrera.setText("Carrera: " + estudiante.getCareer());
+
+        // Cargar imagen de perfil
+        if (estudiante.getProfileImageUrl() != null && !estudiante.getProfileImageUrl().isEmpty()) {
+            Picasso.get()
+                    .load(estudiante.getProfileImageUrl())
+                    .placeholder(R.drawable.user)
+                    .error(R.drawable.user)
+                    .into(ivPerfil);
+        }
+
+        // Configurar botón de ver protocolo
+        btnVerProtocolo.setOnClickListener(v -> {
+            Toast.makeText(getContext(), "Ver protocolo de: " + nombre, Toast.LENGTH_SHORT).show();
+            // Aquí irá la lógica para ver el protocolo cuando se implemente
+        });
+
+        // Añadir tarjeta al layout
+        layoutEstudiantesAprobados.addView(cardView);
+    }
+
+    private void aprobarEstudiante(UserProfile estudiante) {
+        if (getContext() == null) return;
+
+        new AlertDialog.Builder(getContext())
+                .setTitle("Aprobar Estudiante")
+                .setMessage("¿Desea aprobar a este estudiante? Se le notificará y podrá comenzar a enviar sus protocolos.")
+                .setPositiveButton("Aprobar", (dialog, which) -> {
+                    // Actualizar estado de aprobación
+                    firebaseManager.actualizarEstadoAprobacionEstudiante(
+                            estudiante.getUserId(),
+                            true,
+                            aVoid -> {
+                                Toast.makeText(getContext(), "Estudiante aprobado correctamente", Toast.LENGTH_SHORT).show();
+                                // Recargar lista de estudiantes
+                                cargarEstudiantesAsignados();
+                            },
+                            e -> {
+                                Toast.makeText(getContext(), "Error al aprobar estudiante: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Error al aprobar estudiante", e);
+                            }
+                    );
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void rechazarEstudiante(UserProfile estudiante) {
+        if (getContext() == null) return;
+
+        new AlertDialog.Builder(getContext())
+                .setTitle("Rechazar Estudiante")
+                .setMessage("¿Está seguro de rechazar a este estudiante? Su solicitud será eliminada.")
+                .setPositiveButton("Rechazar", (dialog, which) -> {
+                    // Usar el nuevo método del FirebaseManager
+                    firebaseManager.rechazarEstudiante(
+                            estudiante.getUserId(),
+                            aVoid -> {
+                                Toast.makeText(getContext(), "Estudiante rechazado", Toast.LENGTH_SHORT).show();
+                                // Recargar lista de estudiantes
+                                cargarEstudiantesAsignados();
+                            },
+                            e -> {
+                                Toast.makeText(getContext(), "Error al rechazar estudiante: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Error al rechazar estudiante", e);
+                            }
+                    );
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
     private void crearCardAlumno(DocumentSnapshot alumnoDoc) {
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_alumno, layoutAlumnos, false);
 
@@ -147,6 +356,7 @@ public class GestionAlumnoFragment extends Fragment {
         layoutAlumnos.addView(cardView);
     }
 
+    // Los métodos restantes permanecen sin cambios (mostrarFormularioAlumno, cargarDatosExistentes, guardarAlumno, etc.)
     private void mostrarFormularioAlumno(String alumnoId) {
         // Salvaguarda de sesión
         if (currentUserId == null) {
@@ -389,5 +599,15 @@ public class GestionAlumnoFragment extends Fragment {
 
     private boolean validarEmail(String email) {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Recargar los datos cuando se vuelve al fragmento
+        if (currentUserId != null) {
+            cargarAlumnos();
+            cargarEstudiantesAsignados();
+        }
     }
 }

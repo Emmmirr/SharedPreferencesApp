@@ -9,8 +9,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +37,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StudentTabFragment extends Fragment {
@@ -54,6 +59,8 @@ public class StudentTabFragment extends Fragment {
     private Button btnStudentSignup;
     private GoogleSignInButton btnGoogleStudentSignup;
     private TextView tvGoToStudentLogin;
+    private Spinner spinnerTeacher;  // Añadido: Spinner para seleccionar maestro
+    private ProgressBar progressTeachers;  // Añadido: ProgressBar mientras se cargan los maestros
 
     private boolean isLoginView = true; // Por defecto mostramos login
 
@@ -61,7 +68,11 @@ public class StudentTabFragment extends Fragment {
     private FirebaseAuth auth;
     private GoogleSignInClient gClient;
     private ProfileManager profileManager;
+    private TeacherService teacherService;  // Añadido: Servicio de maestros
     private ActivityResultLauncher<Intent> activityResultLauncher;
+
+    // Lista de maestros disponibles
+    private List<TeacherService.Teacher> availableTeachers = new ArrayList<>();
 
     public StudentTabFragment() {
         // Required empty public constructor
@@ -102,11 +113,16 @@ public class StudentTabFragment extends Fragment {
         btnStudentSignup = view.findViewById(R.id.btn_student_signup);
         btnGoogleStudentSignup = view.findViewById(R.id.btn_google_student_signup);
         tvGoToStudentLogin = view.findViewById(R.id.tv_go_to_student_login);
+
+        // Inicializar spinner de maestros y progreso
+        spinnerTeacher = view.findViewById(R.id.spinner_teacher);
+        progressTeachers = view.findViewById(R.id.progress_teachers);
     }
 
     private void initializeAuth() {
         auth = FirebaseAuth.getInstance();
         profileManager = new ProfileManager(requireContext());
+        teacherService = new TeacherService();  // Inicializar servicio de maestros
 
         GoogleSignInOptions gOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -153,7 +169,16 @@ public class StudentTabFragment extends Fragment {
                 return;
             }
 
-            registrarEstudianteConEmail(email, password, controlNumber);
+            // Verificar que se ha seleccionado un maestro
+            if (spinnerTeacher.getSelectedItemPosition() <= 0) {
+                Toast.makeText(getContext(), "Por favor selecciona un maestro supervisor", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Obtener el maestro seleccionado
+            TeacherService.Teacher selectedTeacher = availableTeachers.get(spinnerTeacher.getSelectedItemPosition() - 1);
+
+            registrarEstudianteConEmail(email, password, controlNumber, selectedTeacher);
         });
 
         // Evento de registro con Google
@@ -164,9 +189,22 @@ public class StudentTabFragment extends Fragment {
                 return;
             }
 
-            // Guardar temporalmente el número de control para usarlo después del login con Google
+            // Verificar que se ha seleccionado un maestro
+            if (spinnerTeacher.getSelectedItemPosition() <= 0) {
+                Toast.makeText(getContext(), "Por favor selecciona un maestro supervisor", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Obtener el maestro seleccionado
+            TeacherService.Teacher selectedTeacher = availableTeachers.get(spinnerTeacher.getSelectedItemPosition() - 1);
+
+            // Guardar temporalmente el número de control y maestro para usarlos después del login con Google
             SharedPreferences prefs = requireActivity().getSharedPreferences("TempStudentData", Context.MODE_PRIVATE);
-            prefs.edit().putString("tempControlNumber", controlNumber).apply();
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("tempControlNumber", controlNumber);
+            editor.putString("tempSupervisorId", selectedTeacher.getId());
+            editor.putString("tempSupervisorName", selectedTeacher.getFullName());
+            editor.apply();
 
             Intent signInIntent = gClient.getSignInIntent();
             activityResultLauncher.launch(signInIntent);
@@ -186,6 +224,72 @@ public class StudentTabFragment extends Fragment {
         isLoginView = false;
         loginView.setVisibility(View.GONE);
         signupView.setVisibility(View.VISIBLE);
+
+        // Cargar maestros cuando se muestra la vista de registro
+        loadAvailableTeachers();
+    }
+
+    private void loadAvailableTeachers() {
+        progressTeachers.setVisibility(View.VISIBLE);
+
+        Log.d(TAG, "Iniciando carga de maestros...");
+
+        teacherService.getAvailableTeachers(new TeacherService.OnTeachersLoadedListener() {
+            @Override
+            public void onTeachersLoaded(List<TeacherService.Teacher> teachers) {
+                if (getContext() == null) return;
+
+                Log.d(TAG, "Maestros cargados: " + teachers.size());
+
+                availableTeachers = teachers;
+
+                // Crear lista para el spinner añadiendo un ítem inicial "Seleccione un maestro"
+                List<String> teacherNames = new ArrayList<>();
+                teacherNames.add("Seleccione un maestro");
+
+                for (TeacherService.Teacher teacher : teachers) {
+                    Log.d(TAG, "Añadiendo maestro: " + teacher.getFullName() + ", ID: " + teacher.getId());
+                    teacherNames.add(teacher.getFullName());
+                }
+
+                // Si no hay maestros, añadir un mensaje
+                if (teachers.isEmpty()) {
+                    teacherNames.add("No hay maestros disponibles");
+                    // Opcionalmente, crear un maestro de prueba para desarrollo
+                    // teacherService.crearMaestrosDePrueba();
+                }
+
+                // Configurar el adapter para el spinner
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        getContext(),
+                        android.R.layout.simple_spinner_item,
+                        teacherNames
+                );
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerTeacher.setAdapter(adapter);
+
+                progressTeachers.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (getContext() == null) return;
+
+                Log.e(TAG, "Error cargando maestros", e);
+                Toast.makeText(getContext(), "Error al cargar la lista de maestros: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                progressTeachers.setVisibility(View.GONE);
+
+                // Poner un adaptador con mensaje de error
+                List<String> emptyList = new ArrayList<>();
+                emptyList.add("Error al cargar maestros");
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        getContext(),
+                        android.R.layout.simple_spinner_item,
+                        emptyList
+                );
+                spinnerTeacher.setAdapter(adapter);
+            }
+        });
     }
 
     private boolean validateStudentForm(String email, String password, String confirmPassword, String controlNumber) {
@@ -225,13 +329,13 @@ public class StudentTabFragment extends Fragment {
                 });
     }
 
-    private void registrarEstudianteConEmail(String email, String password, String controlNumber) {
+    private void registrarEstudianteConEmail(String email, String password, String controlNumber, TeacherService.Teacher selectedTeacher) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "createUserWithEmail:success");
                         FirebaseUser user = auth.getCurrentUser();
-                        crearPerfilEstudiante(user, controlNumber, email);
+                        crearPerfilEstudiante(user, controlNumber, email, selectedTeacher.getId(), selectedTeacher.getFullName());
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
                         Toast.makeText(getContext(), "Error en el registro: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
@@ -261,11 +365,15 @@ public class StudentTabFragment extends Fragment {
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
                             if (!isLoginView) {
-                                // Es registro, necesitamos el número de control
+                                // Es registro, necesitamos el número de control y maestro
                                 SharedPreferences prefs = requireActivity().getSharedPreferences("TempStudentData", Context.MODE_PRIVATE);
                                 String controlNumber = prefs.getString("tempControlNumber", "");
-                                crearPerfilEstudiante(user, controlNumber, user.getEmail());
-                                // Limpiar dato temporal
+                                String supervisorId = prefs.getString("tempSupervisorId", "");
+                                String supervisorName = prefs.getString("tempSupervisorName", "");
+
+                                crearPerfilEstudiante(user, controlNumber, user.getEmail(), supervisorId, supervisorName);
+
+                                // Limpiar datos temporales
                                 prefs.edit().clear().apply();
                             } else {
                                 // Es login, verificar si ya está registrado como estudiante
@@ -279,7 +387,7 @@ public class StudentTabFragment extends Fragment {
                 });
     }
 
-    private void crearPerfilEstudiante(FirebaseUser user, String controlNumber, String email) {
+    private void crearPerfilEstudiante(FirebaseUser user, String controlNumber, String email, String supervisorId, String supervisorName) {
         if (user == null) return;
 
         // Crear un perfil básico con tipo "student"
@@ -287,7 +395,12 @@ public class StudentTabFragment extends Fragment {
                 user.getDisplayName() != null ? user.getDisplayName() : email,
                 "email");
         newProfile.setControlNumber(controlNumber);
-        newProfile.setUserType("student"); // Campo nuevo para distinguir entre admin y estudiante
+        newProfile.setUserType("student"); // Campo para distinguir entre admin y estudiante
+
+        // Añadir información del supervisor
+        newProfile.setSupervisorId(supervisorId);
+        newProfile.setSupervisorName(supervisorName);
+        newProfile.setApproved(false); // Por defecto no está aprobado
 
         profileManager.crearOVerificarPerfil(user, email, "email",
                 () -> {
