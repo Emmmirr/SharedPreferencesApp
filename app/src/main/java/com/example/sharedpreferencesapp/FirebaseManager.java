@@ -305,4 +305,14 @@ public class FirebaseManager {
                 });
     }
 
+    /**
+     * Busca el perfil de CUALQUIER usuario (generalmente un estudiante) por su ID
+     * en la colección principal de perfiles.
+     * @param studentId El ID del estudiante a buscar.
+     * @param onCompleteListener El listener para manejar el resultado.
+     */
+    public void buscarPerfilDeEstudiantePorId(String studentId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_USER_PROFILES).document(studentId).get().addOnCompleteListener(onCompleteListener);
+    }
+
 }

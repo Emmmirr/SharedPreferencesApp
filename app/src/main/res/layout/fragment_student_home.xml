@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -83,8 +84,9 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Resto del contenido para estudiantes -->
+        <!-- Card de Próximas Entregas (AHORA DINÁMICA) -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardProximasEntregas"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -100,18 +102,62 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Próximas entregas"
+                    android:text="Próximas Entregas"
                     android:textAlignment="center"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary" />
 
+                <!-- Layout para mostrar el resultado -->
+                <LinearLayout
+                    android:id="@+id/layoutProximaEntregaInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"> <!-- Empieza oculto -->
+
+                    <TextView
+                        android:id="@+id/tvProximaEntregaLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1ª Entrega"
+                        android:textAlignment="center"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvProximaEntregaFecha"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Fecha: 25/12/2024"
+                        android:textAlignment="center"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <!-- TextView para mostrar cuando no hay entregas -->
                 <TextView
+                    android:id="@+id/tvNoEntregas"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="No hay entregas pendientes"
                     android:textAlignment="center"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    android:visibility="gone" /> <!-- Empieza oculto -->
+
+                <!-- ProgressBar para el estado de carga -->
+                <ProgressBar
+                    android:id="@+id/progressProximaEntrega"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:visibility="visible" /> <!-- Empieza visible -->
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

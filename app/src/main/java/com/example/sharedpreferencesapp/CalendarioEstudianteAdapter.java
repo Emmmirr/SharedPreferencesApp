@@ -13,11 +13,15 @@ public class CalendarioEstudianteAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
+        // --- INICIO DE CÓDIGO MODIFICADO ---
         if (position == 0) {
-            return new FechasEstudianteFragment();
+            // Pestaña 0: Muestra las fechas asignadas en modo solo lectura.
+            return new FechasAsignadasFragment();
         } else {
-            return new DocumentosEstudianteFragment();
+            // Pestaña 1: Muestra la interfaz para subir los documentos del calendario.
+            return new MiCalendarioDocumentosFragment();
         }
+        // --- FIN DE CÓDIGO MODIFICADO ---
     }
 
     @Override

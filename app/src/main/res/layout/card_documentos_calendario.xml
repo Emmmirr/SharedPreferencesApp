@@ -51,13 +51,15 @@
                 android:layout_weight="1"
                 android:text="Actividad 1" />
 
+            <!-- Botón de subida (para el alumno) -->
             <Button
                 android:id="@+id/btnSubirDoc1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Subir PDF"
+                android:layout_height="40dp"
+                android:text="Subir"
                 android:textSize="12sp" />
 
+            <!-- Botón para ver el documento -->
             <ImageView
                 android:id="@+id/btnVerDoc1"
                 android:layout_width="40dp"
@@ -66,30 +68,38 @@
                 android:padding="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Ver PDF" />
+
+            <!-- NUEVO: Botón de revisión para el maestro -->
+            <ImageView
+                android:id="@+id/btnRevisarDoc1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_manage"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Revisar Documento"
+                app:tint="?attr/colorPrimary" />
         </LinearLayout>
 
-        <!-- Documento 2 -->
+        <!-- Documento 2 (con los mismos cambios) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
-
             <TextView
                 android:id="@+id/tvLabelDoc2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Actividad 2" />
-
             <Button
                 android:id="@+id/btnSubirDoc2"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Subir PDF"
+                android:layout_height="40dp"
+                android:text="Subir"
                 android:textSize="12sp" />
-
             <ImageView
                 android:id="@+id/btnVerDoc2"
                 android:layout_width="40dp"
@@ -98,29 +108,35 @@
                 android:padding="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Ver PDF" />
+            <ImageView
+                android:id="@+id/btnRevisarDoc2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_manage"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Revisar Documento"
+                app:tint="?attr/colorPrimary"/>
         </LinearLayout>
 
-        <!-- Documento 3 -->
+        <!-- Documento 3 (con los mismos cambios) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
-
             <TextView
                 android:id="@+id/tvLabelDoc3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Actividad 3" />
-
             <Button
                 android:id="@+id/btnSubirDoc3"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Subir PDF"
+                android:layout_height="40dp"
+                android:text="Subir"
                 android:textSize="12sp" />
-
             <ImageView
                 android:id="@+id/btnVerDoc3"
                 android:layout_width="40dp"
@@ -129,6 +145,15 @@
                 android:padding="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Ver PDF" />
+            <ImageView
+                android:id="@+id/btnRevisarDoc3"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_manage"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Revisar Documento"
+                app:tint="?attr/colorPrimary"/>
         </LinearLayout>
 
     </LinearLayout>

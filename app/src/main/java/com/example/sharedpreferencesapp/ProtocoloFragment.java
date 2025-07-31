@@ -198,6 +198,8 @@ public class ProtocoloFragment extends Fragment {
         }
     }
 
+// Dentro de ProtocoloFragment.java
+
     private void saveProtocoloData() {
         // Validar campos obligatorios
         if (TextUtils.isEmpty(etNombreProyecto.getText())) {
@@ -221,43 +223,56 @@ public class ProtocoloFragment extends Fragment {
         // Obtener valores del formulario
         Map<String, Object> protocolo = new HashMap<>();
 
-        // Información del proyecto
-        protocolo.put("nombreProyecto", getText(etNombreProyecto));
-        protocolo.put("tipoProyecto", spTipoProyecto.getSelectedItem().toString());
-        protocolo.put("asesorInterno", getText(etAsesorInterno));
-
-        // Información de la empresa
-        protocolo.put("nombreEmpresa", getText(etNombreEmpresa));
-        protocolo.put("tipoEmpresa", spTipoEmpresa.getSelectedItem().toString());
-        protocolo.put("rfc", getText(etRfc));
-        protocolo.put("domicilio", getText(etDomicilio));
-        protocolo.put("colonia", getText(etColonia));
-        protocolo.put("codigoPostal", getText(etCodigoPostal));
-        protocolo.put("ciudad", getText(etCiudad));
-        protocolo.put("telefonoEmpresa", getText(etTelefono));
-        protocolo.put("misionEmpresa", getText(etMision));
-
-        // Contactos de la empresa
-        protocolo.put("nombreTitular", getText(etNombreTitular));
-        protocolo.put("puestoTitular", getText(etPuestoTitular));
-        protocolo.put("asesorExterno", getText(etNombreAsesorExterno));
-        protocolo.put("puestoAsesorExterno", getText(etPuestoAsesorExterno));
-        protocolo.put("firmanteConvenio", getText(etFirmanteConvenio));
-        protocolo.put("puestoFirmante", getText(etPuestoFirmante));
-
-        // Timestamp
-        protocolo.put("fechaActualizacion", System.currentTimeMillis());
-
-        // Referencias al perfil del estudiante
+        // --- CAMBIO CLAVE: Obtener el perfil actual para incluir datos del alumno y del supervisor ---
         profileManager.obtenerPerfilActual(
                 profile -> {
                     if (profile != null && isAdded()) {
-                        protocolo.put("estudiante", profile.getUserId());
+                        if (profile.getSupervisorId() == null || profile.getSupervisorId().isEmpty()) {
+                            Toast.makeText(requireContext(), "Error: No tienes un supervisor asignado para registrar un protocolo.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        // Información del proyecto
+                        protocolo.put("nombreProyecto", getText(etNombreProyecto));
+                        protocolo.put("tipoProyecto", spTipoProyecto.getSelectedItem().toString());
+                        protocolo.put("asesorInterno", getText(etAsesorInterno));
+
+                        // Información de la empresa
+                        protocolo.put("nombreEmpresa", getText(etNombreEmpresa));
+                        protocolo.put("tipoEmpresa", spTipoEmpresa.getSelectedItem().toString());
+                        protocolo.put("rfc", getText(etRfc));
+                        protocolo.put("domicilio", getText(etDomicilio));
+                        protocolo.put("colonia", getText(etColonia));
+                        protocolo.put("codigoPostal", getText(etCodigoPostal));
+                        protocolo.put("ciudad", getText(etCiudad));
+                        protocolo.put("telefonoEmpresa", getText(etTelefono));
+                        protocolo.put("misionEmpresa", getText(etMision));
+
+                        // Contactos de la empresa
+                        protocolo.put("nombreTitular", getText(etNombreTitular));
+                        protocolo.put("puestoTitular", getText(etPuestoTitular));
+                        protocolo.put("asesorExterno", getText(etNombreAsesorExterno));
+                        protocolo.put("puestoAsesorExterno", getText(etPuestoAsesorExterno));
+                        protocolo.put("firmanteConvenio", getText(etFirmanteConvenio));
+                        protocolo.put("puestoFirmante", getText(etPuestoFirmante));
+
+                        // Timestamp
+                        protocolo.put("fechaActualizacion", System.currentTimeMillis());
+
+                        // --- INICIO DE DATOS AÑADIDOS PARA REFERENCIA ---
+                        // Referencias al perfil del estudiante
+                        protocolo.put("estudianteId", profile.getUserId());
                         protocolo.put("nombreEstudiante", profile.getFullName());
                         protocolo.put("numeroControl", profile.getControlNumber());
                         protocolo.put("carrera", profile.getCareer());
 
+                        // Referencias al supervisor (¡MUY IMPORTANTE!)
+                        protocolo.put("supervisorId", profile.getSupervisorId());
+                        protocolo.put("supervisorName", profile.getSupervisorName());
+                        // --- FIN DE DATOS AÑADIDOS PARA REFERENCIA ---
+
                         // Guardar en Firestore
+                        // El ID del documento seguirá siendo el ID del alumno para asegurar que solo tenga un protocolo
                         DocumentReference protocoloRef = db.collection("protocolos").document(userId);
                         protocoloRef.set(protocolo)
                                 .addOnSuccessListener(aVoid -> {

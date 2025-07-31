@@ -140,9 +140,10 @@ public class ListaCalendariosFragment extends Fragment {
             return;
         }
 
-        firebaseManager.cargarAlumnos(currentUserId, task -> {
+// Usamos el método para cargar solo los estudiantes aprobados por el maestro actual
+        firebaseManager.cargarEstudiantesAprobados(currentUserId, task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
-                Toast.makeText(getContext(), "Error al cargar alumnos.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Error al cargar alumnos aprobados.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -151,16 +152,24 @@ public class ListaCalendariosFragment extends Fragment {
             alumnosDisplay.add("Selecciona un alumno...");
             alumnosIds.add(null);
 
-            for (QueryDocumentSnapshot alumnoDoc : task.getResult()) {
-                alumnosDisplay.add(alumnoDoc.getString("nombre") + " (" + alumnoDoc.getString("numControl") + ")");
-                alumnosIds.add(alumnoDoc.getId());
+            // Iteramos sobre los documentos de UserProfile de los estudiantes
+            for (QueryDocumentSnapshot studentDoc : task.getResult()) {
+                // Creamos un objeto UserProfile para acceder fácilmente a los datos
+                UserProfile estudiante = UserProfile.fromMap(studentDoc.getData());
+
+                String nombre = estudiante.getFullName().isEmpty() ? estudiante.getDisplayName() : estudiante.getFullName();
+                String numControl = estudiante.getControlNumber();
+
+                alumnosDisplay.add(nombre + " (" + numControl + ")");
+                alumnosIds.add(estudiante.getUserId()); // Usamos el ID de usuario del estudiante
             }
 
             if (alumnosIds.size() <= 1) {
-                Toast.makeText(getContext(), "Primero debe registrar un alumno.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "No tienes alumnos aprobados para asignarles un calendario.", Toast.LENGTH_LONG).show();
                 return;
             }
 
+            // El resto del método sigue igual...
             construirYMostrarDialogo(calendarioId, alumnosDisplay, alumnosIds);
         });
     }
@@ -376,16 +385,23 @@ public class ListaCalendariosFragment extends Fragment {
         String alumnoId = calendario.getString("alumnoId");
 
         if (alumnoId != null) {
-            firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, task -> {
+            firebaseManager.buscarPerfilDeEstudiantePorId(alumnoId, task -> {
                 if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    DocumentSnapshot alumno = task.getResult();
-                    tvNombreAlumno.setText(limpiarTextoVista(alumno.getString("nombre")));
-                    tvNumControl.setText("No. Control: " + limpiarTextoVista(alumno.getString("numControl")));
-                    tvCarrera.setText("Carrera: " + limpiarTextoVista(alumno.getString("carrera")));
+                    // Creamos un UserProfile para acceder a los datos fácilmente
+                    UserProfile alumnoProfile = UserProfile.fromMap(task.getResult().getData());
+
+                    String nombre = alumnoProfile.getFullName().isEmpty() ? alumnoProfile.getDisplayName() : alumnoProfile.getFullName();
+                    tvNombreAlumno.setText(limpiarTextoVista(nombre));
+                    tvNumControl.setText("No. Control: " + limpiarTextoVista(alumnoProfile.getControlNumber()));
+                    tvCarrera.setText("Carrera: " + limpiarTextoVista(alumnoProfile.getCareer()));
+
                 } else {
-                    tvNombreAlumno.setText("Alumno no encontrado");
+                    tvNombreAlumno.setText("Perfil de Alumno no Encontrado");
+                    tvNumControl.setText("ID: " + alumnoId);
+                    Log.e(TAG, "No se encontró el perfil para el alumno con ID: " + alumnoId, task.getException());
                 }
             });
+            // --- FIN DE CÓDIGO MODIFICADO ---
         }
 
         String[] fechasArray = {
@@ -440,10 +456,11 @@ public class ListaCalendariosFragment extends Fragment {
                 this.alumnoActualId = alumnoId;
                 this.calendarioActualId = calendarioId;
 
-                firebaseManager.buscarAlumnoPorId(currentUserId, alumnoId, alumnoTask -> {
+                firebaseManager.buscarPerfilDeEstudiantePorId(alumnoId, alumnoTask -> {
                     if(alumnoTask.isSuccessful() && alumnoTask.getResult() != null && alumnoTask.getResult().exists()){
-                        DocumentSnapshot alumno = alumnoTask.getResult();
-                        tvNombreAlumnoSeleccionado.setText(alumno.getString("nombre") + "\nNo. Control: " + alumno.getString("numControl"));
+                        UserProfile alumnoProfile = UserProfile.fromMap(alumnoTask.getResult().getData());
+                        String nombre = alumnoProfile.getFullName().isEmpty() ? alumnoProfile.getDisplayName() : alumnoProfile.getFullName();
+                        tvNombreAlumnoSeleccionado.setText(nombre + "\nNo. Control: " + alumnoProfile.getControlNumber());
                         tvNombreAlumnoSeleccionado.setVisibility(View.VISIBLE);
                         spinnerAlumno.setVisibility(View.GONE);
                     }
