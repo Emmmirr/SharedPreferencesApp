@@ -182,25 +182,25 @@ public class ListaCalendariosFragment extends Fragment {
         TextView tvTitulo = dialogView.findViewById(R.id.tvTituloFormulario);
         Spinner spinnerAlumno = dialogView.findViewById(R.id.spinnerAlumno);
         TextView tvNombreAlumnoSeleccionado = dialogView.findViewById(R.id.tvNombreAlumnoSeleccionado);
-        ImageView btnCalendarioAnteproyecto = dialogView.findViewById(R.id.btnCalendarioAnteproyecto);
-        ImageView btnCalendarioViabilidad = dialogView.findViewById(R.id.btnCalendarioViabilidad);
-        ImageView btnCalendarioModificacion = dialogView.findViewById(R.id.btnCalendarioModificacion);
-        ImageView btnGuardarAnteproyecto = dialogView.findViewById(R.id.btnGuardarAnteproyecto);
-        ImageView btnGuardarViabilidad = dialogView.findViewById(R.id.btnGuardarViabilidad);
-        ImageView btnGuardarModificacion = dialogView.findViewById(R.id.btnGuardarModificacion);
+        LinearLayout btnCalendarioAnteproyecto = dialogView.findViewById(R.id.btnCalendarioAnteproyecto);
+        LinearLayout btnCalendarioViabilidad = dialogView.findViewById(R.id.btnCalendarioViabilidad);
+        LinearLayout btnCalendarioModificacion = dialogView.findViewById(R.id.btnCalendarioModificacion);
+        LinearLayout btnGuardarAnteproyecto = dialogView.findViewById(R.id.btnGuardarAnteproyecto);
+        LinearLayout btnGuardarViabilidad = dialogView.findViewById(R.id.btnGuardarViabilidad);
+        LinearLayout btnGuardarModificacion = dialogView.findViewById(R.id.btnGuardarModificacion);
         TextView tvFechaAnteproyecto = dialogView.findViewById(R.id.tvFechaAnteproyecto);
         TextView tvFechaViabilidad = dialogView.findViewById(R.id.tvFechaViabilidad);
         TextView tvFechaModificacion = dialogView.findViewById(R.id.tvFechaModificacion);
         TextView tvLabelAnteproyecto = dialogView.findViewById(R.id.tvLabelAnteproyecto);
         TextView tvLabelViabilidad = dialogView.findViewById(R.id.tvLabelViabilidad);
         TextView tvLabelModificacion = dialogView.findViewById(R.id.tvLabelModificacion);
-        Button btnBorrarFechas = dialogView.findViewById(R.id.btnBorrarFechas);
+        LinearLayout btnBorrarFechas = dialogView.findViewById(R.id.btnBorrarFechas);
 
         final String[] fechasTemp = new String[3];
         SimpleDateFormat formatoFecha = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         TextView[] textViewsFecha = {tvFechaAnteproyecto, tvFechaViabilidad, tvFechaModificacion};
-        ImageView[] iconosCalendario = {btnCalendarioAnteproyecto, btnCalendarioViabilidad, btnCalendarioModificacion};
-        ImageView[] iconosGuardar = {btnGuardarAnteproyecto, btnGuardarViabilidad, btnGuardarModificacion};
+        LinearLayout[] iconosCalendario = {btnCalendarioAnteproyecto, btnCalendarioViabilidad, btnCalendarioModificacion};
+        LinearLayout[] iconosGuardar = {btnGuardarAnteproyecto, btnGuardarViabilidad, btnGuardarModificacion};
         String[] nombresCamposFecha = {"fechaPrimeraEntrega", "fechaSegundaEntrega", "fechaResultado"};
         TextView[] textViewsLabel = {tvLabelAnteproyecto, tvLabelViabilidad, tvLabelModificacion};
         String[] nombresCamposLabel = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
@@ -217,7 +217,12 @@ public class ListaCalendariosFragment extends Fragment {
                     Toast.makeText(getContext(), "Primero selecciona un alumno", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                String fechaMinima = indice > 0 ? fechasTemp[indice - 1] : null;
+                // Para la primera fecha (índice 0), no hay fecha mínima
+                // Para fechas posteriores, usar la fecha anterior solo si existe y no está vacía
+                String fechaMinima = null;
+                if (indice > 0 && fechasTemp[indice - 1] != null && !fechasTemp[indice - 1].isEmpty()) {
+                    fechaMinima = fechasTemp[indice - 1];
+                }
                 mostrarDatePickerIndividualIcono(indice, fechasTemp, textViewsFecha, iconosGuardar, formatoFecha, fechaMinima);
             });
         }
@@ -500,16 +505,15 @@ public class ListaCalendariosFragment extends Fragment {
         });
     }
 
-    private void cargarDatosCalendarioExistenteFirebase(String[] fechasTemp, TextView[] textViewsFecha, ImageView[] iconosGuardar,
+    private void cargarDatosCalendarioExistenteFirebase(String[] fechasTemp, TextView[] textViewsFecha, LinearLayout[] iconosGuardar,
                                                         TextView[] textViewsLabel, String[] defaultLabels) {
         if (currentUserId == null) return;
         for (int i = 0; i < textViewsFecha.length; i++) {
             fechasTemp[i] = "";
             textViewsFecha[i].setText("Fecha: Sin asignar");
-            textViewsFecha[i].setTextColor(0xFF4299E1);
+            textViewsFecha[i].setTextColor(getResources().getColor(R.color.text_secondary));
             iconosGuardar[i].setEnabled(false);
             iconosGuardar[i].setAlpha(0.5f);
-            iconosGuardar[i].setColorFilter(0xFF1976D2);
             textViewsLabel[i].setText(defaultLabels[i]);
         }
         if (calendarioActualId == null) return;
@@ -525,8 +529,9 @@ public class ListaCalendariosFragment extends Fragment {
                         if (fecha != null && !fecha.isEmpty()) {
                             fechasTemp[i] = fecha;
                             textViewsFecha[i].setText("Fecha: " + fecha);
-                            textViewsFecha[i].setTextColor(0xFF2E7D32);
+                            textViewsFecha[i].setTextColor(getResources().getColor(R.color.status_approved));
                             iconosGuardar[i].setAlpha(1.0f);
+                            iconosGuardar[i].setEnabled(true);
                         }
                         String label = calendario.getString(camposLabel[i]);
                         textViewsLabel[i].setText(label != null ? label : defaultLabels[i]);
@@ -536,7 +541,7 @@ public class ListaCalendariosFragment extends Fragment {
         });
     }
 
-    private void borrarTodasLasFechasFirebase(String[] fechasTemp, TextView[] textViews, ImageView[] iconosGuardar, TextView[] textViewsLabel, String[] defaultLabels) {
+    private void borrarTodasLasFechasFirebase(String[] fechasTemp, TextView[] textViews, LinearLayout[] iconosGuardar, TextView[] textViewsLabel, String[] defaultLabels) {
         if (currentUserId == null || calendarioActualId == null) return;
         Map<String, Object> updates = new HashMap<>();
         updates.put("fechaPrimeraEntrega", "");
@@ -557,7 +562,7 @@ public class ListaCalendariosFragment extends Fragment {
     }
 
     private void mostrarDatePickerIndividualIcono(int indice, String[] fechasTemp, TextView[] textViews,
-                                                  ImageView[] iconosGuardar, SimpleDateFormat formatoFecha, String fechaMinima) {
+                                                  LinearLayout[] iconosGuardar, SimpleDateFormat formatoFecha, String fechaMinima) {
         if (getContext() == null) return;
         Calendar calendar = Calendar.getInstance();
         if (fechaMinima != null && !fechaMinima.isEmpty()) {
@@ -582,10 +587,9 @@ public class ListaCalendariosFragment extends Fragment {
                 String fechaSeleccionada = formatoFecha.format(selectedDate.getTime());
                 fechasTemp[indice] = fechaSeleccionada;
                 textViews[indice].setText("Fecha: " + fechaSeleccionada);
-                textViews[indice].setTextColor(0xFF1976D2);
+                textViews[indice].setTextColor(getResources().getColor(R.color.primary));
                 iconosGuardar[indice].setEnabled(true);
                 iconosGuardar[indice].setAlpha(1.0f);
-                iconosGuardar[indice].setColorFilter(0xFF1976D2);
             } else {
                 Toast.makeText(getContext(), "La fecha debe ser posterior a la fecha anterior", Toast.LENGTH_SHORT).show();
             }
@@ -610,8 +614,15 @@ public class ListaCalendariosFragment extends Fragment {
     }
 
     private boolean validarFecha(Date fechaSeleccionada, String fechaMinima, SimpleDateFormat formatoFecha) {
-        if (esFindeSemana(Calendar.getInstance())) return false;
+        // Verificar si la fecha seleccionada es fin de semana
+        Calendar calSeleccionada = Calendar.getInstance();
+        calSeleccionada.setTime(fechaSeleccionada);
+        if (esFindeSemana(calSeleccionada)) return false;
+
+        // Si no hay fecha mínima (primera fecha), la validación pasa
         if (fechaMinima == null || fechaMinima.isEmpty()) return true;
+
+        // Si hay fecha mínima, verificar que la fecha seleccionada sea posterior
         try {
             return fechaSeleccionada.after(formatoFecha.parse(fechaMinima));
         } catch (ParseException e) {
