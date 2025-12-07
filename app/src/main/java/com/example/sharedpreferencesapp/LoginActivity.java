@@ -50,8 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         viewPager2 = findViewById(R.id.view_pager);
 
         tabLayout.addTab(tabLayout.newTab().setText("Admin"));
-        tabLayout.addTab(tabLayout.newTab().setText("Registro Admin"));
-        tabLayout.addTab(tabLayout.newTab().setText("Estudiante")); // Nueva pestaña
+        tabLayout.addTab(tabLayout.newTab().setText("Estudiante"));
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         adapter = new ViewPagerAdapter(fragmentManager, getLifecycle());

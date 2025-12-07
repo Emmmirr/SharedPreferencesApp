@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
@@ -33,9 +34,21 @@ public class LoginTabFragment extends Fragment {
 
     private static final String TAG = "LoginTabFragment";
 
+    // Vista para login
+    private View loginView;
     private EditText loginEmail, loginPassword;
     private Button loginButton;
     private GoogleSignInButton googleBtn;
+    private TextView tvGoToAdminSignup;
+
+    // Vista para registro
+    private View signupView;
+    private EditText signupEmail, signupPassword, signupConfirm;
+    private Button signupButton;
+    private GoogleSignInButton googleSignupBtn;
+    private TextView tvGoToAdminLogin;
+
+    private boolean isLoginView = true; // Por defecto mostramos login
 
     private GoogleSignInClient gClient;
     private FirebaseAuth auth;
@@ -55,14 +68,31 @@ public class LoginTabFragment extends Fragment {
         initializeAuth();
         setupEventListeners();
 
+        // Por defecto mostramos login
+        showLoginView();
+
         return view;
     }
 
     private void initializeViews(View view) {
+        // Inicializar las vistas de login y registro
+        loginView = view.findViewById(R.id.admin_login_view);
+        signupView = view.findViewById(R.id.admin_signup_view);
+
+        // Inicializar campos de login
         loginEmail = view.findViewById(R.id.login_email);
         loginPassword = view.findViewById(R.id.login_password);
         loginButton = view.findViewById(R.id.login_button);
         googleBtn = view.findViewById(R.id.googleBtn);
+        tvGoToAdminSignup = view.findViewById(R.id.tv_go_to_admin_signup);
+
+        // Inicializar campos de registro
+        signupEmail = view.findViewById(R.id.signup_email);
+        signupPassword = view.findViewById(R.id.signup_password);
+        signupConfirm = view.findViewById(R.id.signup_confirm);
+        signupButton = view.findViewById(R.id.signup_button);
+        googleSignupBtn = view.findViewById(R.id.googleSignupBtn);
+        tvGoToAdminLogin = view.findViewById(R.id.tv_go_to_admin_login);
     }
 
     private void initializeAuth() {
@@ -81,6 +111,7 @@ public class LoginTabFragment extends Fragment {
     }
 
     private void setupEventListeners() {
+        // Evento de login con email/password
         loginButton.setOnClickListener(v -> {
             String email = loginEmail.getText().toString().trim();
             String password = loginPassword.getText().toString().trim();
@@ -92,12 +123,113 @@ public class LoginTabFragment extends Fragment {
             }
         });
 
+        // Evento de login con Google
         if (googleBtn != null) {
             googleBtn.setOnClickListener(v -> {
                 Intent signInIntent = gClient.getSignInIntent();
                 activityResultLauncher.launch(signInIntent);
             });
         }
+
+        // Cambiar a vista de registro
+        tvGoToAdminSignup.setOnClickListener(v -> showSignupView());
+
+        // Evento de registro con email/password
+        signupButton.setOnClickListener(v -> {
+            String email = signupEmail.getText().toString().trim();
+            String password = signupPassword.getText().toString().trim();
+            String confirmPassword = signupConfirm.getText().toString().trim();
+
+            if (validateAdminForm(email, password, confirmPassword)) {
+                registrarUsuarioConEmail(email, password);
+            }
+        });
+
+        // Evento de registro con Google
+        if (googleSignupBtn != null) {
+            googleSignupBtn.setOnClickListener(v -> {
+                Intent signInIntent = gClient.getSignInIntent();
+                activityResultLauncher.launch(signInIntent);
+            });
+        }
+
+        // Cambiar a vista de login
+        tvGoToAdminLogin.setOnClickListener(v -> showLoginView());
+    }
+
+    private void showLoginView() {
+        isLoginView = true;
+        loginView.setVisibility(View.VISIBLE);
+        signupView.setVisibility(View.GONE);
+    }
+
+    private void showSignupView() {
+        isLoginView = false;
+        loginView.setVisibility(View.GONE);
+        signupView.setVisibility(View.VISIBLE);
+    }
+
+    private boolean validateAdminForm(String email, String password, String confirmPassword) {
+        if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            Toast.makeText(getContext(), "Complete todos los campos", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(getContext(), "Ingrese un email válido", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (!password.equals(confirmPassword)) {
+            Toast.makeText(getContext(), "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (password.length() < 6) {
+            Toast.makeText(getContext(), "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void registrarUsuarioConEmail(String email, String password) {
+        auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(requireActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "createUserWithEmail:success");
+                        FirebaseUser user = auth.getCurrentUser();
+
+                        // Crear un objeto UserProfile con userType="admin"
+                        UserProfile newProfile = new UserProfile(
+                                user.getUid(),
+                                email,
+                                email,
+                                "email"
+                        );
+                        newProfile.setUserType("admin");
+
+                        // Después de crear el usuario en Auth, crea su perfil en Firestore
+                        profileManager.crearOVerificarPerfil(user, email, "email",
+                                () -> { // onSuccess
+                                    // Actualizar con el userType específico
+                                    profileManager.actualizarPerfilActual(newProfile,
+                                            () -> {
+                                                Toast.makeText(getContext(), "Registro exitoso como Administrador", Toast.LENGTH_SHORT).show();
+                                                guardarSesionLocalYRedirigir(email, email, "email", "admin");
+                                            },
+                                            e -> {
+                                                Log.e(TAG, "Error actualizando perfil", e);
+                                                Toast.makeText(getContext(), "Error creando perfil: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                guardarSesionLocalYRedirigir(email, email, "email", "admin");
+                                            });
+                                },
+                                e -> { // onFailure
+                                    Log.e(TAG, "Error creando perfil en Firestore", e);
+                                    Toast.makeText(getContext(), "Registro exitoso (error al crear perfil).", Toast.LENGTH_SHORT).show();
+                                    guardarSesionLocalYRedirigir(email, email, "email", "admin");
+                                });
+                    } else {
+                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                        Toast.makeText(getContext(), "Error en el registro: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void loginUsuarioConEmail(String email, String password) {
@@ -109,11 +241,11 @@ public class LoginTabFragment extends Fragment {
                         // Al hacer login, también verificamos que su perfil exista en Firestore.
                         profileManager.crearOVerificarPerfil(user, email, "email",
                                 () -> { // onSuccess
-                                    guardarSesionLocalYRedirigir(email, email, "email");
+                                    guardarSesionLocalYRedirigir(email, email, "email", "admin");
                                 },
                                 e -> { // onFailure
                                     Log.e(TAG, "Error verificando perfil en Firestore", e);
-                                    guardarSesionLocalYRedirigir(email, email, "email");
+                                    guardarSesionLocalYRedirigir(email, email, "email", "admin");
                                 });
                     } else {
                         Log.w(TAG, "signInWithEmail:failure", task.getException());
@@ -143,15 +275,43 @@ public class LoginTabFragment extends Fragment {
                     if (task.isSuccessful()) {
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
-                            // Al hacer login con Google, también verificamos que su perfil exista en Firestore.
-                            profileManager.crearOVerificarPerfil(user, user.getDisplayName(), "google",
-                                    () -> { // onSuccess
-                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google");
-                                    },
-                                    e -> { // onFailure
-                                        Log.e(TAG, "Error verificando perfil de Google en Firestore", e);
-                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google");
-                                    });
+                            if (!isLoginView) {
+                                // Es registro, crear perfil como admin
+                                UserProfile newProfile = new UserProfile(
+                                        user.getUid(),
+                                        user.getEmail(),
+                                        user.getDisplayName() != null ? user.getDisplayName() : user.getEmail(),
+                                        "google"
+                                );
+                                newProfile.setUserType("admin");
+
+                                profileManager.crearOVerificarPerfil(user, user.getDisplayName(), "google",
+                                        () -> { // onSuccess
+                                            profileManager.actualizarPerfilActual(newProfile,
+                                                    () -> {
+                                                        Toast.makeText(getContext(), "Registro exitoso como Administrador", Toast.LENGTH_SHORT).show();
+                                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                                    },
+                                                    e -> {
+                                                        Log.e(TAG, "Error actualizando perfil", e);
+                                                        guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                                    });
+                                        },
+                                        e -> { // onFailure
+                                            Log.e(TAG, "Error creando/verificando perfil de Google", e);
+                                            guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                        });
+                            } else {
+                                // Es login, verificar perfil existente
+                                profileManager.crearOVerificarPerfil(user, user.getDisplayName(), "google",
+                                        () -> { // onSuccess
+                                            guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                        },
+                                        e -> { // onFailure
+                                            Log.e(TAG, "Error verificando perfil de Google en Firestore", e);
+                                            guardarSesionLocalYRedirigir(user.getDisplayName(), user.getEmail(), "google", "admin");
+                                        });
+                            }
                         }
                     } else {
                         Log.e(TAG, "Firebase auth falló", task.getException());
@@ -160,7 +320,7 @@ public class LoginTabFragment extends Fragment {
                 });
     }
 
-    private void guardarSesionLocalYRedirigir(String username, String email, String method) {
+    private void guardarSesionLocalYRedirigir(String username, String email, String method, String userType) {
         if (getActivity() == null) return;
         SharedPreferences prefs = getActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -168,9 +328,15 @@ public class LoginTabFragment extends Fragment {
         editor.putString("username", username);
         editor.putString("email", email);
         editor.putString("loginMethod", method);
+        editor.putString("userType", userType);
         editor.apply();
 
         redirigirAMainActivity();
+    }
+
+    // Método sobrecargado para mantener compatibilidad con login
+    private void guardarSesionLocalYRedirigir(String username, String email, String method) {
+        guardarSesionLocalYRedirigir(username, email, method, "admin");
     }
 
     private void redirigirAMainActivity() {

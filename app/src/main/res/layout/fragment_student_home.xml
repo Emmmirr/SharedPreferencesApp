@@ -19,7 +19,8 @@
             android:layout_height="wrap_content"
             android:text="Lunes, 1 de enero de 2023"
             android:textAlignment="center"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
 
         <!-- Mensaje de Bienvenida -->
         <TextView
@@ -27,10 +28,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Bienvenido, Estudiante"
+            android:text="Hey, Welcome Back!"
             android:textAlignment="center"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary" />
 
         <!-- Card de Estado de Solicitud -->
         <androidx.cardview.widget.CardView
@@ -55,7 +57,8 @@
                     android:text="EN ESPERA ⏳"
                     android:textAlignment="center"
                     android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:textColor="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvSupervisorInfo"
@@ -106,7 +109,7 @@
                     android:textAlignment="center"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary" />
+                    android:textColor="@color/primary" />
 
                 <!-- Layout para mostrar el resultado -->
                 <LinearLayout

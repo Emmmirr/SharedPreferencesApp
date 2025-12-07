@@ -1,80 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:fillViewport="true"
+    android:background="@color/background_light"
     tools:context=".LoginTabFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="24dp">
 
+        <!-- Vista de Login -->
         <LinearLayout
+            android:id="@+id/admin_login_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="20dp"
-            android:padding="20dp">
+            android:visibility="visible">
 
+            <!-- Logo de la institución -->
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="100dp"
-                android:src="@drawable/loginimg"/>
-
-            <EditText
-                android:layout_width="300dp"
-                android:layout_height="60dp"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_gravity="center"
-                android:id="@+id/login_email"
-                android:layout_marginTop="30dp"
-                android:padding="8dp"
+                android:src="@drawable/logotec"
+                android:contentDescription="Logo del Instituto Tecnológico de Chilpancingo"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="Bienvenido a ResiTechApp"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:gravity="center"
+                android:text="Inicia sesión como admin"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:hint="Email"
-                android:textColorHint="#BEBEBE"
-                android:drawableLeft="@drawable/round_email_24"
-                android:drawablePadding="8dp"
-                android:background="@drawable/edittext_bkg"/>
+                android:layout_marginBottom="16dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-            <EditText
-                android:layout_width="300dp"
-                android:layout_height="60dp"
-                android:layout_gravity="center"
-                android:id="@+id/login_password"
-                android:layout_marginTop="20dp"
-                android:padding="8dp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/login_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:hint="Password"
-                android:inputType="textPassword"
-                android:textColorHint="#BEBEBE"
-                android:drawableLeft="@drawable/round_lock_24"
-                android:drawablePadding="8dp"
-                android:background="@drawable/edittext_bkg"/>
+                android:layout_marginBottom="24dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-            <Button
-                android:layout_width="300dp"
-                android:layout_height="70dp"
-                android:layout_gravity="center"
-                android:layout_marginTop="30dp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/login_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/login_button"
-                android:textSize="18sp"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
                 android:text="Login"
-                app:cornerRadius = "30dp"/>
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/primary"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp"
+                android:layout_marginBottom="16dp"/>
 
-            <!-- Botón de Google Sign-In -->
             <com.developer.gbuttons.GoogleSignInButton
-                android:layout_width="300dp"
-                android:layout_height="60dp"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
                 android:text="Iniciar sesión con Google"
                 android:id="@+id/googleBtn"
                 app:isDarkTheme="false"
-                android:layout_gravity="center"
-                android:layout_marginTop="20dp"
-                android:padding="8dp"/>
+                android:layout_marginBottom="16dp"/>
 
+            <TextView
+                android:id="@+id/tv_go_to_admin_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="¿No tienes una cuenta? Regístrate"
+                android:textColor="@color/primary"
+                android:textSize="14sp" />
         </LinearLayout>
 
-    </LinearLayout>
+        <!-- Vista de Registro -->
+        <LinearLayout
+            android:id="@+id/admin_signup_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-</LinearLayout>
+            <!-- Logo de la institución -->
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:src="@drawable/logotec"
+                android:contentDescription="Logo del Instituto Tecnológico de Chilpancingo"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="Bienvenido a ResiTechApp"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:gravity="center"
+                android:text="Regístrate como admin"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:layout_marginBottom="16dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:layout_marginBottom="16dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Confirm Password"
+                android:layout_marginBottom="24dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/signup_button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Signup"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/primary"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp"
+                android:layout_marginBottom="16dp"/>
+
+            <com.developer.gbuttons.GoogleSignInButton
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Registrarse con Google"
+                android:id="@+id/googleSignupBtn"
+                app:isDarkTheme="false"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/tv_go_to_admin_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="¿Ya tienes una cuenta? Inicia sesión"
+                android:textColor="@color/primary"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

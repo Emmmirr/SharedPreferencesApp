@@ -1,39 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp">
+    android:orientation="vertical"
+    android:background="@color/background_light">
 
-    <TextView
-        android:id="@+id/tv_title"
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mis Estudiantes Asignados"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp"
-        android:gravity="center" />
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:padding="16dp"
+        android:elevation="2dp">
 
+        <!-- Título y botón de regreso -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_revert"
+                android:tint="@color/text_primary"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Gestión de Alumnos"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:gravity="center" />
+
+            <View
+                android:layout_width="24dp"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+
+        <!-- Barra de búsqueda -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/searchLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/primary"
+            app:startIconDrawable="@android:drawable/ic_menu_search"
+            app:startIconTint="@color/text_secondary">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Buscar"
+                android:inputType="text"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+    <!-- Tabs/Filtros -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/tabsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tabAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="• Todos"
+                android:textSize="16sp"
+                android:textColor="@color/primary"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tabPending"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pendientes"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tabApproved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aprobados"
+                android:textSize="16sp"
+                android:textColor="@color/text_secondary"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- Lista de estudiantes -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_students"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/tv_title" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
 
+    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_gravity="center"
         android:visibility="gone" />
 
+    <!-- Mensaje cuando no hay estudiantes -->
     <TextView
         android:id="@+id/tv_no_students"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="No hay estudiantes asignados"
+        android:layout_gravity="center"
+        android:text="No hay estudiantes"
         android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:padding="16dp"
         android:visibility="gone" />
 
-</RelativeLayout>
+</LinearLayout>

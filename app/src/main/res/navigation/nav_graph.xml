@@ -11,24 +11,24 @@
         android:label="Inicio"
         tools:layout="@layout/fragment_home" />
 
-    <!-- Modificado: Este fragmento apunta ahora a GestionAlumnoFragment -->
+    <!-- Modificado: Este fragmento apunta ahora a StudentsManagementFragment -->
     <fragment
         android:id="@+id/protocolosAlumnosFragment"
-        android:name="com.example.sharedpreferencesapp.GestionAlumnoFragment"
+        android:name="com.example.sharedpreferencesapp.StudentsManagementFragment"
         android:label="Gestión de Alumnos"
-        tools:layout="@layout/fragment_gestion_alumno" />
+        tools:layout="@layout/fragment_students_management" />
 
     <fragment
         android:id="@+id/gestionAlumnoFragment"
-        android:name="com.example.sharedpreferencesapp.GestionAlumnoFragment"
+        android:name="com.example.sharedpreferencesapp.StudentsManagementFragment"
         android:label="Gestión de Alumnos"
-        tools:layout="@layout/fragment_gestion_alumno" />
+        tools:layout="@layout/fragment_students_management" />
 
     <fragment
         android:id="@+id/gestionProtocoloFragment"
         android:name="com.example.sharedpreferencesapp.GestionProtocoloFragment"
         android:label="Gestión de Protocolos"
-        tools:layout="@layout/fragment_gestion_protocolo" />
+        tools:layout="@layout/fragment_protocolos_management" />
 
     <fragment
         android:id="@+id/gestionCalendarioFragment"

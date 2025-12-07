@@ -38,7 +38,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Gestión de Calendarios"
+                android:text="Protocolos de Alumnos"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -73,60 +73,34 @@
 
     </LinearLayout>
 
-    <!-- Tabs/Filtros -->
-    <LinearLayout
-        android:id="@+id/layoutTabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:elevation="1dp">
-
-        <TextView
-            android:id="@+id/tabFechas"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Fechas"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/primary"
-            android:gravity="center"
-            android:padding="12dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="#E0E0E0" />
-
-        <TextView
-            android:id="@+id/tabDocumentos"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Documentos"
-            android:textSize="16sp"
-            android:textColor="@color/text_secondary"
-            android:gravity="center"
-            android:padding="12dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true" />
-
-    </LinearLayout>
-
-    <!-- ViewPager para las pestañas -->
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPagerCalendario"
+    <!-- Lista de protocolos -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_protocolos"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <!-- Mensaje cuando no hay protocolos -->
+    <TextView
+        android:id="@+id/tv_no_protocolos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="No hay protocolos"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:padding="16dp"
+        android:visibility="gone" />
 
 </LinearLayout>
+

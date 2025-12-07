@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_light"
+    tools:context=".PersonalDetailsFragment">
+
+    <!-- Header con título y botón de regreso -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:titleTextColor="@color/white"
+            app:navigationIcon="@android:drawable/ic_menu_revert"
+            app:title="Detalles Personales"
+            android:elevation="4dp" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Lista de detalles personales -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Opción: Nombre Completo -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionFullName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconFullName"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutFullName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconFullName"
+                        app:layout_constraintEnd_toStartOf="@id/arrowFullName"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nombre completo"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvFullName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowFullName"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Fecha de Nacimiento -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionDateOfBirth"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconDateOfBirth"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_today"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutDateOfBirth"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconDateOfBirth"
+                        app:layout_constraintEnd_toStartOf="@id/arrowDateOfBirth"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Fecha de nacimiento"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvDateOfBirth"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowDateOfBirth"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Género -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionGender"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconGender"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutGender"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconGender"
+                        app:layout_constraintEnd_toStartOf="@id/arrowGender"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Género"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvGender"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowGender"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: CURP -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionCurp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconCurp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutCurp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconCurp"
+                        app:layout_constraintEnd_toStartOf="@id/arrowCurp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CURP"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvCurp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowCurp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Carrera -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionCareer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconCareer"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutCareer"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconCareer"
+                        app:layout_constraintEnd_toStartOf="@id/arrowCareer"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Carrera"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvCareer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowCareer"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Número de Control -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionControlNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconControlNumber"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutControlNumber"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconControlNumber"
+                        app:layout_constraintEnd_toStartOf="@id/arrowControlNumber"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Número de control"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvControlNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowControlNumber"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Teléfono -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionPhoneNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconPhoneNumber"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_call"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutPhoneNumber"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconPhoneNumber"
+                        app:layout_constraintEnd_toStartOf="@id/arrowPhoneNumber"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Teléfono"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvPhoneNumber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowPhoneNumber"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Condiciones Médicas -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionMedicalConditions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconMedicalConditions"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_myplaces"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutMedicalConditions"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconMedicalConditions"
+                        app:layout_constraintEnd_toStartOf="@id/arrowMedicalConditions"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Condiciones médicas"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvMedicalConditions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowMedicalConditions"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginStart="56dp" />
+
+                <!-- Opción: Contacto de Emergencia -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/optionEmergencyContact"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/iconEmergencyContact"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_call"
+                        android:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutEmergencyContact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintStart_toEndOf="@id/iconEmergencyContact"
+                        app:layout_constraintEnd_toStartOf="@id/arrowEmergencyContact"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Contacto de emergencia"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tvEmergencyContact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sin especificar"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowEmergencyContact"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_more"
+                        android:tint="@color/text_secondary"
+                        android:rotation="90"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

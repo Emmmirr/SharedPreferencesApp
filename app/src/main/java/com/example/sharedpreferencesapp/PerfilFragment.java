@@ -64,9 +64,10 @@ public class PerfilFragment extends Fragment {
 
     // Vistas y otros...
     private ImageView ivProfileImage;
-    private TextView tvDisplayName, tvEmail, tvAuthMethod, tvProfileCompleteness;
-    private TextView tvFullName, tvBirthDateAndAge, tvAccount, tvPasswordStatus;
-    private Button btnEditProfile, btnLogout, btnChangePhoto, btnChangePassword, btnExportPdf;
+    private TextView tvDisplayName, tvEmail, tvProfileCompleteness;
+    private TextView tvFullName, tvPasswordStatus, btnLogout;
+    private View optionPersonalDetails, optionChangePassword, optionExportPdf, optionLogout;
+    private Button btnChangePhoto;
     private ProgressBar progressCompleteness;
     private ProfileManager profileManager;
     private FirebaseManager firebaseManager;
@@ -110,18 +111,18 @@ public class PerfilFragment extends Fragment {
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
         tvDisplayName = view.findViewById(R.id.tvDisplayName);
         tvEmail = view.findViewById(R.id.tvEmail);
-        tvAuthMethod = view.findViewById(R.id.tvAuthMethod);
         tvProfileCompleteness = view.findViewById(R.id.tvProfileCompleteness);
         progressCompleteness = view.findViewById(R.id.progressCompleteness);
-        btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnLogout = view.findViewById(R.id.btnLogout);
         tvFullName = view.findViewById(R.id.tvFullName);
-        tvBirthDateAndAge = view.findViewById(R.id.tvBirthDate);
-        tvAccount = view.findViewById(R.id.tvAccount);
         tvPasswordStatus = view.findViewById(R.id.tvPasswordStatus);
         btnChangePhoto = view.findViewById(R.id.btnChangePhoto);
-        btnChangePassword = view.findViewById(R.id.btnChangePassword);
-        btnExportPdf = view.findViewById(R.id.btnExportPdf);
+
+        // Opciones de menú
+        optionPersonalDetails = view.findViewById(R.id.optionPersonalDetails);
+        optionChangePassword = view.findViewById(R.id.optionChangePassword);
+        optionExportPdf = view.findViewById(R.id.optionExportPdf);
+        optionLogout = view.findViewById(R.id.optionLogout);
     }
 
     private void setupLaunchers() {
@@ -180,13 +181,33 @@ public class PerfilFragment extends Fragment {
     }
 
     private void setupEventListeners() {
-        btnEditProfile.setOnClickListener(v -> mostrarDialogEditarPerfil());
-        btnLogout.setOnClickListener(v -> mostrarDialogCerrarSesion());
+        // Opción: Detalles Personales
+        if (optionPersonalDetails != null) {
+            optionPersonalDetails.setOnClickListener(v -> navegarADetallesPersonales());
+        }
+
+        // Opción: Cambiar Contraseña
+        if (optionChangePassword != null) {
+            optionChangePassword.setOnClickListener(v -> mostrarDialogCambiarPassword());
+        }
+
+        // Opción: Exportar PDF
+        if (optionExportPdf != null) {
+            optionExportPdf.setOnClickListener(v -> exportarPerfilAPDF());
+        }
+
+        // Opción: Cerrar Sesión
+        if (optionLogout != null) {
+            optionLogout.setOnClickListener(v -> mostrarDialogCerrarSesion());
+        }
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> mostrarDialogCerrarSesion());
+        }
+
+        // Cambiar foto de perfil
         ivProfileImage.setOnClickListener(v -> mostrarDialogElegirFoto());
-        btnChangePhoto.setOnClickListener(v -> mostrarDialogElegirFoto());
-        btnChangePassword.setOnClickListener(v -> mostrarDialogCambiarPassword());
-        if (btnExportPdf != null) {
-            btnExportPdf.setOnClickListener(v -> exportarPerfilAPDF());
+        if (btnChangePhoto != null) {
+            btnChangePhoto.setOnClickListener(v -> mostrarDialogElegirFoto());
         }
     }
 
@@ -205,23 +226,29 @@ public class PerfilFragment extends Fragment {
 
     private void actualizarVistasPerfil(UserProfile profile) {
         if (profile == null || getContext() == null) return;
-        tvDisplayName.setText(profile.getFullName().isEmpty() ? profile.getDisplayName() : profile.getFullName());
+
+        // Actualizar header
+        String displayName = profile.getFullName().isEmpty() ? profile.getDisplayName() : profile.getFullName();
+        tvDisplayName.setText(displayName);
         tvEmail.setText(profile.getEmail());
-        String authMethodText = "google".equals(profile.getAuthMethod()) ? "Google" : "Email y Contraseña";
-        tvAuthMethod.setText("Autenticado con: " + authMethodText);
-        tvFullName.setText(profile.getFullName().isEmpty() ? "Sin especificar" : profile.getFullName());
-        String birthDateText = profile.getDateOfBirth().isEmpty() ? "Sin especificar" : profile.getDateOfBirth();
-        int age = profile.getAge();
-        if (age > 0) {
-            tvBirthDateAndAge.setText(birthDateText + " (" + age + " años)");
-        } else {
-            tvBirthDateAndAge.setText(birthDateText);
+
+        // Actualizar opción de detalles personales
+        if (tvFullName != null) {
+            String fullNameText = profile.getFullName().isEmpty() ? "Ver y editar información personal" : profile.getFullName();
+            tvFullName.setText(fullNameText);
         }
-        tvAccount.setText(profile.getEmail());
-        String passwordStatus = "google".equals(profile.getAuthMethod()) ? "Gestionada por Google" : "••••••••";
-        tvPasswordStatus.setText(passwordStatus);
+
+        // Actualizar opción de cambiar contraseña
+        if (tvPasswordStatus != null) {
+            String passwordStatus = "google".equals(profile.getAuthMethod()) ? "Gestionada por Google" : "********";
+            tvPasswordStatus.setText(passwordStatus);
+        }
+
+        // Actualizar completitud del perfil
         int completeness = profile.getProfileCompleteness();
-        tvProfileCompleteness.setText("Perfil completado: " + completeness + "%");
+        if (tvProfileCompleteness != null) {
+            tvProfileCompleteness.setText("Perfil completado: " + completeness + "%");
+        }
         progressCompleteness.setProgress(completeness);
 
         cargarImagenPerfilDesdeUrl(profile);
@@ -574,5 +601,38 @@ public class PerfilFragment extends Fragment {
         );
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
+    }
+
+    private void navegarADetallesPersonales() {
+        if (getActivity() == null || getView() == null) return;
+
+        PersonalDetailsFragment fragment = new PersonalDetailsFragment();
+
+        // Verificar si estamos en StudentMainActivity (usa fragment_container)
+        View fragmentContainer = getActivity().findViewById(R.id.fragment_container);
+        if (fragmentContainer != null) {
+            // StudentMainActivity - usar FragmentManager directo
+            getActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack("perfil")
+                    .commit();
+        } else {
+            // MainActivity - el fragment está dentro del NavHostFragment
+            // Encontrar el contenedor del fragment actual
+            ViewGroup parent = (ViewGroup) getView().getParent();
+            if (parent != null) {
+                // Reemplazar en el contenedor padre
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(parent.getId(), fragment)
+                        .addToBackStack("perfil")
+                        .commit();
+            } else {
+                // Fallback: reemplazar el fragment actual
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(getId(), fragment)
+                        .addToBackStack("perfil")
+                        .commit();
+            }
+        }
     }
 }

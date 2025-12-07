@@ -68,7 +68,7 @@ public class DocumentosTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (currentUserId != null) {
+        if (currentUserId !=  null) {
             cargarCalendariosDocumentos();
         }
     }

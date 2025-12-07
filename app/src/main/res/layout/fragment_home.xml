@@ -1,75 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:fillViewport="true"
+    android:background="@color/background_light"
     tools:context=".HomeFragment">
 
-    <TextView
-        android:id="@+id/tv_welcome"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="¡Bienvenido!"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="@color/primary"
-        android:textAlignment="center"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp" />
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tv_user_name"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Nombre del Estudiante"
-        android:textSize="20sp"
-        android:textAlignment="center"
-        app:layout_constraintTop_toBottomOf="@+id/tv_welcome"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+        <TextView
+            android:id="@+id/tv_welcome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Hey, Welcome Back!"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:textAlignment="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp" />
 
-    <ImageView
-        android:id="@+id/iv_school_icon"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:src="@drawable/ic_school"
-        app:layout_constraintTop_toBottomOf="@+id/tv_user_name"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/tv_app_description"
-        android:layout_marginTop="32dp"
-        android:contentDescription="Icono de escuela" />
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Nombre del Usuario"
+            android:textSize="20sp"
+            android:textColor="@color/text_secondary"
+            android:textAlignment="center"
+            app:layout_constraintTop_toBottomOf="@+id/tv_welcome"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
 
-    <TextView
-        android:id="@+id/tv_app_description"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Sistema de Residencias del Instituto Tecnológico de Chilpancingo"
-        android:textSize="16sp"
-        android:textAlignment="center"
-        app:layout_constraintTop_toBottomOf="@+id/iv_school_icon"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="32dp" />
+        <ImageView
+            android:id="@+id/iv_school_icon"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_school"
+            app:layout_constraintTop_toBottomOf="@+id/tv_user_name"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp"
+            android:contentDescription="Icono de escuela" />
 
-    <TextView
-        android:id="@+id/tv_current_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="14sp"
-        android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp" />
+        <TextView
+            android:id="@+id/tv_app_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Sistema de Residencias del Instituto Tecnológico de Chilpancingo"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:textAlignment="center"
+            app:layout_constraintTop_toBottomOf="@+id/iv_school_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="32dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

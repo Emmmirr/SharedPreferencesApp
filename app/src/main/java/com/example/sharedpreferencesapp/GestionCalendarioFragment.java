@@ -4,16 +4,19 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
 
 public class GestionCalendarioFragment extends Fragment {
 
-    // Ya no necesitamos el método newInstance ni la constante ARG_TAB_TO_OPEN aquí.
+    private ViewPager2 viewPager;
+    private TextView tabFechas, tabDocumentos;
+    private CalendarioTabsAdapter adapter;
 
     @Nullable
     @Override
@@ -25,31 +28,78 @@ public class GestionCalendarioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TabLayout tabLayout = view.findViewById(R.id.tabLayoutCalendario);
-        ViewPager2 viewPager = view.findViewById(R.id.viewPagerCalendario);
+        // Inicializar vistas
+        viewPager = view.findViewById(R.id.viewPagerCalendario);
+        tabFechas = view.findViewById(R.id.tabFechas);
+        tabDocumentos = view.findViewById(R.id.tabDocumentos);
 
-        CalendarioTabsAdapter adapter = new CalendarioTabsAdapter(this);
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            });
+        }
+
+        // Configurar ViewPager
+        adapter = new CalendarioTabsAdapter(this);
         viewPager.setAdapter(adapter);
 
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            if (position == 0) {
-                tab.setText("Fechas");
-                tab.setIcon(android.R.drawable.ic_menu_my_calendar);
-            } else {
-                tab.setText("Documentos");
-                tab.setIcon(android.R.drawable.ic_menu_upload);
-            }
-        }).attach();
+        // Configurar tabs personalizados
+        setupTabs();
 
-        // --- INICIO DE CÓDIGO MODIFICADO ---
-        // Leemos los argumentos que nos pasó el NavController desde la MainActivity
+        // Leer argumentos para abrir una pestaña específica
         if (getArguments() != null) {
-            // El nombre del argumento ("TAB_TO_OPEN") debe coincidir con el usado en MainActivity
             int tabToOpen = getArguments().getInt("TAB_TO_OPEN", -1);
             if (tabToOpen != -1) {
                 viewPager.post(() -> viewPager.setCurrentItem(tabToOpen, false));
+                updateTabSelection(tabToOpen);
             }
         }
-        // --- FIN DE CÓDIGO MODIFICADO ---
+    }
+
+    private void setupTabs() {
+        tabFechas.setOnClickListener(v -> {
+            viewPager.setCurrentItem(0, true);
+            updateTabSelection(0);
+        });
+
+        tabDocumentos.setOnClickListener(v -> {
+            viewPager.setCurrentItem(1, true);
+            updateTabSelection(1);
+        });
+
+        // Listener para sincronizar tabs con ViewPager
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updateTabSelection(position);
+            }
+        });
+
+        // Seleccionar primera pestaña por defecto
+        updateTabSelection(0);
+    }
+
+    private void updateTabSelection(int position) {
+        if (position == 0) {
+            // Pestaña Fechas seleccionada
+            tabFechas.setTextColor(getResources().getColor(R.color.primary));
+            tabFechas.setTextSize(16);
+            tabFechas.setTypeface(null, android.graphics.Typeface.BOLD);
+            tabDocumentos.setTextColor(getResources().getColor(R.color.text_secondary));
+            tabDocumentos.setTextSize(16);
+            tabDocumentos.setTypeface(null, android.graphics.Typeface.NORMAL);
+        } else {
+            // Pestaña Documentos seleccionada
+            tabDocumentos.setTextColor(getResources().getColor(R.color.primary));
+            tabDocumentos.setTextSize(16);
+            tabDocumentos.setTypeface(null, android.graphics.Typeface.BOLD);
+            tabFechas.setTextColor(getResources().getColor(R.color.text_secondary));
+            tabFechas.setTextSize(16);
+            tabFechas.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
     }
 }

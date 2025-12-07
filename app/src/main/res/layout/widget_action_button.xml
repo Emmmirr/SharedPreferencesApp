@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/widget_action_button_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/button_rounded_primary"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:elevation="2dp">
+
+    <!-- Icono (opcional, puede ser invisible si no se necesita) -->
+    <ImageView
+        android:id="@+id/iv_button_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_document"
+        app:tint="@color/button_text_light"
+        android:visibility="gone"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Texto del botón -->
+    <TextView
+        android:id="@+id/tv_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button"
+        android:textColor="@color/button_text_light"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</LinearLayout>
+

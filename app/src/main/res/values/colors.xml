@@ -20,13 +20,18 @@
     <color name="lavender">#E6E6FA</color>
 
     <!-- Colores adicionales para el sistema -->
-    <color name="primary">#4299E1</color>
-    <color name="primary_dark">#2B6CB0</color>
-    <color name="accent">#4299E1</color>
+    <color name="primary">#1b396a</color>
+    <color name="primary_dark">#152d4f</color>
+    <color name="accent">#1b396a</color>
 
     <!-- Colores para estados activo/inactivo -->
-    <color name="bottom_nav_active">#4299E1</color>
+    <color name="bottom_nav_active">#1b396a</color>
     <color name="bottom_nav_inactive">#9CA3AF</color>
+
+    <!-- Color de fondo para login y pantallas principales -->
+    <color name="background_light">#FFFFFF</color>
+    <color name="text_primary">#1b396a</color>
+    <color name="text_secondary">#666666</color>
 
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
@@ -40,5 +45,14 @@
     <color name="approved_bg">#E3F2FD</color> <!-- Azul claro -->
     <color name="pending_bg">#FFF3E0</color> <!-- Naranja claro -->
     <color name="error_bg">#FFEBEE</color> <!-- Rojo claro -->
+
+    <!-- Colores para estados de estudiantes -->
+    <color name="status_approved">#4CAF50</color> <!-- Verde para Aprobado -->
+    <color name="status_pending">#9E9E9E</color> <!-- Gris para Pendiente -->
+    <color name="status_ongoing">#2196F3</color> <!-- Azul para En Progreso -->
+    <color name="status_cancelled">#F44336</color> <!-- Rojo para Cancelado -->
+
+    <!-- Color para texto de botones de acción -->
+    <color name="button_text_light">#B3FFFFFF</color> <!-- Blanco con transparencia (70%) -->
 
 </resources>

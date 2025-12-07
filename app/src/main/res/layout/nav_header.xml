@@ -13,7 +13,8 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:src="@drawable/user"
-        android:contentDescription="Foto de perfil" />
+        android:contentDescription="Foto de perfil"
+        android:background="@drawable/circular_image_background" />
 
     <TextView
         android:id="@+id/nav_header_username"
@@ -22,12 +23,15 @@
         android:paddingTop="8dp"
         android:text="Nombre de Usuario"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:textColor="@color/white" />
 
     <TextView
         android:id="@+id/nav_header_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="usuario@example.com" />
+        android:text="usuario@example.com"
+        android:textColor="@color/white"
+        android:textSize="14sp" />
 
 </LinearLayout>

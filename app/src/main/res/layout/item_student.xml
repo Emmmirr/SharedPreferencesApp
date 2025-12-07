@@ -1,77 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:background="@color/white"
+    android:padding="16dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
+    <!-- Avatar circular -->
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/iv_student_profile"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:src="@drawable/user"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Contenedor de información del estudiante -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/layoutStudentInfo"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
+        android:orientation="vertical"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintStart_toEndOf="@+id/iv_student_profile"
+        app:layout_constraintEnd_toStartOf="@+id/layoutRightInfo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/iv_student_profile"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@drawable/user" />
-
-        <LinearLayout
-            android:layout_width="0dp"
+        <!-- Nombre del estudiante -->
+        <TextView
+            android:id="@+id/tv_student_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:orientation="vertical">
+            android:text="Nombre del Estudiante"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
 
-            <TextView
-                android:id="@+id/tv_student_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:text="Nombre del Estudiante" />
+        <!-- Información: Control | Carrera -->
+        <TextView
+            android:id="@+id/tv_student_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12345678 | Ingeniería en Sistemas"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
 
-            <TextView
-                android:id="@+id/tv_student_control"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Número de Control: 12345678"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tv_student_career"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Carrera: Ingeniería en Sistemas"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
+        <!-- Estado -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
 
-            <Button
-                android:id="@+id/btn_approve_student"
+            <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Aprobar"
-                android:textSize="12sp" />
+                android:layout_height="wrap_content"
+                android:text="Estado: "
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary" />
 
-            <Button
-                android:id="@+id/btn_view_protocol"
+            <TextView
+                android:id="@+id/tv_student_status"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Protocolo"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp" />
+                android:layout_height="wrap_content"
+                android:text="Pendiente"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/status_pending" />
+
         </LinearLayout>
 
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <!-- Fecha y acciones a la derecha -->
+    <LinearLayout
+        android:id="@+id/layoutRightInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        app:layout_constraintEnd_toStartOf="@+id/ivMenu"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginEnd="8dp">
+
+        <!-- Fecha -->
+        <TextView
+            android:id="@+id/tv_student_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Oct 2, 2020"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="end" />
+
+        <!-- Botón de aprobar (solo visible si está pendiente) -->
+        <TextView
+            android:id="@+id/tvApproveAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Aprobar"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp"
+            android:padding="4dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Menú de tres puntos -->
+    <ImageView
+        android:id="@+id/ivMenu"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@android:drawable/ic_menu_more"
+        app:tint="@color/text_secondary"
+        android:rotation="90"
+        android:padding="4dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Separador -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        android:layout_marginStart="72dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
