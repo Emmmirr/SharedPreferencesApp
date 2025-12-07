@@ -4,9 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    android:elevation="8dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="16dp">
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,10 +16,38 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Información del Alumno -->
+        <TextView
+            android:id="@+id/tvNombreAlumno"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del Alumno"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvNumControl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No. Control: 12345678"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="#DDDDDD" />
+
+        <!-- Información adicional con botones a la derecha -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -26,97 +56,172 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvNombreAlumno"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#1A202C"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvNumControl"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="#38A169"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
                     android:id="@+id/tvCarrera"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="#4299E1"
+                    android:text="Carrera: Ingeniería en Sistemas"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvProximaFecha"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="#718096"
-                    android:textSize="14sp" />
+                    android:text="Próximo: Sin fechas próximas"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="4dp" />
 
                 <TextView
                     android:id="@+id/tvProgreso"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="#E53E3E"
+                    android:text="Progreso: 0/3 fechas configuradas"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="4dp" />
 
                 <TextView
                     android:id="@+id/tvFechaCreacion"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="#A0AEC0"
-                    android:textSize="12sp" />
+                    android:text="Creado: Fecha no disponible"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
 
+            <!-- Botones -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginStart="16dp"
+                android:gravity="center_vertical">
 
-                <Button
+                <!-- Botón Ver PDF -->
+                <LinearLayout
                     android:id="@+id/btnPDFCalendario"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:background="#FF5722"
-                    android:text="PDF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/button_rounded_primary"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="2dp"
+                    android:layout_marginBottom="8dp"
+                    android:minWidth="100dp">
 
-                <Button
+                    <!-- Icono -->
+                    <ImageView
+                        android:id="@+id/iv_button_icon_pdf"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_document"
+                        app:tint="@color/button_text_light"
+                        android:visibility="visible"
+                        android:layout_marginEnd="8dp" />
+
+                    <!-- Texto del botón -->
+                    <TextView
+                        android:id="@+id/tv_button_text_pdf"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ver PDF"
+                        android:textColor="@color/button_text_light"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Botón Editar -->
+                <LinearLayout
                     android:id="@+id/btnEditarCalendario"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_marginTop="4dp"
-                    android:background="#E2E8F0"
-                    android:text="EDIT"
-                    android:textColor="#4299E1"
-                    android:textSize="12sp" />
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/button_rounded_primary"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="2dp"
+                    android:layout_marginBottom="8dp"
+                    android:minWidth="100dp">
 
-                <Button
+                    <!-- Icono -->
+                    <ImageView
+                        android:id="@+id/iv_button_icon_edit"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_assignment"
+                        app:tint="@color/button_text_light"
+                        android:visibility="visible"
+                        android:layout_marginEnd="8dp" />
+
+                    <!-- Texto del botón -->
+                    <TextView
+                        android:id="@+id/tv_button_text_edit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Editar"
+                        android:textColor="@color/button_text_light"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Botón Eliminar -->
+                <LinearLayout
                     android:id="@+id/btnEliminarCalendario"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_marginTop="4dp"
-                    android:background="#FED7D7"
-                    android:text="DEL"
-                    android:textColor="#E53E3E"
-                    android:textSize="12sp" />
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/button_rounded_primary"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="2dp"
+                    android:minWidth="100dp">
+
+                    <!-- Icono -->
+                    <ImageView
+                        android:id="@+id/iv_button_icon_delete"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_logout"
+                        app:tint="@color/button_text_light"
+                        android:visibility="visible"
+                        android:layout_marginEnd="8dp" />
+
+                    <!-- Texto del botón -->
+                    <TextView
+                        android:id="@+id/tv_button_text_delete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Eliminar"
+                        android:textColor="@color/button_text_light"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

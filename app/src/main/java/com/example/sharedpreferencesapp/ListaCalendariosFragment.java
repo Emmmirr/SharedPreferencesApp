@@ -377,9 +377,9 @@ public class ListaCalendariosFragment extends Fragment {
         TextView tvProximaFecha = cardView.findViewById(R.id.tvProximaFecha);
         TextView tvProgreso = cardView.findViewById(R.id.tvProgreso);
         TextView tvFechaCreacion = cardView.findViewById(R.id.tvFechaCreacion);
-        Button btnPDF = cardView.findViewById(R.id.btnPDFCalendario);
-        Button btnEditar = cardView.findViewById(R.id.btnEditarCalendario);
-        Button btnEliminar = cardView.findViewById(R.id.btnEliminarCalendario);
+        LinearLayout btnPDF = cardView.findViewById(R.id.btnPDFCalendario);
+        LinearLayout btnEditar = cardView.findViewById(R.id.btnEditarCalendario);
+        LinearLayout btnEliminar = cardView.findViewById(R.id.btnEliminarCalendario);
 
         String calendarioId = calendario.getId();
         String alumnoId = calendario.getString("alumnoId");
@@ -391,9 +391,9 @@ public class ListaCalendariosFragment extends Fragment {
                     UserProfile alumnoProfile = UserProfile.fromMap(task.getResult().getData());
 
                     String nombre = alumnoProfile.getFullName().isEmpty() ? alumnoProfile.getDisplayName() : alumnoProfile.getFullName();
-                    tvNombreAlumno.setText(limpiarTextoVista(nombre));
-                    tvNumControl.setText("No. Control: " + limpiarTextoVista(alumnoProfile.getControlNumber()));
-                    tvCarrera.setText("Carrera: " + limpiarTextoVista(alumnoProfile.getCareer()));
+                    tvNombreAlumno.setText(nombre);
+                    tvNumControl.setText("No. Control: " + (alumnoProfile.getControlNumber() != null ? alumnoProfile.getControlNumber() : ""));
+                    tvCarrera.setText("Carrera: " + (alumnoProfile.getCareer() != null ? alumnoProfile.getCareer() : ""));
 
                 } else {
                     tvNombreAlumno.setText("Perfil de Alumno no Encontrado");
@@ -418,6 +418,37 @@ public class ListaCalendariosFragment extends Fragment {
         tvProximaFecha.setText(calcularProximaFecha(fechasArray, etiquetas));
         tvProgreso.setText(calcularProgreso(fechasArray));
         tvFechaCreacion.setText("Creado: " + limpiarTextoVista(calendario.getString("fechaCreacion")));
+
+        // Configurar texto e iconos de los botones
+        TextView tvButtonTextPdf = btnPDF.findViewById(R.id.tv_button_text_pdf);
+        if (tvButtonTextPdf != null) {
+            tvButtonTextPdf.setText("Ver PDF");
+        }
+        ImageView ivButtonIconPdf = btnPDF.findViewById(R.id.iv_button_icon_pdf);
+        if (ivButtonIconPdf != null) {
+            ivButtonIconPdf.setImageResource(R.drawable.ic_document);
+            ivButtonIconPdf.setVisibility(View.VISIBLE);
+        }
+
+        TextView tvButtonTextEdit = btnEditar.findViewById(R.id.tv_button_text_edit);
+        if (tvButtonTextEdit != null) {
+            tvButtonTextEdit.setText("Editar");
+        }
+        ImageView ivButtonIconEdit = btnEditar.findViewById(R.id.iv_button_icon_edit);
+        if (ivButtonIconEdit != null) {
+            ivButtonIconEdit.setImageResource(R.drawable.ic_assignment);
+            ivButtonIconEdit.setVisibility(View.VISIBLE);
+        }
+
+        TextView tvButtonTextDelete = btnEliminar.findViewById(R.id.tv_button_text_delete);
+        if (tvButtonTextDelete != null) {
+            tvButtonTextDelete.setText("Eliminar");
+        }
+        ImageView ivButtonIconDelete = btnEliminar.findViewById(R.id.iv_button_icon_delete);
+        if (ivButtonIconDelete != null) {
+            ivButtonIconDelete.setImageResource(R.drawable.ic_logout);
+            ivButtonIconDelete.setVisibility(View.VISIBLE);
+        }
 
         btnPDF.setOnClickListener(v -> {
             JSONObject calJson = new JSONObject(calendario.getData());

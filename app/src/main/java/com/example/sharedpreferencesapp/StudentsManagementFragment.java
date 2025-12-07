@@ -133,33 +133,33 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
 
     private void updateTabSelection() {
         // Resetear todos los tabs
-        tabAll.setText("Todos");
         tabAll.setTextColor(getResources().getColor(R.color.text_secondary));
+        tabAll.setTextSize(16);
         tabAll.setTypeface(null, android.graphics.Typeface.NORMAL);
 
-        tabPending.setText("Pendientes");
         tabPending.setTextColor(getResources().getColor(R.color.text_secondary));
+        tabPending.setTextSize(16);
         tabPending.setTypeface(null, android.graphics.Typeface.NORMAL);
 
-        tabApproved.setText("Aprobados");
         tabApproved.setTextColor(getResources().getColor(R.color.text_secondary));
+        tabApproved.setTextSize(16);
         tabApproved.setTypeface(null, android.graphics.Typeface.NORMAL);
 
         // Resaltar el tab seleccionado
         switch (currentFilter) {
             case "all":
-                tabAll.setText("• Todos");
                 tabAll.setTextColor(getResources().getColor(R.color.primary));
+                tabAll.setTextSize(16);
                 tabAll.setTypeface(null, android.graphics.Typeface.BOLD);
                 break;
             case "pending":
-                tabPending.setText("• Pendientes");
                 tabPending.setTextColor(getResources().getColor(R.color.primary));
+                tabPending.setTextSize(16);
                 tabPending.setTypeface(null, android.graphics.Typeface.BOLD);
                 break;
             case "approved":
-                tabApproved.setText("• Aprobados");
                 tabApproved.setTextColor(getResources().getColor(R.color.primary));
+                tabApproved.setTextSize(16);
                 tabApproved.setTypeface(null, android.graphics.Typeface.BOLD);
                 break;
         }

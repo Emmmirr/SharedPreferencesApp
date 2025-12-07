@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -64,35 +65,33 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
         if (isApproved) {
             holder.tvStatus.setText("Aprobado");
             holder.tvStatus.setTextColor(context.getResources().getColor(R.color.status_approved));
-            holder.tvApproveAction.setVisibility(View.GONE);
+            holder.btnApprove.setVisibility(View.GONE);
         } else {
             holder.tvStatus.setText("Pendiente");
             holder.tvStatus.setTextColor(context.getResources().getColor(R.color.status_pending));
-            holder.tvApproveAction.setVisibility(View.VISIBLE);
+            holder.btnApprove.setVisibility(View.VISIBLE);
         }
 
         // Fecha - usar createdAt o updatedAt
-        String dateText = "";
+        String dateText = "Fecha no disponible";
         if (student.getCreatedAt() != null && !student.getCreatedAt().isEmpty()) {
             try {
                 long timestamp = Long.parseLong(student.getCreatedAt());
                 Date date = new Date(timestamp);
                 SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-                dateText = sdf.format(date);
+                dateText = "Fecha: " + sdf.format(date);
             } catch (NumberFormatException e) {
-                dateText = "Fecha no disponible";
+                dateText = "Fecha: No disponible";
             }
         } else if (student.getUpdatedAt() != null && !student.getUpdatedAt().isEmpty()) {
             try {
                 long timestamp = Long.parseLong(student.getUpdatedAt());
                 Date date = new Date(timestamp);
                 SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-                dateText = sdf.format(date);
+                dateText = "Fecha: " + sdf.format(date);
             } catch (NumberFormatException e) {
-                dateText = "Fecha no disponible";
+                dateText = "Fecha: No disponible";
             }
-        } else {
-            dateText = "Fecha no disponible";
         }
         holder.tvDate.setText(dateText);
 
@@ -106,18 +105,23 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
             holder.ivProfile.setImageResource(R.drawable.user);
         }
 
-        // Configurar click listeners
-        holder.tvApproveAction.setOnClickListener(v -> {
+        // Configurar el botón Aprobar
+        holder.btnApprove.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onApproveClicked(student, position);
             }
         });
 
-        holder.ivMenu.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onMenuClicked(student, v);
-            }
-        });
+        // Configurar el texto y el icono del botón
+        TextView tvButtonText = holder.btnApprove.findViewById(R.id.tv_button_text);
+        if (tvButtonText != null) {
+            tvButtonText.setText("Aprobar");
+        }
+        ImageView ivButtonIcon = holder.btnApprove.findViewById(R.id.iv_button_icon);
+        if (ivButtonIcon != null) {
+            ivButtonIcon.setImageResource(R.drawable.ic_check);
+            ivButtonIcon.setVisibility(View.VISIBLE);
+        }
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
@@ -155,8 +159,8 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
 
     static class StudentViewHolder extends RecyclerView.ViewHolder {
         CircleImageView ivProfile;
-        TextView tvFullName, tvInfo, tvStatus, tvDate, tvApproveAction;
-        ImageView ivMenu;
+        LinearLayout btnApprove; // Cambiado a LinearLayout
+        TextView tvFullName, tvInfo, tvStatus, tvDate;
 
         public StudentViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -165,8 +169,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
             tvInfo = itemView.findViewById(R.id.tv_student_info);
             tvStatus = itemView.findViewById(R.id.tv_student_status);
             tvDate = itemView.findViewById(R.id.tv_student_date);
-            tvApproveAction = itemView.findViewById(R.id.tvApproveAction);
-            ivMenu = itemView.findViewById(R.id.ivMenu);
+            btnApprove = itemView.findViewById(R.id.btnApprove); // Acceder al LinearLayout
         }
     }
 }
