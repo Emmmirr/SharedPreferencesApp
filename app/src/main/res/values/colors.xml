@@ -55,4 +55,10 @@
     <!-- Color para texto de botones de acción -->
     <color name="button_text_light">#B3FFFFFF</color> <!-- Blanco con transparencia (70%) -->
 
+    <!-- Variaciones del color primary para cards de fechas (colores pasteles basados en #1b396a) -->
+    <color name="primary_light_1">#E8ECF5</color> <!-- Azul muy claro (fondo superior) -->
+    <color name="primary_light_2">#D1DAEB</color> <!-- Azul claro pastel (card 1) -->
+    <color name="primary_light_3">#BAC8E1</color> <!-- Azul medio pastel (card 2) -->
+    <color name="primary_light_4">#A3B6D7</color> <!-- Azul más intenso pastel (card 3) -->
+
 </resources>
