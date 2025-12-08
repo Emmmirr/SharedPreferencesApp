@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CalendarView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,9 +48,14 @@ public class CalendarioFragment extends Fragment {
     private TextView tvDiaNumero;
     private TextView tvMesAno;
     private TextView tvDiasRestantes;
+    private CalendarView calendarView;
     private LinearLayout btnSubirDocumento;
-    private LinearLayout layoutArchivoSubido;
+    private TextView tvTextoSubir;
+    private ImageView ivIconoSubir;
     private LinearLayout btnVerDocumento;
+
+    // Referencias a las cards de fechas para cambiar el color
+    private View[] fechaCardViews = new View[3];
 
     // Datos del calendario
     private DocumentSnapshot calendarioDocument;
@@ -150,9 +157,16 @@ public class CalendarioFragment extends Fragment {
         tvDiaNumero = view.findViewById(R.id.tvDiaNumero);
         tvMesAno = view.findViewById(R.id.tvMesAno);
         tvDiasRestantes = view.findViewById(R.id.tvDiasRestantes);
+        calendarView = view.findViewById(R.id.calendarView);
         btnSubirDocumento = view.findViewById(R.id.btnSubirDocumento);
-        layoutArchivoSubido = view.findViewById(R.id.layoutArchivoSubido);
+        tvTextoSubir = view.findViewById(R.id.tvTextoSubir);
+        ivIconoSubir = view.findViewById(R.id.ivIconoSubir);
         btnVerDocumento = view.findViewById(R.id.btnVerDocumento);
+
+        // Deshabilitar completamente la interacción del calendario (solo visual)
+        calendarView.setEnabled(false);
+        calendarView.setClickable(false);
+        calendarView.setFocusable(false);
 
         btnSubirDocumento.setOnClickListener(v -> {
             if (selectedFechaIndex >= 0) {
@@ -177,6 +191,9 @@ public class CalendarioFragment extends Fragment {
             tvNoCalendario.setVisibility(View.VISIBLE);
             layoutDetalleFecha.setVisibility(View.GONE);
             layoutFechasLista.setVisibility(View.GONE);
+            if (calendarView != null) {
+                calendarView.setVisibility(View.GONE);
+            }
             return;
         }
 
@@ -197,6 +214,7 @@ public class CalendarioFragment extends Fragment {
                         tvNoCalendario.setVisibility(View.VISIBLE);
                         layoutDetalleFecha.setVisibility(View.GONE);
                         layoutFechasLista.setVisibility(View.GONE);
+                        calendarView.setVisibility(View.GONE);
                         return;
                     }
 
@@ -207,6 +225,7 @@ public class CalendarioFragment extends Fragment {
                             tvNoCalendario.setVisibility(View.GONE);
                             layoutDetalleFecha.setVisibility(View.VISIBLE);
                             layoutFechasLista.setVisibility(View.VISIBLE);
+                            calendarView.setVisibility(View.VISIBLE);
                             cargarFechas();
                             // Seleccionar la primera fecha por defecto
                             if (selectedFechaIndex < 0) {
@@ -217,6 +236,7 @@ public class CalendarioFragment extends Fragment {
                             tvNoCalendario.setVisibility(View.VISIBLE);
                             layoutDetalleFecha.setVisibility(View.GONE);
                             layoutFechasLista.setVisibility(View.GONE);
+                            calendarView.setVisibility(View.GONE);
                         }
                     });
                 },
@@ -228,10 +248,15 @@ public class CalendarioFragment extends Fragment {
         if (calendarioDocument == null) return;
 
         layoutFechasLista.removeAllViews();
+        // Limpiar referencias anteriores
+        for (int j = 0; j < fechaCardViews.length; j++) {
+            fechaCardViews[j] = null;
+        }
 
         for (int i = 0; i < 3; i++) {
             String label = calendarioDocument.getString(camposLabel[i]);
             String fecha = calendarioDocument.getString(camposFecha[i]);
+            String pdfUrl = calendarioDocument.getString(camposPdfUri[i]);
 
             if (fecha == null || fecha.isEmpty()) {
                 continue; // No mostrar fechas sin asignar
@@ -245,8 +270,18 @@ public class CalendarioFragment extends Fragment {
             TextView tvDiaNumeroItem = fechaItem.findViewById(R.id.tvDiaNumeroItem);
             TextView tvMesAnoItem = fechaItem.findViewById(R.id.tvMesAnoItem);
 
-            // Establecer color de fondo según el índice
-            cardFecha.setCardBackgroundColor(getResources().getColor(fechaCardColors[i % fechaCardColors.length]));
+            // Verificar si hay documento subido para cambiar el color
+            boolean tieneDocumento = !TextUtils.isEmpty(pdfUrl);
+            if (tieneDocumento) {
+                // Verde pastel si tiene documento
+                cardFecha.setCardBackgroundColor(getResources().getColor(R.color.green_pastel));
+            } else {
+                // Color normal según el índice
+                cardFecha.setCardBackgroundColor(getResources().getColor(fechaCardColors[i % fechaCardColors.length]));
+            }
+
+            // Guardar referencia a la card
+            fechaCardViews[i] = cardFecha;
 
             // Establecer nombre
             tvNombreItem.setText(label != null && !label.isEmpty() ? label : defaultLabels[i]);
@@ -281,6 +316,17 @@ public class CalendarioFragment extends Fragment {
             String[] fechaFormateada = formatearFecha(fecha);
             tvDiaNumero.setText(fechaFormateada[0]);
             tvMesAno.setText(fechaFormateada[1]);
+
+            // Actualizar calendario visual con la fecha seleccionada
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                Date fechaDate = sdf.parse(fecha);
+                if (fechaDate != null) {
+                    calendarView.setDate(fechaDate.getTime(), false, true);
+                }
+            } catch (ParseException e) {
+                Log.e(TAG, "Error al parsear fecha para calendario: " + fecha, e);
+            }
         } else {
             tvDiaNumero.setText("--");
             tvMesAno.setText("Sin asignar");
@@ -299,20 +345,26 @@ public class CalendarioFragment extends Fragment {
         boolean fechaVencida = diasRestantes < 0;
         boolean puedeSubir = puedeSubirDocumento(index);
 
-        // Mostrar/ocultar botón de subir
+        // Actualizar botón de subir/sustituir
         if (puedeSubir && !fechaVencida) {
             btnSubirDocumento.setVisibility(View.VISIBLE);
             btnSubirDocumento.setEnabled(true);
+
+            // Cambiar texto según si hay documento o no
+            if (tieneDocumento) {
+                tvTextoSubir.setText("Sustituir Documento");
+            } else {
+                tvTextoSubir.setText("Subir Documento");
+            }
         } else {
             btnSubirDocumento.setVisibility(View.GONE);
         }
 
-        // Mostrar/ocultar indicador de archivo subido
+        // Mostrar/ocultar botón de ver documento
         if (tieneDocumento) {
-            layoutArchivoSubido.setVisibility(View.VISIBLE);
             btnVerDocumento.setVisibility(View.VISIBLE);
         } else {
-            layoutArchivoSubido.setVisibility(View.GONE);
+            btnVerDocumento.setVisibility(View.GONE);
         }
     }
 
@@ -412,13 +464,27 @@ public class CalendarioFragment extends Fragment {
                     Toast.makeText(getContext(), "Documento actualizado exitosamente.", Toast.LENGTH_SHORT).show();
 
                     AlarmScheduler scheduler = new AlarmScheduler(requireContext());
+                    int fechaIndex = -1;
                     for (int i = 0; i < camposPdfUri.length; i++) {
                         if (camposPdfUri[i].equals(campoPdfKey)) {
                             scheduler.stopShortIntervalCycle(calendarioId, i);
+                            fechaIndex = i;
                             break;
                         }
                     }
-                    // Recargar datos
+
+                    // Cambiar el color de la card a verde pastel
+                    if (fechaIndex >= 0 && fechaIndex < fechaCardViews.length && fechaCardViews[fechaIndex] != null) {
+                        androidx.cardview.widget.CardView card = (androidx.cardview.widget.CardView) fechaCardViews[fechaIndex];
+                        card.setCardBackgroundColor(getResources().getColor(R.color.green_pastel));
+                    }
+
+                    // Actualizar la vista de la fecha seleccionada
+                    if (selectedFechaIndex == fechaIndex) {
+                        seleccionarFecha(fechaIndex);
+                    }
+
+                    // Recargar datos para actualizar el documento
                     cargarCalendarioAsignado();
                 },
                 e -> {
@@ -457,6 +523,9 @@ public class CalendarioFragment extends Fragment {
             tvNoCalendario.setVisibility(View.VISIBLE);
             layoutDetalleFecha.setVisibility(View.GONE);
             layoutFechasLista.setVisibility(View.GONE);
+            if (calendarView != null) {
+                calendarView.setVisibility(View.GONE);
+            }
         }
         Log.e(TAG, message);
     }

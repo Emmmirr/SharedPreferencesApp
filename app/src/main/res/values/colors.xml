@@ -61,4 +61,7 @@
     <color name="primary_light_3">#BAC8E1</color> <!-- Azul medio pastel (card 2) -->
     <color name="primary_light_4">#A3B6D7</color> <!-- Azul más intenso pastel (card 3) -->
 
+    <!-- Verde pastel para cards con documento subido -->
+    <color name="green_pastel">#C8E6C9</color> <!-- Verde pastel suave -->
+
 </resources>

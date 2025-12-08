@@ -73,6 +73,48 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Calendario visual -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <CalendarView
+                        android:id="@+id/calendarView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minDate="0"
+                        android:maxDate="4102444800000"
+                        android:firstDayOfWeek="2"
+                        android:showWeekNumber="false"
+                        android:enabled="false"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusedMonthDateColor="@color/primary"
+                        android:selectedWeekBackgroundColor="@color/primary_light_2"
+                        android:weekSeparatorLineColor="@color/primary_light_3" />
+
+                    <!-- Vista transparente que bloquea todos los toques -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </FrameLayout>
+
+            </androidx.cardview.widget.CardView>
+
             <!-- Días restantes -->
             <TextView
                 android:id="@+id/tvDiasRestantes"
@@ -83,68 +125,51 @@
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="24dp" />
 
-            <!-- Botón para subir documento -->
+            <!-- Botones de acción: Subir/Sustituir y Ver -->
             <LinearLayout
-                android:id="@+id/btnSubirDocumento"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:background="@drawable/button_rounded_primary"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:elevation="2dp"
-                android:layout_marginBottom="16dp"
-                android:layout_gravity="center_horizontal">
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/ic_menu_upload"
-                    app:tint="@color/button_text_light"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
+                <!-- Botón para subir/sustituir documento -->
+                <LinearLayout
+                    android:id="@+id/btnSubirDocumento"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Subir Documento"
-                    android:textColor="@color/button_text_light"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/button_rounded_primary"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="2dp"
+                    android:layout_marginEnd="12dp">
 
-            <!-- Indicador de archivo subido -->
-            <LinearLayout
-                android:id="@+id/layoutArchivoSubido"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="#E8F5E9"
-                android:padding="12dp"
-                android:visibility="gone"
-                android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:id="@+id/ivIconoSubir"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_menu_upload"
+                        app:tint="@color/button_text_light"
+                        android:layout_marginEnd="8dp" />
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_check"
-                    app:tint="@color/green_success"
-                    android:layout_marginEnd="8dp" />
+                    <TextView
+                        android:id="@+id/tvTextoSubir"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Subir Documento"
+                        android:textColor="@color/button_text_light"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Documento subido"
-                    android:textSize="14sp"
-                    android:textColor="@color/green_success"
-                    android:textStyle="bold" />
-
+                <!-- Botón para ver documento -->
                 <LinearLayout
                     android:id="@+id/btnVerDocumento"
                     android:layout_width="wrap_content"
@@ -152,27 +177,28 @@
                     android:orientation="horizontal"
                     android:gravity="center"
                     android:background="@drawable/button_rounded_primary"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
                     android:clickable="true"
                     android:focusable="true"
-                    android:elevation="1dp">
+                    android:elevation="2dp"
+                    android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@android:drawable/ic_menu_view"
                         app:tint="@color/button_text_light"
-                        android:layout_marginEnd="6dp" />
+                        android:layout_marginEnd="8dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Ver"
                         android:textColor="@color/button_text_light"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
