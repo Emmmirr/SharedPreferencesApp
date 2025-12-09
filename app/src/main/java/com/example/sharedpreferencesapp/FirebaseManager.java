@@ -315,4 +315,71 @@ public class FirebaseManager {
         db.collection(COLLECTION_USER_PROFILES).document(studentId).get().addOnCompleteListener(onCompleteListener);
     }
 
+    // --- MÉTODOS PARA TRÁMITES Y FORMATOS ---
+
+    private static final String SUBCOLLECTION_TRAMITES_FORMATOS = "tramites_formatos";
+
+    /**
+     * Guarda o actualiza el estado de un documento en trámites y formatos
+     */
+    public void guardarDocumentoTramite(String userId, String documentoId, Map<String, Object> documentoData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES)
+                .document(userId)
+                .collection(SUBCOLLECTION_TRAMITES_FORMATOS)
+                .document("documentos")
+                .get()
+                .addOnCompleteListener(task -> {
+                    Map<String, Object> documentosData = new HashMap<>();
+                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                        documentosData = task.getResult().getData();
+                    }
+                    if (documentosData == null) {
+                        documentosData = new HashMap<>();
+                    }
+                    documentosData.put(documentoId, documentoData);
+                    documentosData.put("updatedAt", System.currentTimeMillis());
+
+                    db.collection(COLLECTION_USER_PROFILES)
+                            .document(userId)
+                            .collection(SUBCOLLECTION_TRAMITES_FORMATOS)
+                            .document("documentos")
+                            .set(documentosData)
+                            .addOnSuccessListener(aVoid -> onSuccess.run())
+                            .addOnFailureListener(onFailure::accept);
+                });
+    }
+
+    /**
+     * Guarda un borrador del wizard
+     */
+    public void guardarBorradorWizard(String userId, String documentoId, Map<String, Object> borradorData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        Map<String, Object> documentoData = new HashMap<>();
+        documentoData.put("borrador", borradorData);
+        documentoData.put("estado", "en_proceso");
+        documentoData.put("fechaGuardado", System.currentTimeMillis());
+
+        guardarDocumentoTramite(userId, documentoId, documentoData, onSuccess, onFailure);
+    }
+
+    /**
+     * Sube un PDF generado a Storage
+     */
+    public void subirPdfTramite(String userId, String documentoId, Uri fileUri, OnSuccessListener<String> onSuccess, OnFailureListener onFailure) {
+        if (userId == null || documentoId == null || fileUri == null) {
+            onFailure.onFailure(new IllegalArgumentException("UserID, DocumentoID o la URI del archivo no pueden ser nulos."));
+            return;
+        }
+
+        String path = COLLECTION_USER_PROFILES + "/" + userId + "/" + SUBCOLLECTION_TRAMITES_FORMATOS + "/" + documentoId + ".pdf";
+        StorageReference storageRef = storage.getReference(path);
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> onSuccess.onSuccess(uri.toString()))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
 }

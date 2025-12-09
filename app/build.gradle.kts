@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.sharedpreferencesapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34  // ⬅️ MANTENER: targetSdk puede ser diferente
         versionCode = 1
         versionName = "1.0"
@@ -52,6 +52,9 @@ dependencies {
 
     implementation("com.squareup.picasso:picasso:2.71828")
     implementation("com.itextpdf:itext7-core:7.2.5")
+    // Apache POI para manipular documentos Word
+    implementation("org.apache.poi:poi:5.2.4")
+    implementation("org.apache.poi:poi-ooxml:5.2.4")
     // Otras dependencias
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.github.TutorialsAndroid:GButton:v1.0.19")
