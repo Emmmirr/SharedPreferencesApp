@@ -34,6 +34,9 @@ public class FirebaseManager {
     // Colección principal para los perfiles de usuario
     private static final String COLLECTION_USER_PROFILES = "user_profiles";
 
+    // Colección para números de control autorizados para registro
+    private static final String COLLECTION_AUTORIZADOS = "numeros_control_autorizados";
+
     // Nombres de las SUB-COLECCIONES que existirán dentro de cada documento de usuario
     private static final String SUBCOLLECTION_ALUMNOS = "alumnos";
     private static final String SUBCOLLECTION_PROTOCOLOS = "protocolos";
@@ -401,6 +404,68 @@ public class FirebaseManager {
                             .addOnFailureListener(onFailure);
                 })
                 .addOnFailureListener(onFailure);
+    }
+
+    // --- MÉTODOS PARA NÚMEROS DE CONTROL AUTORIZADOS ---
+
+    /**
+     * Agrega un número de control a la lista de números autorizados para registro
+     */
+    public void agregarNumeroAutorizado(String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
+        Map<String, Object> autorizadoData = new HashMap<>();
+        autorizadoData.put("numeroControl", numeroControl);
+        autorizadoData.put("fechaRegistro", System.currentTimeMillis());
+        autorizadoData.put("activo", true);
+
+        // Usar el número de control como ID del documento para evitar duplicados
+        db.collection(COLLECTION_AUTORIZADOS)
+                .document(numeroControl)
+                .set(autorizadoData, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(e -> onFailure.accept(e));
+    }
+
+    /**
+     * Verifica si un número de control está en la lista de números autorizados
+     */
+    public void verificarNumeroAutorizado(String numeroControl, Consumer<Boolean> onComplete) {
+        db.collection(COLLECTION_AUTORIZADOS)
+                .document(numeroControl)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                        Map<String, Object> data = task.getResult().getData();
+                        Boolean activo = (Boolean) data.getOrDefault("activo", true);
+                        onComplete.accept(activo != null && activo);
+                    } else {
+                        onComplete.accept(false);
+                    }
+                });
+    }
+
+    /**
+     * Obtiene todos los números de control autorizados
+     */
+    public void obtenerNumerosAutorizados(OnCompleteListener<QuerySnapshot> onCompleteListener) {
+        db.collection(COLLECTION_AUTORIZADOS)
+                .whereEqualTo("activo", true)
+                .get()
+                .addOnCompleteListener(onCompleteListener);
+    }
+
+    /**
+     * Elimina o desactiva un número autorizado
+     */
+    public void eliminarNumeroAutorizado(String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("activo", false);
+        updateData.put("fechaEliminacion", System.currentTimeMillis());
+
+        db.collection(COLLECTION_AUTORIZADOS)
+                .document(numeroControl)
+                .update(updateData)
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(e -> onFailure.accept(e));
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.sharedpreferencesapp;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -36,6 +38,14 @@ public class ListaAlumnosAdminFragment extends Fragment {
     private List<UserProfile> filteredList = new ArrayList<>();
     private AlumnoAdminAdapter adapter;
 
+    // Números de control autorizados
+    private RecyclerView recyclerAutorizados;
+    private TextView tvNoAutorizados;
+    private MaterialButton btnAgregarAutorizado;
+    private List<String> numerosAutorizadosList = new ArrayList<>();
+    private NumeroAutorizadoAdapter numeroAutorizadoAdapter;
+    private FirebaseManager firebaseManager;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -51,19 +61,36 @@ public class ListaAlumnosAdminFragment extends Fragment {
         tvNoAlumnos = view.findViewById(R.id.tv_no_alumnos);
         etSearch = view.findViewById(R.id.etSearch);
 
-        // Configurar RecyclerView
+        // Números de control autorizados
+        recyclerAutorizados = view.findViewById(R.id.recycler_autorizados);
+        tvNoAutorizados = view.findViewById(R.id.tv_no_autorizados);
+        btnAgregarAutorizado = view.findViewById(R.id.btn_agregar_autorizado);
+
+        // Configurar RecyclerView de alumnos
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new AlumnoAdminAdapter(getContext(), filteredList);
         recyclerView.setAdapter(adapter);
 
+        // Configurar RecyclerView de números autorizados
+        recyclerAutorizados.setLayoutManager(new LinearLayoutManager(getContext()));
+        numeroAutorizadoAdapter = new NumeroAutorizadoAdapter(getContext(), numerosAutorizadosList, this::eliminarNumeroAutorizado);
+        recyclerAutorizados.setAdapter(numeroAutorizadoAdapter);
+
         // Inicializar Firebase
         db = FirebaseFirestore.getInstance();
+        firebaseManager = new FirebaseManager();
 
         // Configurar búsqueda
         setupSearch();
 
+        // Configurar botón agregar número autorizado
+        btnAgregarAutorizado.setOnClickListener(v -> mostrarDialogoAgregarAutorizado());
+
         // Cargar alumnos
         loadAlumnos();
+
+        // Cargar números autorizados
+        loadNumerosAutorizados();
     }
 
     private void setupSearch() {
@@ -151,6 +178,95 @@ public class ListaAlumnosAdminFragment extends Fragment {
         } else {
             tvNoAlumnos.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    // --- MÉTODOS PARA NÚMEROS DE CONTROL AUTORIZADOS ---
+
+    private void loadNumerosAutorizados() {
+        firebaseManager.obtenerNumerosAutorizados(task -> {
+            if (task.isSuccessful()) {
+                numerosAutorizadosList.clear();
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    String numeroControl = document.getString("numeroControl");
+                    if (numeroControl != null && !numeroControl.isEmpty()) {
+                        numerosAutorizadosList.add(numeroControl);
+                    }
+                }
+                numeroAutorizadoAdapter.notifyDataSetChanged();
+                updateAutorizadosEmptyState();
+            } else {
+                Log.e(TAG, "Error cargando números autorizados", task.getException());
+            }
+        });
+    }
+
+    private void mostrarDialogoAgregarAutorizado() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_agregar_autorizado, null);
+        builder.setView(dialogView);
+
+        TextInputEditText etNumeroControl = dialogView.findViewById(R.id.et_numero_control);
+        MaterialButton btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
+        MaterialButton btnAgregar = dialogView.findViewById(R.id.btn_agregar);
+
+        AlertDialog dialog = builder.create();
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        btnAgregar.setOnClickListener(v -> {
+            String numeroControl = etNumeroControl.getText().toString().trim();
+            if (numeroControl.isEmpty()) {
+                Toast.makeText(getContext(), "Por favor ingresa un número de control", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Verificar si ya existe
+            if (numerosAutorizadosList.contains(numeroControl)) {
+                Toast.makeText(getContext(), "Este número de control ya está registrado", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            firebaseManager.agregarNumeroAutorizado(numeroControl,
+                    () -> {
+                        Toast.makeText(getContext(), "Número de control agregado exitosamente", Toast.LENGTH_SHORT).show();
+                        loadNumerosAutorizados();
+                        dialog.dismiss();
+                    },
+                    e -> {
+                        Log.e(TAG, "Error agregando número autorizado", e);
+                        Toast.makeText(getContext(), "Error al agregar número de control: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        dialog.show();
+    }
+
+    private void eliminarNumeroAutorizado(String numeroControl) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Eliminar Número de Control")
+                .setMessage("¿Estás seguro de que deseas eliminar el número de control " + numeroControl + "?")
+                .setPositiveButton("Eliminar", (dialog, which) -> {
+                    firebaseManager.eliminarNumeroAutorizado(numeroControl,
+                            () -> {
+                                Toast.makeText(getContext(), "Número de control eliminado", Toast.LENGTH_SHORT).show();
+                                loadNumerosAutorizados();
+                            },
+                            e -> {
+                                Log.e(TAG, "Error eliminando número autorizado", e);
+                                Toast.makeText(getContext(), "Error al eliminar número de control: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void updateAutorizadosEmptyState() {
+        if (numerosAutorizadosList.isEmpty()) {
+            tvNoAutorizados.setVisibility(View.VISIBLE);
+            recyclerAutorizados.setVisibility(View.GONE);
+        } else {
+            tvNoAutorizados.setVisibility(View.GONE);
+            recyclerAutorizados.setVisibility(View.VISIBLE);
         }
     }
 }

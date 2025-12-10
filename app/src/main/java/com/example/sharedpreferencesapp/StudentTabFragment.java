@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class StudentTabFragment extends Fragment {
 
@@ -69,6 +70,7 @@ public class StudentTabFragment extends Fragment {
     private GoogleSignInClient gClient;
     private ProfileManager profileManager;
     private TeacherService teacherService;  // Añadido: Servicio de maestros
+    private FirebaseManager firebaseManager;  // Añadido: Para validar números autorizados
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
     // Lista de maestros disponibles
@@ -123,6 +125,7 @@ public class StudentTabFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
         profileManager = new ProfileManager(requireContext());
         teacherService = new TeacherService();  // Inicializar servicio de maestros
+        firebaseManager = new FirebaseManager();  // Inicializar FirebaseManager para validar números autorizados
 
         GoogleSignInOptions gOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -178,7 +181,8 @@ public class StudentTabFragment extends Fragment {
             // Obtener el maestro seleccionado
             TeacherService.Teacher selectedTeacher = availableTeachers.get(spinnerTeacher.getSelectedItemPosition() - 1);
 
-            registrarEstudianteConEmail(email, password, controlNumber, selectedTeacher);
+            // Validar número de control con la lista de números autorizados
+            verificarNumeroControlYRegistrar(email, password, controlNumber, selectedTeacher);
         });
 
         // Evento de registro con Google
@@ -198,16 +202,8 @@ public class StudentTabFragment extends Fragment {
             // Obtener el maestro seleccionado
             TeacherService.Teacher selectedTeacher = availableTeachers.get(spinnerTeacher.getSelectedItemPosition() - 1);
 
-            // Guardar temporalmente el número de control y maestro para usarlos después del login con Google
-            SharedPreferences prefs = requireActivity().getSharedPreferences("TempStudentData", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("tempControlNumber", controlNumber);
-            editor.putString("tempSupervisorId", selectedTeacher.getId());
-            editor.putString("tempSupervisorName", selectedTeacher.getFullName());
-            editor.apply();
-
-            Intent signInIntent = gClient.getSignInIntent();
-            activityResultLauncher.launch(signInIntent);
+            // Validar número de control antes de proceder con Google Sign-In
+            verificarNumeroControlYRegistrarConGoogle(controlNumber, selectedTeacher);
         });
 
         // Cambiar a vista de login
@@ -327,6 +323,47 @@ public class StudentTabFragment extends Fragment {
                         Toast.makeText(getContext(), "Error al iniciar sesión: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void verificarNumeroControlYRegistrar(String email, String password, String controlNumber, TeacherService.Teacher selectedTeacher) {
+        // Mostrar mensaje de verificación
+        Toast.makeText(getContext(), "Verificando número de control...", Toast.LENGTH_SHORT).show();
+
+        // Verificar si el número de control está en la lista de números autorizados
+        firebaseManager.verificarNumeroAutorizado(controlNumber, esValido -> {
+            if (esValido) {
+                // El número de control es válido, proceder con el registro
+                registrarEstudianteConEmail(email, password, controlNumber, selectedTeacher);
+            } else {
+                // El número de control no está autorizado
+                Toast.makeText(getContext(), "Tu número de control no está autorizado. Contacta al administrador.", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void verificarNumeroControlYRegistrarConGoogle(String controlNumber, TeacherService.Teacher selectedTeacher) {
+        // Mostrar mensaje de verificación
+        Toast.makeText(getContext(), "Verificando número de control...", Toast.LENGTH_SHORT).show();
+
+        // Verificar si el número de control está en la lista de números autorizados
+        firebaseManager.verificarNumeroAutorizado(controlNumber, esValido -> {
+            if (esValido) {
+                // El número de control es válido, proceder con Google Sign-In
+                // Guardar temporalmente el número de control y maestro para usarlos después del login con Google
+                SharedPreferences prefs = requireActivity().getSharedPreferences("TempStudentData", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("tempControlNumber", controlNumber);
+                editor.putString("tempSupervisorId", selectedTeacher.getId());
+                editor.putString("tempSupervisorName", selectedTeacher.getFullName());
+                editor.apply();
+
+                Intent signInIntent = gClient.getSignInIntent();
+                activityResultLauncher.launch(signInIntent);
+            } else {
+                // El número de control no está autorizado
+                Toast.makeText(getContext(), "Tu número de control no está autorizado. Contacta al administrador.", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void registrarEstudianteConEmail(String email, String password, String controlNumber, TeacherService.Teacher selectedTeacher) {
