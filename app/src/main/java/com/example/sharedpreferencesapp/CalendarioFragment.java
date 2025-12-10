@@ -42,6 +42,7 @@ public class CalendarioFragment extends Fragment {
     private LinearLayout layoutDetalleFecha;
     private LinearLayout layoutFechasLista;
     private TextView tvNoCalendario;
+    private View scrollViewDetalle;
 
     // Vistas del detalle superior
     private TextView tvNombreActividad;
@@ -58,11 +59,10 @@ public class CalendarioFragment extends Fragment {
     private View[] fechaCardViews = new View[3];
 
     // Datos del calendario
-    private DocumentSnapshot calendarioDocument;
+    private DocumentSnapshot calendarioGlobalDocument; // Fechas globales
+    private DocumentSnapshot calendarioEstudianteDocument; // Documentos del estudiante
     private UserProfile studentProfile;
-    private String supervisorId;
     private String currentUserId;
-    private String calendarioId;
 
     // Fecha actualmente seleccionada (0, 1, o 2)
     private int selectedFechaIndex = -1;
@@ -95,12 +95,14 @@ public class CalendarioFragment extends Fragment {
                         requireContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
                         Toast.makeText(getContext(), "Subiendo archivo...", Toast.LENGTH_LONG).show();
 
-                        if (supervisorId == null) {
-                            Toast.makeText(getContext(), "Error: No se encontró el supervisor.", Toast.LENGTH_SHORT).show();
+                        if (currentUserId == null) {
+                            Toast.makeText(getContext(), "Error: No se encontró el usuario.", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        firebaseManager.subirPdfStorage(supervisorId, calendarioId, pendingUploadCampoPdf, uri,
+                        // Los documentos se guardan en la colección del estudiante
+                        String calendarioId = "calendario_" + currentUserId;
+                        firebaseManager.subirPdfStorage(currentUserId, calendarioId, pendingUploadCampoPdf, uri,
                                 downloadUrl -> guardarUrlEnFirestore(pendingUploadCampoPdf, downloadUrl),
                                 e -> {
                                     Toast.makeText(getContext(), "Error al subir el archivo: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -152,6 +154,8 @@ public class CalendarioFragment extends Fragment {
         layoutDetalleFecha = view.findViewById(R.id.layoutDetalleFecha);
         layoutFechasLista = view.findViewById(R.id.layoutFechasLista);
         tvNoCalendario = view.findViewById(R.id.tvNoCalendario);
+        // Buscar el ScrollView que contiene layoutDetalleFecha
+        scrollViewDetalle = layoutDetalleFecha != null ? (View) layoutDetalleFecha.getParent() : null;
 
         tvNombreActividad = view.findViewById(R.id.tvNombreActividad);
         tvDiaNumero = view.findViewById(R.id.tvDiaNumero);
@@ -175,8 +179,8 @@ public class CalendarioFragment extends Fragment {
         });
 
         btnVerDocumento.setOnClickListener(v -> {
-            if (selectedFechaIndex >= 0 && calendarioDocument != null) {
-                String pdfUrl = calendarioDocument.getString(camposPdfUri[selectedFechaIndex]);
+            if (selectedFechaIndex >= 0 && calendarioEstudianteDocument != null) {
+                String pdfUrl = calendarioEstudianteDocument.getString(camposPdfUri[selectedFechaIndex]);
                 if (!TextUtils.isEmpty(pdfUrl)) {
                     verPDF(pdfUrl);
                 }
@@ -207,36 +211,73 @@ public class CalendarioFragment extends Fragment {
                     }
 
                     studentProfile = profile;
-                    supervisorId = profile.getSupervisorId();
 
-                    if (supervisorId == null || supervisorId.isEmpty()) {
-                        tvNoCalendario.setText("Aún no tienes un supervisor asignado.");
-                        tvNoCalendario.setVisibility(View.VISIBLE);
-                        layoutDetalleFecha.setVisibility(View.GONE);
-                        layoutFechasLista.setVisibility(View.GONE);
-                        calendarView.setVisibility(View.GONE);
-                        return;
-                    }
+                    // Cargar calendario global (fechas) y calendario del estudiante (documentos)
+                    firebaseManager.obtenerCalendarioGlobal(taskGlobal -> {
+                        if (taskGlobal.isSuccessful() && taskGlobal.getResult() != null && taskGlobal.getResult().exists()) {
+                            calendarioGlobalDocument = taskGlobal.getResult();
 
-                    calendarioId = "calendario_" + currentUserId;
-                    firebaseManager.buscarCalendarioPorId(supervisorId, calendarioId, task -> {
-                        if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                            calendarioDocument = task.getResult();
-                            tvNoCalendario.setVisibility(View.GONE);
-                            layoutDetalleFecha.setVisibility(View.VISIBLE);
-                            layoutFechasLista.setVisibility(View.VISIBLE);
-                            calendarView.setVisibility(View.VISIBLE);
-                            cargarFechas();
-                            // Seleccionar la primera fecha por defecto
-                            if (selectedFechaIndex < 0) {
-                                seleccionarFecha(0);
+                            // Verificar si hay al menos una fecha asignada ANTES de mostrar los contenedores
+                            boolean hayFechas = false;
+                            for (int i = 0; i < 3; i++) {
+                                String fecha = calendarioGlobalDocument.getString(camposFecha[i]);
+                                if (fecha != null && !fecha.isEmpty()) {
+                                    hayFechas = true;
+                                    break;
+                                }
                             }
+
+                            if (!hayFechas) {
+                                // El documento existe pero no tiene fechas asignadas
+                                tvNoCalendario.setText("Aún no hay fechas asignadas. El administrador configurará las fechas próximamente.");
+                                tvNoCalendario.setVisibility(View.VISIBLE);
+                                // Ocultar el ScrollView que contiene layoutDetalleFecha
+                                if (scrollViewDetalle != null) {
+                                    scrollViewDetalle.setVisibility(View.GONE);
+                                }
+                                layoutFechasLista.setVisibility(View.GONE);
+                                if (calendarView != null) {
+                                    calendarView.setVisibility(View.GONE);
+                                }
+                                return;
+                            }
+
+                            // Hay fechas, cargar también el calendario del estudiante para obtener los PDFs subidos
+                            String calendarioId = "calendario_" + currentUserId;
+                            firebaseManager.buscarCalendarioPorId(currentUserId, calendarioId, taskEstudiante -> {
+                                if (taskEstudiante.isSuccessful() && taskEstudiante.getResult() != null && taskEstudiante.getResult().exists()) {
+                                    calendarioEstudianteDocument = taskEstudiante.getResult();
+                                } else {
+                                    calendarioEstudianteDocument = null; // No hay documentos aún
+                                }
+
+                                tvNoCalendario.setVisibility(View.GONE);
+                                // Mostrar el ScrollView que contiene layoutDetalleFecha
+                                if (scrollViewDetalle != null) {
+                                    scrollViewDetalle.setVisibility(View.VISIBLE);
+                                }
+                                layoutDetalleFecha.setVisibility(View.VISIBLE);
+                                layoutFechasLista.setVisibility(View.VISIBLE);
+                                if (calendarView != null) {
+                                    calendarView.setVisibility(View.VISIBLE);
+                                }
+                                cargarFechas();
+                                // Seleccionar la primera fecha por defecto
+                                if (selectedFechaIndex < 0) {
+                                    seleccionarFecha(0);
+                                }
+                            });
                         } else {
-                            tvNoCalendario.setText("Tu supervisor aún no te ha asignado un calendario de entregas.");
+                            tvNoCalendario.setText("Aún no hay fechas asignadas. El administrador configurará las fechas próximamente.");
                             tvNoCalendario.setVisibility(View.VISIBLE);
-                            layoutDetalleFecha.setVisibility(View.GONE);
+                            // Ocultar el ScrollView que contiene layoutDetalleFecha
+                            if (scrollViewDetalle != null) {
+                                scrollViewDetalle.setVisibility(View.GONE);
+                            }
                             layoutFechasLista.setVisibility(View.GONE);
-                            calendarView.setVisibility(View.GONE);
+                            if (calendarView != null) {
+                                calendarView.setVisibility(View.GONE);
+                            }
                         }
                     });
                 },
@@ -245,7 +286,7 @@ public class CalendarioFragment extends Fragment {
     }
 
     private void cargarFechas() {
-        if (calendarioDocument == null) return;
+        if (calendarioGlobalDocument == null) return;
 
         layoutFechasLista.removeAllViews();
         // Limpiar referencias anteriores
@@ -253,10 +294,46 @@ public class CalendarioFragment extends Fragment {
             fechaCardViews[j] = null;
         }
 
+        // Verificar si hay al menos una fecha asignada
+        boolean hayFechas = false;
         for (int i = 0; i < 3; i++) {
-            String label = calendarioDocument.getString(camposLabel[i]);
-            String fecha = calendarioDocument.getString(camposFecha[i]);
-            String pdfUrl = calendarioDocument.getString(camposPdfUri[i]);
+            String fecha = calendarioGlobalDocument.getString(camposFecha[i]);
+            if (fecha != null && !fecha.isEmpty()) {
+                hayFechas = true;
+                break;
+            }
+        }
+
+        if (!hayFechas) {
+            // No hay fechas asignadas, mostrar mensaje
+            tvNoCalendario.setText("Aún no hay fechas asignadas. El administrador configurará las fechas próximamente.");
+            tvNoCalendario.setVisibility(View.VISIBLE);
+            layoutDetalleFecha.setVisibility(View.GONE);
+            layoutFechasLista.setVisibility(View.GONE);
+            if (calendarView != null) {
+                calendarView.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        // Hay fechas, mostrar el contenedor
+        tvNoCalendario.setVisibility(View.GONE);
+        layoutDetalleFecha.setVisibility(View.VISIBLE);
+        layoutFechasLista.setVisibility(View.VISIBLE);
+        if (calendarView != null) {
+            calendarView.setVisibility(View.VISIBLE);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            // Fechas y labels vienen del calendario global
+            String label = calendarioGlobalDocument.getString(camposLabel[i]);
+            String fecha = calendarioGlobalDocument.getString(camposFecha[i]);
+
+            // PDFs vienen del calendario del estudiante (si existe)
+            String pdfUrl = null;
+            if (calendarioEstudianteDocument != null) {
+                pdfUrl = calendarioEstudianteDocument.getString(camposPdfUri[i]);
+            }
 
             if (fecha == null || fecha.isEmpty()) {
                 continue; // No mostrar fechas sin asignar
@@ -300,13 +377,19 @@ public class CalendarioFragment extends Fragment {
     }
 
     private void seleccionarFecha(int index) {
-        if (calendarioDocument == null || index < 0 || index >= 3) return;
+        if (calendarioGlobalDocument == null || index < 0 || index >= 3) return;
 
         selectedFechaIndex = index;
 
-        String label = calendarioDocument.getString(camposLabel[index]);
-        String fecha = calendarioDocument.getString(camposFecha[index]);
-        String pdfUrl = calendarioDocument.getString(camposPdfUri[index]);
+        // Fechas y labels vienen del calendario global
+        String label = calendarioGlobalDocument.getString(camposLabel[index]);
+        String fecha = calendarioGlobalDocument.getString(camposFecha[index]);
+
+        // PDFs vienen del calendario del estudiante (si existe)
+        String pdfUrl = null;
+        if (calendarioEstudianteDocument != null) {
+            pdfUrl = calendarioEstudianteDocument.getString(camposPdfUri[index]);
+        }
 
         // Actualizar nombre de actividad
         tvNombreActividad.setText(label != null && !label.isEmpty() ? label : defaultLabels[index]);
@@ -436,14 +519,14 @@ public class CalendarioFragment extends Fragment {
         }
 
         // Para las siguientes fechas, verificar que la anterior tenga documento
-        if (calendarioDocument == null) return false;
+        if (calendarioEstudianteDocument == null) return false;
 
-        String pdfUrlAnterior = calendarioDocument.getString(camposPdfUri[index - 1]);
+        String pdfUrlAnterior = calendarioEstudianteDocument.getString(camposPdfUri[index - 1]);
         return !TextUtils.isEmpty(pdfUrlAnterior);
     }
 
     private void iniciarSubidaPDF() {
-        if (selectedFechaIndex < 0 || calendarioDocument == null) return;
+        if (selectedFechaIndex < 0 || calendarioGlobalDocument == null) return;
 
         String campoPdfKey = camposPdfUri[selectedFechaIndex];
         pendingUploadCampoPdf = campoPdfKey;
@@ -451,40 +534,50 @@ public class CalendarioFragment extends Fragment {
     }
 
     private void guardarUrlEnFirestore(String campoPdfKey, String downloadUrl) {
-        if (supervisorId == null || getContext() == null) {
-            Toast.makeText(getContext(), "Error de sesión o supervisor no encontrado.", Toast.LENGTH_SHORT).show();
+        if (currentUserId == null || getContext() == null) {
+            Toast.makeText(getContext(), "Error de sesión.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Los documentos se guardan en la colección del estudiante
+        String calendarioId = "calendario_" + currentUserId;
         Map<String, Object> update = new HashMap<>();
         update.put(campoPdfKey, downloadUrl);
 
-        firebaseManager.guardarOActualizarCalendario(supervisorId, calendarioId, update,
+        firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, update,
                 () -> {
                     Toast.makeText(getContext(), "Documento actualizado exitosamente.", Toast.LENGTH_SHORT).show();
 
-                    AlarmScheduler scheduler = new AlarmScheduler(requireContext());
-                    int fechaIndex = -1;
-                    for (int i = 0; i < camposPdfUri.length; i++) {
-                        if (camposPdfUri[i].equals(campoPdfKey)) {
-                            scheduler.stopShortIntervalCycle(calendarioId, i);
-                            fechaIndex = i;
-                            break;
+                    // Recargar el calendario del estudiante para actualizar los PDFs
+                    firebaseManager.buscarCalendarioPorId(currentUserId, calendarioId, task -> {
+                        if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                            calendarioEstudianteDocument = task.getResult();
                         }
-                    }
 
-                    // Cambiar el color de la card a verde pastel
-                    if (fechaIndex >= 0 && fechaIndex < fechaCardViews.length && fechaCardViews[fechaIndex] != null) {
-                        androidx.cardview.widget.CardView card = (androidx.cardview.widget.CardView) fechaCardViews[fechaIndex];
-                        card.setCardBackgroundColor(getResources().getColor(R.color.green_pastel));
-                    }
+                        AlarmScheduler scheduler = new AlarmScheduler(requireContext());
+                        int fechaIndex = -1;
+                        for (int i = 0; i < camposPdfUri.length; i++) {
+                            if (camposPdfUri[i].equals(campoPdfKey)) {
+                                scheduler.stopShortIntervalCycle(calendarioId, i);
+                                fechaIndex = i;
+                                break;
+                            }
+                        }
 
-                    // Actualizar la vista de la fecha seleccionada
-                    if (selectedFechaIndex == fechaIndex) {
-                        seleccionarFecha(fechaIndex);
-                    }
+                        // Cambiar el color de la card a verde pastel
+                        if (fechaIndex >= 0 && fechaIndex < fechaCardViews.length && fechaCardViews[fechaIndex] != null) {
+                            androidx.cardview.widget.CardView card = (androidx.cardview.widget.CardView) fechaCardViews[fechaIndex];
+                            card.setCardBackgroundColor(getResources().getColor(R.color.green_pastel));
+                        }
 
-                    // Recargar datos para actualizar el documento
+                        // Actualizar la vista de la fecha seleccionada
+                        if (selectedFechaIndex == fechaIndex) {
+                            seleccionarFecha(fechaIndex);
+                        }
+
+                        // Recargar fechas para actualizar la UI
+                        cargarFechas();
+                    });
                     cargarCalendarioAsignado();
                 },
                 e -> {

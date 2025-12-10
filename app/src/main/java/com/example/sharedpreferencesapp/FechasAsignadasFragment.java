@@ -73,20 +73,10 @@ public class FechasAsignadasFragment extends Fragment {
                         return;
                     }
 
-                    String supervisorId = profile.getSupervisorId();
-                    String supervisorName = profile.getSupervisorName();
+                    // Cargar calendario global (ya no depende del supervisor)
+                    tvSupervisorInfo.setText("Calendario Global de Residencia");
 
-                    if (supervisorId == null || supervisorId.isEmpty()) {
-                        tvSupervisorInfo.setText("Aún no tienes un supervisor asignado.");
-                        tvNoCalendario.setVisibility(View.VISIBLE);
-                        layoutFechasContainer.setVisibility(View.GONE);
-                        return;
-                    }
-
-                    tvSupervisorInfo.setText("Asignado por: " + (supervisorName.isEmpty() ? "Supervisor" : supervisorName));
-
-                    String calendarioId = "calendario_" + studentId;
-                    firebaseManager.buscarCalendarioPorId(supervisorId, calendarioId, task -> {
+                    firebaseManager.obtenerCalendarioGlobal(task -> {
                         if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
                             actualizarUIConDatos(task.getResult());
                         } else {
@@ -100,15 +90,34 @@ public class FechasAsignadasFragment extends Fragment {
     }
 
     private void actualizarUIConDatos(DocumentSnapshot calendario) {
-        tvNoCalendario.setVisibility(View.GONE);
-        layoutFechasContainer.setVisibility(View.VISIBLE);
-
         // Nombres de campo y etiquetas por defecto
         String[] camposFecha = {"fechaPrimeraEntrega", "fechaSegundaEntrega", "fechaResultado"};
         String[] camposLabel = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
         String[] defaultLabels = {"1ª Entrega", "2ª Entrega", "Resultado Final"};
         TextView[] textViewsLabel = {tvLabelFecha1, tvLabelFecha2, tvLabelFecha3};
         TextView[] textViewsFecha = {tvFecha1, tvFecha2, tvFecha3};
+
+        // Verificar si hay al menos una fecha asignada
+        boolean hayFechas = false;
+        for (int i = 0; i < camposFecha.length; i++) {
+            String fecha = calendario.getString(camposFecha[i]);
+            if (fecha != null && !fecha.isEmpty()) {
+                hayFechas = true;
+                break;
+            }
+        }
+
+        if (!hayFechas) {
+            // No hay fechas asignadas
+            tvNoCalendario.setText("Aún no hay fechas asignadas. El administrador configurará las fechas próximamente.");
+            tvNoCalendario.setVisibility(View.VISIBLE);
+            layoutFechasContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        // Hay fechas, mostrar el contenedor
+        tvNoCalendario.setVisibility(View.GONE);
+        layoutFechasContainer.setVisibility(View.VISIBLE);
 
         for (int i = 0; i < camposFecha.length; i++) {
             String label = calendario.getString(camposLabel[i]);

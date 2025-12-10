@@ -38,6 +38,10 @@ public class FirebaseManager {
     // Colección para números de control autorizados para registro (organizados en bloques)
     private static final String COLLECTION_BLOQUES_AUTORIZADOS = "bloques_numeros_autorizados";
 
+    // Colección para calendario global (fechas aplicables a todos los alumnos)
+    private static final String COLLECTION_CALENDARIO_GLOBAL = "calendario_global";
+    private static final String DOCUMENT_CALENDARIO_GLOBAL = "fechas_residencia";
+
     // Nombres de las SUB-COLECCIONES que existirán dentro de cada documento de usuario
     private static final String SUBCOLLECTION_ALUMNOS = "alumnos";
     private static final String SUBCOLLECTION_PROTOCOLOS = "protocolos";
@@ -637,6 +641,30 @@ public class FirebaseManager {
                 .whereEqualTo("userType", "admin")
                 .get()
                 .addOnCompleteListener(listener);
+    }
+
+    // --- MÉTODOS PARA CALENDARIO GLOBAL ---
+
+    /**
+     * Obtiene el calendario global (fechas para todos los alumnos)
+     */
+    public void obtenerCalendarioGlobal(OnCompleteListener<DocumentSnapshot> listener) {
+        db.collection(COLLECTION_CALENDARIO_GLOBAL)
+                .document(DOCUMENT_CALENDARIO_GLOBAL)
+                .get()
+                .addOnCompleteListener(listener);
+    }
+
+    /**
+     * Guarda o actualiza el calendario global
+     */
+    public void guardarCalendarioGlobal(Map<String, Object> calendarioData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        calendarioData.put("updatedAt", String.valueOf(System.currentTimeMillis()));
+        db.collection(COLLECTION_CALENDARIO_GLOBAL)
+                .document(DOCUMENT_CALENDARIO_GLOBAL)
+                .set(calendarioData, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
     }
 
 }

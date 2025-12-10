@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -74,7 +75,29 @@ public class AdminMainActivity extends AppCompatActivity {
 
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
-            NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+            // Interceptar la navegación para limpiar el back stack si es necesario
+            bottomNavigationView.setOnItemSelectedListener(item -> {
+                // Limpiar el back stack del FragmentManager antes de navegar
+                // Esto evita conflictos cuando hay fragments agregados manualmente
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                int backStackCount = fragmentManager.getBackStackEntryCount();
+                if (backStackCount > 0) {
+                    // Limpiar el back stack del FragmentManager de forma segura
+                    try {
+                        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error al limpiar back stack", e);
+                        // Si falla, intentar limpiar de otra forma
+                        while (fragmentManager.getBackStackEntryCount() > 0) {
+                            fragmentManager.popBackStackImmediate();
+                        }
+                    }
+                }
+
+                // Usar el NavController para navegar
+                return NavigationUI.onNavDestinationSelected(item, navController);
+            });
         } else {
             Log.e(TAG, "NavHostFragment no encontrado");
         }

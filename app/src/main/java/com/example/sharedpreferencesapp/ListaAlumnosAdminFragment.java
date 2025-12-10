@@ -15,6 +15,7 @@ public class ListaAlumnosAdminFragment extends Fragment {
 
     private CardView cardListaAlumnos;
     private CardView cardNumerosAutorizados;
+    private CardView cardCalendarioGlobal;
 
     @Nullable
     @Override
@@ -28,10 +29,12 @@ public class ListaAlumnosAdminFragment extends Fragment {
 
         cardListaAlumnos = view.findViewById(R.id.card_lista_alumnos);
         cardNumerosAutorizados = view.findViewById(R.id.card_numeros_autorizados);
+        cardCalendarioGlobal = view.findViewById(R.id.card_calendario_global);
 
         // Configurar click listeners
         cardListaAlumnos.setOnClickListener(v -> abrirListaAlumnos());
         cardNumerosAutorizados.setOnClickListener(v -> abrirBloquesAutorizados());
+        cardCalendarioGlobal.setOnClickListener(v -> abrirCalendarioGlobal());
     }
 
     private void abrirListaAlumnos() {
@@ -44,6 +47,14 @@ public class ListaAlumnosAdminFragment extends Fragment {
 
     private void abrirBloquesAutorizados() {
         BloquesAutorizadosFragment fragment = new BloquesAutorizadosFragment();
+        FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.nav_host_fragment, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void abrirCalendarioGlobal() {
+        GestionCalendarioGlobalFragment fragment = new GestionCalendarioGlobalFragment();
         FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.nav_host_fragment, fragment);
         transaction.addToBackStack(null);

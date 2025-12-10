@@ -6,6 +6,19 @@
     android:orientation="vertical"
     android:background="@color/background_light">
 
+    <!-- Mensaje cuando no hay calendario (fuera del layoutDetalleFecha para que siempre sea visible) -->
+    <TextView
+        android:id="@+id/tvNoCalendario"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="Tu supervisor aún no te ha asignado un calendario."
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:padding="20dp"
+        android:visibility="gone" />
+
     <!-- Parte Superior: Detalle de la fecha seleccionada (sin card, contenido suelto) -->
     <ScrollView
         android:layout_width="match_parent"
@@ -202,18 +215,6 @@
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
-
-            <!-- Mensaje cuando no hay calendario -->
-            <TextView
-                android:id="@+id/tvNoCalendario"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tu supervisor aún no te ha asignado un calendario."
-                android:gravity="center"
-                android:textSize="16sp"
-                android:textColor="@color/text_secondary"
-                android:padding="20dp"
-                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
