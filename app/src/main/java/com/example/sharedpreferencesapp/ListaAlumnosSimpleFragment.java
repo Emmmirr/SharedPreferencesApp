@@ -57,6 +57,42 @@ public class ListaAlumnosSimpleFragment extends Fragment {
         // Configurar RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new AlumnoAdminAdapter(getContext(), filteredList);
+
+        // Configurar listeners
+        adapter.setOnAlumnoClickListener(alumno -> {
+            // Navegar a detalle del alumno
+            String nombre = "";
+            if (alumno.getFullName() != null && !alumno.getFullName().isEmpty()) {
+                nombre = alumno.getFullName();
+            } else if (alumno.getDisplayName() != null && !alumno.getDisplayName().isEmpty()) {
+                nombre = alumno.getDisplayName();
+            } else if (alumno.getEmail() != null && !alumno.getEmail().isEmpty()) {
+                nombre = alumno.getEmail();
+            } else {
+                nombre = "Sin nombre";
+            }
+
+            DetalleAlumnoAdminFragment fragment = DetalleAlumnoAdminFragment.newInstance(
+                    alumno.getUserId(), nombre
+            );
+
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        adapter.setOnEstadoClickListener(studentId -> {
+            // Abrir BottomSheet para editar estado
+            BottomSheetEditarEstado bottomSheet = BottomSheetEditarEstado.newInstance(studentId);
+            bottomSheet.setOnEstadoGuardadoListener(() -> {
+                // Recargar la lista para actualizar badges
+                loadAlumnos();
+            });
+            bottomSheet.show(getParentFragmentManager(), "BottomSheetEditarEstado");
+        });
+
         recyclerView.setAdapter(adapter);
 
         // Inicializar Firebase

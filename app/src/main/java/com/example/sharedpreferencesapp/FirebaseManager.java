@@ -550,4 +550,46 @@ public class FirebaseManager {
                 });
     }
 
+    // --- MÉTODOS PARA ESTADO DE RESIDENCIA ---
+
+    private static final String SUBCOLLECTION_ESTADO_RESIDENCIA = "estado_residencia";
+
+    /**
+     * Guarda o actualiza el estado de residencia de un estudiante
+     */
+    public void guardarEstadoResidencia(String studentId, Map<String, Object> estadoData, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES)
+                .document(studentId)
+                .collection(SUBCOLLECTION_ESTADO_RESIDENCIA)
+                .document("datos")
+                .set(estadoData)
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onFailure::accept);
+    }
+
+    /**
+     * Carga el estado de residencia de un estudiante
+     */
+    public void cargarEstadoResidencia(String studentId, Consumer<Map<String, Object>> onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_USER_PROFILES)
+                .document(studentId)
+                .collection(SUBCOLLECTION_ESTADO_RESIDENCIA)
+                .document("datos")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                        Map<String, Object> data = task.getResult().getData();
+                        if (data != null) {
+                            onSuccess.accept(data);
+                        } else {
+                            onSuccess.accept(new HashMap<>());
+                        }
+                    } else {
+                        // Si no existe, retornar mapa vacío
+                        onSuccess.accept(new HashMap<>());
+                    }
+                })
+                .addOnFailureListener(e -> onFailure.accept(e));
+    }
+
 }

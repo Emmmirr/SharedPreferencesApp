@@ -210,10 +210,16 @@ public class EstadoResidenciaFragment extends Fragment {
             String faseId = FASES_IDS[i];
             String faseNombre = FASES[i];
 
-            // Obtener estado de la fase
-            String estadoFase = (String) fasesData.getOrDefault(faseId, "pendiente");
-            if (estadoFase == null) {
-                estadoFase = "pendiente";
+            // Obtener estado de la fase - puede ser Boolean (true/false) o String ("pendiente"/"completada")
+            boolean completada = false;
+            String estadoFase = "pendiente";
+            Object estadoObj = fasesData.get(faseId);
+            if (estadoObj instanceof Boolean) {
+                completada = (Boolean) estadoObj;
+                estadoFase = completada ? "completada" : "pendiente";
+            } else if (estadoObj instanceof String) {
+                estadoFase = (String) estadoObj;
+                completada = "completada".equals(estadoFase);
             }
 
             // Obtener fecha de la fase si existe
@@ -224,8 +230,7 @@ public class EstadoResidenciaFragment extends Fragment {
                 fechaFase = (String) faseInfo.get("fecha");
             }
 
-            // Determinar si está completada, en curso o pendiente
-            boolean completada = "completada".equals(estadoFase);
+            // Determinar si está en curso
             boolean enCurso = (i == faseActualIndex && !completada);
 
             // Crear vista de la fase
@@ -278,8 +283,14 @@ public class EstadoResidenciaFragment extends Fragment {
             case ESTATUS_EN_CURSO:
                 // Buscar la primera fase no completada
                 for (int i = 0; i < FASES_IDS.length; i++) {
-                    String estado = (String) fasesData.getOrDefault(FASES_IDS[i], "pendiente");
-                    if (!"completada".equals(estado)) {
+                    Object estadoObj = fasesData.get(FASES_IDS[i]);
+                    boolean completada = false;
+                    if (estadoObj instanceof Boolean) {
+                        completada = (Boolean) estadoObj;
+                    } else if (estadoObj instanceof String) {
+                        completada = "completada".equals(estadoObj);
+                    }
+                    if (!completada) {
                         return i;
                     }
                 }
