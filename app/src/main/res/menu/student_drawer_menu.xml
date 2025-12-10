@@ -28,6 +28,10 @@
             android:id="@+id/nav_tramites_formatos"
             android:icon="@drawable/ic_assignment"
             android:title="Trámites y formatos" />
+        <item
+            android:id="@+id/nav_estado_residencia"
+            android:icon="@drawable/ic_home"
+            android:title="Estado de mi residencia" />
     </group>
 
     <item android:title="Cuenta">

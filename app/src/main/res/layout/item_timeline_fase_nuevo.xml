@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:minHeight="140dp">
+
+    <!-- Columna de fecha/indicador -->
+    <LinearLayout
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingEnd="12dp">
+
+        <!-- Línea vertical superior (solo si no es el primer item) -->
+        <View
+            android:id="@+id/lineTop"
+            android:layout_width="2dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="50dp"
+            android:background="@drawable/timeline_line_vertical"
+            android:alpha="0.4"
+            android:visibility="visible" />
+
+        <!-- Fecha y punto circular -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginVertical="12dp">
+
+            <TextView
+                android:id="@+id/tvFechaFase"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 Ene"
+                android:textSize="11sp"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"
+                android:gravity="center" />
+
+            <View
+                android:id="@+id/indicatorPoint"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="@drawable/timeline_point_pending" />
+
+        </LinearLayout>
+
+        <!-- Línea vertical inferior punteada (solo si no es el último item) -->
+        <View
+            android:id="@+id/lineBottom"
+            android:layout_width="2dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="50dp"
+            android:background="@drawable/timeline_line_vertical"
+            android:alpha="0.4"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+    <!-- Card de la fase -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardFase"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:id="@+id/cardContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@color/white">
+
+            <!-- Nombre de la fase (título grande) -->
+            <TextView
+                android:id="@+id/tvNombreFase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nombre de la Fase"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp"
+                android:lineSpacingMultiplier="1.2" />
+
+            <!-- Estado/Fecha en pill -->
+            <LinearLayout
+                android:id="@+id/pillEstado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/pill_time_background"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:id="@+id/ivIconoPill"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="@color/primary"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/tvEstadoPill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fecha pendiente"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+            </LinearLayout>
+
+            <!-- Información adicional (fecha si está disponible) -->
+            <TextView
+                android:id="@+id/tvInfoFase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>
+

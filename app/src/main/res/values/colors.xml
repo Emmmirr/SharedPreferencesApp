@@ -64,4 +64,11 @@
     <!-- Verde pastel para cards con documento subido -->
     <color name="green_pastel">#C8E6C9</color> <!-- Verde pastel suave -->
 
+    <!-- Colores pastel para fases de residencia -->
+    <color name="phase_pink">#F8E1E8</color> <!-- Rosa pastel -->
+    <color name="phase_purple">#E8E1F8</color> <!-- Púrpura pastel -->
+    <color name="phase_blue">#E1E8F8</color> <!-- Azul pastel -->
+    <color name="phase_green">#E1F8E8</color> <!-- Verde pastel claro -->
+    <color name="phase_peach">#F8E8E1</color> <!-- Durazno pastel -->
+
 </resources>

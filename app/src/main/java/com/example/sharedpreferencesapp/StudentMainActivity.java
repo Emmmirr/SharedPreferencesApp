@@ -151,6 +151,8 @@ public class StudentMainActivity extends AppCompatActivity implements Navigation
             selectedFragment = new CalendarioFragment();
         } else if (itemId == R.id.nav_tramites_formatos) {
             selectedFragment = new TramitesFormatosFragment();
+        } else if (itemId == R.id.nav_estado_residencia) {
+            selectedFragment = new EstadoResidenciaFragment();
         } else if (itemId == R.id.nav_logout) {
             cerrarSesion();
             return true;
