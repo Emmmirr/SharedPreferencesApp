@@ -135,6 +135,23 @@
                     android:layout_height="wrap_content"
                     android:text="01/01/2000"
                     android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Asesor Asignado"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tv_asesor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Sin asesor asignado"
+                    android:textSize="16sp"
                     android:textColor="@color/text_primary" />
 
             </LinearLayout>

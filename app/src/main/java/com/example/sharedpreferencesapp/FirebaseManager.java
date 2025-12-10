@@ -592,4 +592,51 @@ public class FirebaseManager {
                 .addOnFailureListener(e -> onFailure.accept(e));
     }
 
+    // --- MÉTODOS PARA ASIGNACIÓN DE MAESTROS A ALUMNOS ---
+
+    /**
+     * Asigna o cambia el maestro supervisor de un alumno
+     */
+    public void asignarMaestroAAlumno(String studentId, String maestroId, String maestroNombre,
+                                      OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("supervisorId", maestroId);
+        updates.put("supervisorName", maestroNombre);
+        updates.put("isApproved", true); // Al asignar desde admin, se aprueba automáticamente
+        updates.put("updatedAt", String.valueOf(System.currentTimeMillis()));
+
+        db.collection(COLLECTION_USER_PROFILES)
+                .document(studentId)
+                .update(updates)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Remueve la asignación de maestro de un alumno
+     */
+    public void removerMaestroDeAlumno(String studentId, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("supervisorId", "");
+        updates.put("supervisorName", "");
+        updates.put("isApproved", false);
+        updates.put("updatedAt", String.valueOf(System.currentTimeMillis()));
+
+        db.collection(COLLECTION_USER_PROFILES)
+                .document(studentId)
+                .update(updates)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Obtiene la lista de maestros disponibles (userType = "admin")
+     */
+    public void obtenerMaestrosDisponibles(OnCompleteListener<QuerySnapshot> listener) {
+        db.collection(COLLECTION_USER_PROFILES)
+                .whereEqualTo("userType", "admin")
+                .get()
+                .addOnCompleteListener(listener);
+    }
+
 }

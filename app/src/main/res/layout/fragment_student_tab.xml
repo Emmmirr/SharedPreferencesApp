@@ -230,34 +230,6 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Selector de maestro -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="Seleccionar Maestro Supervisor"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <Spinner
-                android:id="@+id/spinner_teacher"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/edittext_bkg"/>
-
-            <ProgressBar
-                android:id="@+id/progress_teachers"
-                style="?android:attr/progressBarStyleSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone" />
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_student_signup"
                 android:layout_width="match_parent"

@@ -60,17 +60,10 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
         String career = student.getCareer().isEmpty() ? "Sin carrera" : student.getCareer();
         holder.tvInfo.setText(controlNumber + " | " + career);
 
-        // Estado de aprobación
-        boolean isApproved = student.isApproved();
-        if (isApproved) {
-            holder.tvStatus.setText("Aprobado");
-            holder.tvStatus.setTextColor(context.getResources().getColor(R.color.status_approved));
-            holder.btnApprove.setVisibility(View.GONE);
-        } else {
-            holder.tvStatus.setText("Pendiente");
-            holder.tvStatus.setTextColor(context.getResources().getColor(R.color.status_pending));
-            holder.btnApprove.setVisibility(View.VISIBLE);
-        }
+        // Estado - todos los alumnos mostrados están asignados y aprobados
+        holder.tvStatus.setText("Asignado");
+        holder.tvStatus.setTextColor(context.getResources().getColor(R.color.status_approved));
+        holder.btnApprove.setVisibility(View.GONE); // Ocultar botón de aprobar siempre
 
         // Fecha - usar createdAt o updatedAt
         String dateText = "Fecha no disponible";

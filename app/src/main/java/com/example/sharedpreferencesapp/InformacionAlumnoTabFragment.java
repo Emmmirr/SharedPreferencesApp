@@ -19,7 +19,7 @@ public class InformacionAlumnoTabFragment extends Fragment {
     private String studentId;
     private FirebaseFirestore db;
 
-    private TextView tvNombre, tvEmail, tvControl, tvCarrera, tvTelefono, tvFechaNacimiento;
+    private TextView tvNombre, tvEmail, tvControl, tvCarrera, tvTelefono, tvFechaNacimiento, tvAsesor;
 
     public static InformacionAlumnoTabFragment newInstance(String studentId) {
         InformacionAlumnoTabFragment fragment = new InformacionAlumnoTabFragment();
@@ -54,6 +54,7 @@ public class InformacionAlumnoTabFragment extends Fragment {
         tvCarrera = view.findViewById(R.id.tv_carrera);
         tvTelefono = view.findViewById(R.id.tv_telefono);
         tvFechaNacimiento = view.findViewById(R.id.tv_fecha_nacimiento);
+        tvAsesor = view.findViewById(R.id.tv_asesor);
 
         cargarInformacionAlumno();
     }
@@ -83,6 +84,11 @@ public class InformacionAlumnoTabFragment extends Fragment {
                                     profile.getPhoneNumber() : "Sin teléfono");
                             tvFechaNacimiento.setText(profile.getDateOfBirth() != null && !profile.getDateOfBirth().isEmpty() ?
                                     profile.getDateOfBirth() : "Sin fecha");
+
+                            // Mostrar asesor asignado
+                            String asesorNombre = profile.getSupervisorName() != null && !profile.getSupervisorName().isEmpty() ?
+                                    profile.getSupervisorName() : "Sin asesor asignado";
+                            tvAsesor.setText(asesorNombre);
                         }
                     }
                 });

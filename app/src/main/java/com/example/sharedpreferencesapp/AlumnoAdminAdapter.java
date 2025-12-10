@@ -24,6 +24,7 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
     private final FirebaseManager firebaseManager;
     private OnAlumnoClickListener onAlumnoClickListener;
     private OnEstadoClickListener onEstadoClickListener;
+    private OnAsignarMaestroClickListener onAsignarMaestroClickListener;
 
     public interface OnAlumnoClickListener {
         void onAlumnoClick(UserProfile alumno);
@@ -31,6 +32,10 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
 
     public interface OnEstadoClickListener {
         void onEstadoClick(String studentId);
+    }
+
+    public interface OnAsignarMaestroClickListener {
+        void onAsignarMaestroClick(UserProfile alumno);
     }
 
     public AlumnoAdminAdapter(Context context, List<UserProfile> alumnosList) {
@@ -45,6 +50,10 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
 
     public void setOnEstadoClickListener(OnEstadoClickListener listener) {
         this.onEstadoClickListener = listener;
+    }
+
+    public void setOnAsignarMaestroClickListener(OnAsignarMaestroClickListener listener) {
+        this.onAsignarMaestroClickListener = listener;
     }
 
     @NonNull
@@ -98,6 +107,13 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
         holder.btnEditarEstado.setOnClickListener(v -> {
             if (onEstadoClickListener != null && studentId != null) {
                 onEstadoClickListener.onEstadoClick(studentId);
+            }
+        });
+
+        // Click en botón de asignar maestro
+        holder.btnAsignarMaestro.setOnClickListener(v -> {
+            if (onAsignarMaestroClickListener != null) {
+                onAsignarMaestroClickListener.onAsignarMaestroClick(alumno);
             }
         });
     }
@@ -160,6 +176,7 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
         TextView tvEmail;
         TextView badgeEstado;
         LinearLayout btnEditarEstado;
+        LinearLayout btnAsignarMaestro;
 
         AlumnoViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -169,6 +186,7 @@ public class AlumnoAdminAdapter extends RecyclerView.Adapter<AlumnoAdminAdapter.
             tvEmail = itemView.findViewById(R.id.tv_email);
             badgeEstado = itemView.findViewById(R.id.badge_estado);
             btnEditarEstado = itemView.findViewById(R.id.btn_editar_estado);
+            btnAsignarMaestro = itemView.findViewById(R.id.btn_asignar_maestro);
         }
     }
 }

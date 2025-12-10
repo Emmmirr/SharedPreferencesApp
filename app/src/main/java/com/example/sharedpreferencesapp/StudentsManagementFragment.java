@@ -110,25 +110,13 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
     }
 
     private void setupTabs() {
-        tabAll.setOnClickListener(v -> {
-            currentFilter = "all";
-            updateTabSelection();
-            filterStudents();
-        });
+        // Ocultar tabs ya que ahora solo mostramos alumnos asignados (todos aprobados)
+        if (tabAll != null) tabAll.setVisibility(View.GONE);
+        if (tabPending != null) tabPending.setVisibility(View.GONE);
+        if (tabApproved != null) tabApproved.setVisibility(View.GONE);
 
-        tabPending.setOnClickListener(v -> {
-            currentFilter = "pending";
-            updateTabSelection();
-            filterStudents();
-        });
-
-        tabApproved.setOnClickListener(v -> {
-            currentFilter = "approved";
-            updateTabSelection();
-            filterStudents();
-        });
-
-        updateTabSelection();
+        // Ya no hay filtros, todos los alumnos mostrados están asignados y aprobados
+        currentFilter = "all";
     }
 
     private void updateTabSelection() {
@@ -175,19 +163,8 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
         String searchQuery = etSearch.getText().toString().toLowerCase().trim();
 
         for (UserProfile student : allStudentsList) {
-            // Aplicar filtro de estado
-            boolean matchesFilter = false;
-            switch (currentFilter) {
-                case "all":
-                    matchesFilter = true;
-                    break;
-                case "pending":
-                    matchesFilter = !student.isApproved();
-                    break;
-                case "approved":
-                    matchesFilter = student.isApproved();
-                    break;
-            }
+            // Ya no hay filtros, todos los alumnos mostrados están asignados y aprobados
+            boolean matchesFilter = true;
 
             if (!matchesFilter) continue;
 
@@ -249,8 +226,10 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
         progressBar.setVisibility(View.VISIBLE);
         tvNoStudents.setVisibility(View.GONE);
 
+        // Solo cargar alumnos asignados y aprobados (asignados por el administrador)
         db.collection("user_profiles")
                 .whereEqualTo("supervisorId", currentUserId)
+                .whereEqualTo("isApproved", true)
                 .get()
                 .addOnCompleteListener(task -> {
                     progressBar.setVisibility(View.GONE);
@@ -290,32 +269,8 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
 
     @Override
     public void onApproveClicked(UserProfile student, int position) {
-        // Mostrar diálogo de confirmación
-        new AlertDialog.Builder(getContext())
-                .setTitle("Aprobar estudiante")
-                .setMessage("¿Estás seguro de que deseas aprobar a " +
-                        (student.getFullName().isEmpty() ? student.getDisplayName() : student.getFullName()) + "?")
-                .setPositiveButton("Aprobar", (dialog, which) -> {
-                    // Actualizar estado de aprobación
-                    Map<String, Object> updates = new HashMap<>();
-                    updates.put("isApproved", true);
-
-                    db.collection("user_profiles")
-                            .document(student.getUserId())
-                            .update(updates)
-                            .addOnSuccessListener(aVoid -> {
-                                // Actualizar modelo local
-                                student.setApproved(true);
-                                filterStudents(); // Re-filtrar para actualizar la lista
-                                Toast.makeText(getContext(), "Estudiante aprobado", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Error aprobando estudiante", e);
-                                Toast.makeText(getContext(), "Error al aprobar estudiante", Toast.LENGTH_SHORT).show();
-                            });
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+        // Ya no se puede aprobar desde aquí, el administrador es quien asigna
+        Toast.makeText(getContext(), "Los alumnos son asignados por el administrador", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -334,35 +289,17 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
 
     @Override
     public void onMenuClicked(UserProfile student, View view) {
-        // Mostrar menú de opciones
-        String[] options = {"Ver detalles", "Ver protocolo", student.isApproved() ? null : "Aprobar"};
-
-        List<String> validOptions = new ArrayList<>();
-        List<Integer> optionActions = new ArrayList<>();
-
-        validOptions.add("Ver detalles");
-        optionActions.add(0);
-
-        validOptions.add("Ver protocolo");
-        optionActions.add(1);
-
-        if (!student.isApproved()) {
-            validOptions.add("Aprobar");
-            optionActions.add(2);
-        }
+        // Mostrar menú de opciones (sin opción de aprobar)
+        String[] options = {"Ver detalles", "Ver protocolo"};
 
         new AlertDialog.Builder(getContext())
-                .setItems(validOptions.toArray(new String[0]), (dialog, which) -> {
-                    int action = optionActions.get(which);
-                    switch (action) {
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
                         case 0:
                             onStudentClicked(student);
                             break;
                         case 1:
                             onViewProtocolClicked(student);
-                            break;
-                        case 2:
-                            onApproveClicked(student, -1);
                             break;
                     }
                 })

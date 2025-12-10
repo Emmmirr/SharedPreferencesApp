@@ -21,6 +21,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import androidx.appcompat.app.AlertDialog;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,6 +98,11 @@ public class ListaAlumnosSimpleFragment extends Fragment {
                 loadAlumnos();
             });
             bottomSheet.show(getParentFragmentManager(), "BottomSheetEditarEstado");
+        });
+
+        adapter.setOnAsignarMaestroClickListener(alumno -> {
+            // Mostrar diálogo para seleccionar asesor
+            mostrarDialogoAsignarMaestro(alumno);
         });
 
         recyclerView.setAdapter(adapter);
@@ -186,6 +198,116 @@ public class ListaAlumnosSimpleFragment extends Fragment {
             tvNoAlumnos.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void mostrarDialogoAsignarMaestro(UserProfile alumno) {
+        // Crear vista del diálogo
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_asignar_maestro, null);
+        Spinner spinnerMaestros = dialogView.findViewById(R.id.spinner_maestros);
+        ProgressBar progressMaestros = dialogView.findViewById(R.id.progress_maestros);
+
+        List<Map<String, Object>> maestrosList = new ArrayList<>();
+        List<String> maestrosNombres = new ArrayList<>();
+        maestrosNombres.add("Seleccione un asesor");
+
+        // Cargar maestros disponibles
+        FirebaseManager firebaseManager = new FirebaseManager();
+        progressMaestros.setVisibility(View.VISIBLE);
+
+        firebaseManager.obtenerMaestrosDisponibles(task -> {
+            progressMaestros.setVisibility(View.GONE);
+            if (task.isSuccessful()) {
+                maestrosList.clear();
+                maestrosNombres.clear();
+                maestrosNombres.add("Seleccione un asesor");
+
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Map<String, Object> maestroData = document.getData();
+                    String maestroId = document.getId();
+                    String nombre = "";
+
+                    if (maestroData.containsKey("fullName") && maestroData.get("fullName") != null) {
+                        nombre = maestroData.get("fullName").toString();
+                    } else if (maestroData.containsKey("displayName") && maestroData.get("displayName") != null) {
+                        nombre = maestroData.get("displayName").toString();
+                    } else if (maestroData.containsKey("email") && maestroData.get("email") != null) {
+                        nombre = maestroData.get("email").toString();
+                    }
+
+                    if (!nombre.isEmpty()) {
+                        maestroData.put("id", maestroId);
+                        maestrosList.add(maestroData);
+                        maestrosNombres.add(nombre);
+                    }
+                }
+
+                // Si el alumno ya tiene un asesor asignado, seleccionarlo por defecto
+                int selectedIndex = 0;
+                if (alumno.getSupervisorId() != null && !alumno.getSupervisorId().isEmpty()) {
+                    for (int i = 0; i < maestrosList.size(); i++) {
+                        if (maestrosList.get(i).get("id").equals(alumno.getSupervisorId())) {
+                            selectedIndex = i + 1; // +1 porque el primer item es "Seleccione un asesor"
+                            break;
+                        }
+                    }
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                        android.R.layout.simple_spinner_item, maestrosNombres);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerMaestros.setAdapter(adapter);
+                spinnerMaestros.setSelection(selectedIndex);
+            } else {
+                Toast.makeText(getContext(), "Error al cargar asesores", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Crear y mostrar diálogo
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setTitle("Asignar Asesor a " + (alumno.getFullName().isEmpty() ? alumno.getDisplayName() : alumno.getFullName()))
+                .setView(dialogView)
+                .setPositiveButton("Asignar", (d, which) -> {
+                    int selectedPosition = spinnerMaestros.getSelectedItemPosition();
+                    if (selectedPosition > 0) {
+                        Map<String, Object> maestroSeleccionado = maestrosList.get(selectedPosition - 1);
+                        String maestroId = maestroSeleccionado.get("id").toString();
+                        String maestroNombre = maestrosNombres.get(selectedPosition);
+
+                        FirebaseManager fm = new FirebaseManager();
+                        fm.asignarMaestroAAlumno(
+                                alumno.getUserId(),
+                                maestroId,
+                                maestroNombre,
+                                aVoid -> {
+                                    Toast.makeText(getContext(), "Asesor asignado correctamente", Toast.LENGTH_SHORT).show();
+                                    loadAlumnos(); // Recargar lista
+                                },
+                                e -> {
+                                    Toast.makeText(getContext(), "Error al asignar asesor: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                        );
+                    } else {
+                        Toast.makeText(getContext(), "Por favor selecciona un asesor", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .setNeutralButton("Remover", (d, which) -> {
+                    // Remover asignación de asesor
+                    FirebaseManager fm = new FirebaseManager();
+                    fm.removerMaestroDeAlumno(
+                            alumno.getUserId(),
+                            aVoid -> {
+                                Toast.makeText(getContext(), "Asesor removido correctamente", Toast.LENGTH_SHORT).show();
+                                loadAlumnos(); // Recargar lista
+                            },
+                            e -> {
+                                Toast.makeText(getContext(), "Error al remover asesor: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                    );
+                })
+                .create();
+
+        dialog.show();
     }
 }
 
