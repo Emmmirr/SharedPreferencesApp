@@ -44,6 +44,11 @@
             android:name=".StudentMainActivity"
             android:exported="false" />
 
+        <!-- Actividad para administrador -->
+        <activity
+            android:name=".AdminMainActivity"
+            android:exported="false" />
+
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />

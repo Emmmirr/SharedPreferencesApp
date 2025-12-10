@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_admin"
+    app:startDestination="@+id/listaMaestrosFragment">
+
+    <fragment
+        android:id="@+id/listaMaestrosFragment"
+        android:name="com.example.sharedpreferencesapp.ListaMaestrosFragment"
+        android:label="Maestros"
+        tools:layout="@layout/fragment_lista_maestros" />
+
+    <fragment
+        android:id="@+id/listaAlumnosAdminFragment"
+        android:name="com.example.sharedpreferencesapp.ListaAlumnosAdminFragment"
+        android:label="Alumnos"
+        tools:layout="@layout/fragment_lista_alumnos_admin" />
+
+    <fragment
+        android:id="@+id/perfilAdminFragment"
+        android:name="com.example.sharedpreferencesapp.PerfilAdminFragment"
+        android:label="Perfil"
+        tools:layout="@layout/fragment_perfil_admin" />
+
+</navigation>
+

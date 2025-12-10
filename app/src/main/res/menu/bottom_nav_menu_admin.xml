@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/listaMaestrosFragment"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Maestros" />
+
+    <item
+        android:id="@+id/listaAlumnosAdminFragment"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="Alumnos" />
+
+    <item
+        android:id="@+id/perfilAdminFragment"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Perfil" />
+
+</menu>
+

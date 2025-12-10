@@ -35,6 +35,8 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent;
             if ("student".equals(userType)) {
                 intent = new Intent(LoginActivity.this, StudentMainActivity.class);
+            } else if ("administrator".equals(userType)) {
+                intent = new Intent(LoginActivity.this, AdminMainActivity.class);
             } else {
                 intent = new Intent(LoginActivity.this, MainActivity.class);
             }
@@ -49,8 +51,9 @@ public class LoginActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tab_layout);
         viewPager2 = findViewById(R.id.view_pager);
 
-        tabLayout.addTab(tabLayout.newTab().setText("Admin"));
+        tabLayout.addTab(tabLayout.newTab().setText("Maestro"));
         tabLayout.addTab(tabLayout.newTab().setText("Estudiante"));
+        tabLayout.addTab(tabLayout.newTab().setText("Administrador"));
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         adapter = new ViewPagerAdapter(fragmentManager, getLifecycle());

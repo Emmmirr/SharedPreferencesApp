@@ -41,6 +41,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Si está logueado y es administrador, redirigir a AdminMainActivity
+        if (isLoggedIn && "administrator".equals(userType)) {
+            Log.d(TAG, "Usuario tipo administrador detectado, redirigiendo a AdminMainActivity");
+            Intent adminIntent = new Intent(MainActivity.this, AdminMainActivity.class);
+            startActivity(adminIntent);
+            finish();
+            return;
+        }
+
         // Continuar con el flujo normal para administradores
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);

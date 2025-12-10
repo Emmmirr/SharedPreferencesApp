@@ -15,15 +15,19 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
+            case 0:
+                return new LoginTabFragment(); // Tab para maestros (admin)
             case 1:
                 return new StudentTabFragment(); // Tab para estudiantes
+            case 2:
+                return new AdministratorTabFragment(); // Tab para administradores
             default:
-                return new LoginTabFragment(); // Tab para admin (login y registro)
+                return new LoginTabFragment();
         }
     }
 
     @Override
     public int getItemCount() {
-        return 2; // Ahora tenemos 2 pestañas: Admin y Estudiante
+        return 3; // Ahora tenemos 3 pestañas: Maestro, Estudiante y Administrador
     }
 }

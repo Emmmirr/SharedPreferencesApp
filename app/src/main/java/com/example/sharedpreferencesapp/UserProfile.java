@@ -1,5 +1,7 @@
 package com.example.sharedpreferencesapp;
 
+import android.util.Log;
+
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +42,7 @@ public class UserProfile {
     private String updatedAt = "";
     private boolean isProfileComplete = false;
 
-    private String userType = ""; // "admin" o "student"
+    private String userType = ""; // "admin", "student" o "administrator"
 
     // --- Datos de relación maestro-alumno ---
     private String supervisorId = ""; // ID del maestro supervisor
@@ -65,33 +67,70 @@ public class UserProfile {
         UserProfile profile = new UserProfile();
         if (map == null) return profile;
 
-        profile.userId = (String) map.getOrDefault("userId", "");
-        profile.email = (String) map.getOrDefault("email", "");
-        profile.displayName = (String) map.getOrDefault("displayName", "");
-        profile.authMethod = (String) map.getOrDefault("authMethod", "");
-        profile.fullName = (String) map.getOrDefault("fullName", "");
-        profile.dateOfBirth = (String) map.getOrDefault("dateOfBirth", "");
-        profile.gender = (String) map.getOrDefault("gender", "");
-        profile.curp = (String) map.getOrDefault("curp", "");
-        profile.ineScanUrl = (String) map.getOrDefault("ineScanUrl", "");
-        profile.career = (String) map.getOrDefault("career", "");
-        profile.controlNumber = (String) map.getOrDefault("controlNumber", "");
-        profile.medicalConditions = (String) map.getOrDefault("medicalConditions", "");
-        profile.phoneNumber = (String) map.getOrDefault("phoneNumber", "");
-        profile.emergencyContactName = (String) map.getOrDefault("emergencyContactName", "");
-        profile.emergencyContactPhone = (String) map.getOrDefault("emergencyContactPhone", "");
-        profile.profileImageUrl = (String) map.getOrDefault("profileImageUrl", "");
-        profile.createdAt = (String) map.getOrDefault("createdAt", "");
-        profile.updatedAt = (String) map.getOrDefault("updatedAt", "");
-        profile.isProfileComplete = (Boolean) map.getOrDefault("isProfileComplete", false);
-        profile.userType = (String) map.getOrDefault("userType", "");
+        // Helper method para obtener string seguro (maneja null y valores faltantes)
+        profile.userId = getStringFromMap(map, "userId", "");
+        profile.email = getStringFromMap(map, "email", "");
+        profile.displayName = getStringFromMap(map, "displayName", "");
+        profile.authMethod = getStringFromMap(map, "authMethod", "");
+        profile.fullName = getStringFromMap(map, "fullName", "");
+        profile.dateOfBirth = getStringFromMap(map, "dateOfBirth", "");
+        profile.gender = getStringFromMap(map, "gender", "");
+        profile.curp = getStringFromMap(map, "curp", "");
+        profile.ineScanUrl = getStringFromMap(map, "ineScanUrl", "");
+        profile.career = getStringFromMap(map, "career", "");
+        profile.controlNumber = getStringFromMap(map, "controlNumber", "");
+        profile.medicalConditions = getStringFromMap(map, "medicalConditions", "");
+        profile.phoneNumber = getStringFromMap(map, "phoneNumber", "");
+        profile.emergencyContactName = getStringFromMap(map, "emergencyContactName", "");
+        profile.emergencyContactPhone = getStringFromMap(map, "emergencyContactPhone", "");
+        profile.profileImageUrl = getStringFromMap(map, "profileImageUrl", "");
+        profile.createdAt = getStringFromMap(map, "createdAt", "");
+        profile.updatedAt = getStringFromMap(map, "updatedAt", "");
+        profile.isProfileComplete = getBooleanFromMap(map, "isProfileComplete", false);
+        profile.userType = getStringFromMap(map, "userType", "");
 
         // Nuevos campos añadidos
-        profile.supervisorId = (String) map.getOrDefault("supervisorId", "");
-        profile.supervisorName = (String) map.getOrDefault("supervisorName", "");
-        profile.isApproved = (Boolean) map.getOrDefault("isApproved", false);
+        profile.supervisorId = getStringFromMap(map, "supervisorId", "");
+        profile.supervisorName = getStringFromMap(map, "supervisorName", "");
+        profile.isApproved = getBooleanFromMap(map, "isApproved", false);
+
+        // Log para debug
+        Log.d("UserProfile", "fromMap - email: " + profile.email + ", fullName: " + profile.fullName + ", displayName: " + profile.displayName);
 
         return profile;
+    }
+
+    // Helper method para obtener strings de forma segura
+    private static String getStringFromMap(Map<String, Object> map, String key, String defaultValue) {
+        Object value = map.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof String) {
+            String str = (String) value;
+            // Log para campos importantes
+            if (key.equals("fullName") || key.equals("email") || key.equals("displayName") ||
+                    key.equals("controlNumber") || key.equals("career")) {
+                Log.d("UserProfile", "getStringFromMap - " + key + ": '" + str + "' (length: " + str.length() + ")");
+            }
+            return str; // Devolver el string tal cual, incluso si está vacío
+        }
+        // Si es otro tipo (Long, Integer, etc.), convertirlo a string
+        String result = String.valueOf(value);
+        Log.d("UserProfile", "Campo " + key + " no es String, tipo: " + value.getClass().getSimpleName() + ", valor: " + result);
+        return result;
+    }
+
+    // Helper method para obtener booleans de forma segura
+    private static Boolean getBooleanFromMap(Map<String, Object> map, String key, Boolean defaultValue) {
+        Object value = map.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return defaultValue;
     }
 
     public Map<String, Object> toMap() {
