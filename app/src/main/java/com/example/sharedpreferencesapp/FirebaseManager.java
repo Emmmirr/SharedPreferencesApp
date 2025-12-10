@@ -13,6 +13,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
@@ -34,8 +35,8 @@ public class FirebaseManager {
     // Colección principal para los perfiles de usuario
     private static final String COLLECTION_USER_PROFILES = "user_profiles";
 
-    // Colección para números de control autorizados para registro
-    private static final String COLLECTION_AUTORIZADOS = "numeros_control_autorizados";
+    // Colección para números de control autorizados para registro (organizados en bloques)
+    private static final String COLLECTION_BLOQUES_AUTORIZADOS = "bloques_numeros_autorizados";
 
     // Nombres de las SUB-COLECCIONES que existirán dentro de cada documento de usuario
     private static final String SUBCOLLECTION_ALUMNOS = "alumnos";
@@ -406,66 +407,147 @@ public class FirebaseManager {
                 .addOnFailureListener(onFailure);
     }
 
-    // --- MÉTODOS PARA NÚMEROS DE CONTROL AUTORIZADOS ---
+    // --- MÉTODOS PARA BLOQUES DE NÚMEROS DE CONTROL AUTORIZADOS ---
 
     /**
-     * Agrega un número de control a la lista de números autorizados para registro
+     * Crea un nuevo bloque de números autorizados
      */
-    public void agregarNumeroAutorizado(String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
-        Map<String, Object> autorizadoData = new HashMap<>();
-        autorizadoData.put("numeroControl", numeroControl);
-        autorizadoData.put("fechaRegistro", System.currentTimeMillis());
-        autorizadoData.put("activo", true);
+    public void crearBloqueAutorizado(String nombreBloque, Runnable onSuccess, Consumer<Exception> onFailure) {
+        Map<String, Object> bloqueData = new HashMap<>();
+        bloqueData.put("nombre", nombreBloque);
+        bloqueData.put("fechaCreacion", System.currentTimeMillis());
+        bloqueData.put("activo", true);
+        bloqueData.put("numeros", new ArrayList<String>());
 
-        // Usar el número de control como ID del documento para evitar duplicados
-        db.collection(COLLECTION_AUTORIZADOS)
-                .document(numeroControl)
-                .set(autorizadoData, SetOptions.merge())
-                .addOnSuccessListener(aVoid -> onSuccess.run())
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .add(bloqueData)
+                .addOnSuccessListener(documentReference -> onSuccess.run())
                 .addOnFailureListener(e -> onFailure.accept(e));
     }
 
     /**
-     * Verifica si un número de control está en la lista de números autorizados
+     * Obtiene todos los bloques activos
+     * Nota: No usamos orderBy aquí para evitar requerir un índice compuesto en Firestore.
+     * El ordenamiento se hace manualmente en el fragmento.
      */
-    public void verificarNumeroAutorizado(String numeroControl, Consumer<Boolean> onComplete) {
-        db.collection(COLLECTION_AUTORIZADOS)
-                .document(numeroControl)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                        Map<String, Object> data = task.getResult().getData();
-                        Boolean activo = (Boolean) data.getOrDefault("activo", true);
-                        onComplete.accept(activo != null && activo);
-                    } else {
-                        onComplete.accept(false);
-                    }
-                });
-    }
-
-    /**
-     * Obtiene todos los números de control autorizados
-     */
-    public void obtenerNumerosAutorizados(OnCompleteListener<QuerySnapshot> onCompleteListener) {
-        db.collection(COLLECTION_AUTORIZADOS)
+    public void obtenerBloquesAutorizados(OnCompleteListener<QuerySnapshot> onCompleteListener) {
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
                 .whereEqualTo("activo", true)
                 .get()
                 .addOnCompleteListener(onCompleteListener);
     }
 
     /**
-     * Elimina o desactiva un número autorizado
+     * Obtiene un bloque específico por su ID
      */
-    public void eliminarNumeroAutorizado(String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
+    public void obtenerBloquePorId(String bloqueId, OnCompleteListener<DocumentSnapshot> onCompleteListener) {
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .document(bloqueId)
+                .get()
+                .addOnCompleteListener(onCompleteListener);
+    }
+
+    /**
+     * Agrega un número de control a un bloque específico
+     */
+    public void agregarNumeroABloque(String bloqueId, String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .document(bloqueId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Map<String, Object> data = documentSnapshot.getData();
+                        List<String> numeros = (List<String>) data.getOrDefault("numeros", new ArrayList<>());
+
+                        // Verificar si ya existe
+                        if (numeros.contains(numeroControl)) {
+                            onFailure.accept(new Exception("Este número de control ya está en el bloque"));
+                            return;
+                        }
+
+                        numeros.add(numeroControl);
+                        Map<String, Object> updateData = new HashMap<>();
+                        updateData.put("numeros", numeros);
+                        updateData.put("fechaActualizacion", System.currentTimeMillis());
+
+                        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                                .document(bloqueId)
+                                .update(updateData)
+                                .addOnSuccessListener(aVoid -> onSuccess.run())
+                                .addOnFailureListener(e -> onFailure.accept(e));
+                    } else {
+                        onFailure.accept(new Exception("Bloque no encontrado"));
+                    }
+                })
+                .addOnFailureListener(e -> onFailure.accept(e));
+    }
+
+    /**
+     * Elimina un número de control de un bloque
+     */
+    public void eliminarNumeroDeBloque(String bloqueId, String numeroControl, Runnable onSuccess, Consumer<Exception> onFailure) {
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .document(bloqueId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Map<String, Object> data = documentSnapshot.getData();
+                        List<String> numeros = (List<String>) data.getOrDefault("numeros", new ArrayList<>());
+                        numeros.remove(numeroControl);
+
+                        Map<String, Object> updateData = new HashMap<>();
+                        updateData.put("numeros", numeros);
+                        updateData.put("fechaActualizacion", System.currentTimeMillis());
+
+                        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                                .document(bloqueId)
+                                .update(updateData)
+                                .addOnSuccessListener(aVoid -> onSuccess.run())
+                                .addOnFailureListener(e -> onFailure.accept(e));
+                    } else {
+                        onFailure.accept(new Exception("Bloque no encontrado"));
+                    }
+                })
+                .addOnFailureListener(e -> onFailure.accept(e));
+    }
+
+    /**
+     * Elimina o desactiva un bloque completo
+     */
+    public void eliminarBloque(String bloqueId, Runnable onSuccess, Consumer<Exception> onFailure) {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("activo", false);
         updateData.put("fechaEliminacion", System.currentTimeMillis());
 
-        db.collection(COLLECTION_AUTORIZADOS)
-                .document(numeroControl)
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .document(bloqueId)
                 .update(updateData)
                 .addOnSuccessListener(aVoid -> onSuccess.run())
                 .addOnFailureListener(e -> onFailure.accept(e));
+    }
+
+    /**
+     * Verifica si un número de control está en cualquier bloque activo
+     */
+    public void verificarNumeroAutorizado(String numeroControl, Consumer<Boolean> onComplete) {
+        db.collection(COLLECTION_BLOQUES_AUTORIZADOS)
+                .whereEqualTo("activo", true)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Map<String, Object> data = document.getData();
+                            List<String> numeros = (List<String>) data.getOrDefault("numeros", new ArrayList<>());
+                            if (numeros.contains(numeroControl)) {
+                                onComplete.accept(true);
+                                return;
+                            }
+                        }
+                        onComplete.accept(false);
+                    } else {
+                        onComplete.accept(false);
+                    }
+                });
     }
 
 }

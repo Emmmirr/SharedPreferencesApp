@@ -53,7 +53,7 @@ public class NumeroAutorizadoAdapter extends RecyclerView.Adapter<NumeroAutoriza
 
     static class NumeroAutorizadoViewHolder extends RecyclerView.ViewHolder {
         TextView tvNumeroControl;
-        com.google.android.material.button.MaterialButton btnEliminar;
+        android.widget.LinearLayout btnEliminar;
 
         NumeroAutorizadoViewHolder(@NonNull View itemView) {
             super(itemView);

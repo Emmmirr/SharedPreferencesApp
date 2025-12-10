@@ -25,16 +25,37 @@
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
-        <com.google.android.material.button.MaterialButton
+        <LinearLayout
             android:id="@+id/btn_eliminar_autorizado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Eliminar"
-            android:textSize="12sp"
-            app:icon="@android:drawable/ic_menu_delete"
-            app:iconGravity="textStart"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="@color/status_cancelled" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/button_rounded_primary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="2dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="@color/button_text_light"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eliminar"
+                android:textColor="@color/button_text_light"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

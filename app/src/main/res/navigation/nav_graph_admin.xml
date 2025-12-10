@@ -15,7 +15,7 @@
         android:id="@+id/listaAlumnosAdminFragment"
         android:name="com.example.sharedpreferencesapp.ListaAlumnosAdminFragment"
         android:label="Alumnos"
-        tools:layout="@layout/fragment_lista_alumnos_admin" />
+        tools:layout="@layout/fragment_opciones_alumnos" />
 
     <fragment
         android:id="@+id/perfilAdminFragment"

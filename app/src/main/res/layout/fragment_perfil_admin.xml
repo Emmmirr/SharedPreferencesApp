@@ -5,24 +5,24 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background_light"
-    android:padding="24dp"
-    android:gravity="center">
+    android:padding="16dp">
 
     <!-- Título -->
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Perfil de Administrador"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="32dp" />
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
 
     <!-- Información básica -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
         app:cardBackgroundColor="@color/white">
@@ -61,7 +61,7 @@
         android:text="Cerrar Sesión"
         android:textSize="16sp"
         android:padding="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         app:backgroundTint="@color/error_bg"
         android:textColor="@color/status_cancelled"
         app:cornerRadius="12dp" />
