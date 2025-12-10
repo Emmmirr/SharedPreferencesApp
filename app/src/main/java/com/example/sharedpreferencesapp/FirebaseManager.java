@@ -382,4 +382,25 @@ public class FirebaseManager {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Sube un Word llenado a Storage
+     */
+    public void subirWordTramite(String userId, String documentoId, Uri fileUri, OnSuccessListener<String> onSuccess, OnFailureListener onFailure) {
+        if (userId == null || documentoId == null || fileUri == null) {
+            onFailure.onFailure(new IllegalArgumentException("UserID, DocumentoID o la URI del archivo no pueden ser nulos."));
+            return;
+        }
+
+        String path = COLLECTION_USER_PROFILES + "/" + userId + "/" + SUBCOLLECTION_TRAMITES_FORMATOS + "/" + documentoId + ".docx";
+        StorageReference storageRef = storage.getReference(path);
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    storageRef.getDownloadUrl()
+                            .addOnSuccessListener(uri -> onSuccess.onSuccess(uri.toString()))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
 }

@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -154,10 +155,12 @@ public class TramitesTabFragment extends Fragment {
         View cardView = inflater.inflate(R.layout.item_documento_checklist, listaDocumentos, false);
 
         TextView tvNombre = cardView.findViewById(R.id.tvNombreDocumento);
-        TextView ivEstado = cardView.findViewById(R.id.ivEstado);
+        ImageView ivCheckEstado = cardView.findViewById(R.id.ivCheckEstado);
+        LinearLayout layoutBotones = cardView.findViewById(R.id.layoutBotones);
         LinearLayout btnVer = cardView.findViewById(R.id.btnVer);
         LinearLayout btnDescargar = cardView.findViewById(R.id.btnDescargar);
         LinearLayout btnLlenar = cardView.findViewById(R.id.btnLlenar);
+        com.google.android.material.card.MaterialCardView cardDocumento = cardView.findViewById(R.id.cardDocumento);
 
         tvNombre.setText(nombre);
 
@@ -173,53 +176,172 @@ public class TramitesTabFragment extends Fragment {
         final String finalId = id;
         final String finalNombre = nombre;
 
-        // Actualizar estado visual
-        String estado = docData != null ? (String) docData.getOrDefault("estado", "pendiente") : "pendiente";
-        actualizarEstadoVisual(ivEstado, estado, docData != null && docData.containsKey("urlDocumento"));
+        // Verificar si está marcado como completado por el usuario
+        final boolean[] estaCompletado = {docData != null &&
+                Boolean.TRUE.equals(docData.getOrDefault("completado", false))};
+
+        // Actualizar estado visual inicial
+        actualizarEstadoVisual(ivCheckEstado, cardDocumento, estaCompletado[0]);
 
         // Configurar botones
         boolean tieneDocumento = docData != null && docData.containsKey("urlDocumento");
         btnVer.setVisibility(tieneDocumento ? View.VISIBLE : View.GONE);
 
-        btnVer.setOnClickListener(v -> verDocumento(finalId, docData));
-        btnDescargar.setOnClickListener(v -> descargarFormato(finalId, finalNombre));
-        btnLlenar.setOnClickListener(v -> abrirWizard(finalId, finalNombre, docData));
+        // Click en el círculo de check para marcar/desmarcar como completado
+        ivCheckEstado.setOnClickListener(v -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            boolean nuevoEstado = !estaCompletado[0];
+            marcarComoCompletado(finalId, nuevoEstado);
+            actualizarEstadoVisual(ivCheckEstado, cardDocumento, nuevoEstado);
+            estaCompletado[0] = nuevoEstado;
+        });
+
+        // Click en la card para expandir/colapsar botones
+        LinearLayout cardContent = cardView.findViewById(R.id.cardContent);
+        cardContent.setOnClickListener(v -> {
+            boolean isExpanded = layoutBotones.getVisibility() == View.VISIBLE;
+            layoutBotones.setVisibility(isExpanded ? View.GONE : View.VISIBLE);
+        });
+
+        btnVer.setOnClickListener(v -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            verDocumento(finalId, docData);
+        });
+        btnDescargar.setOnClickListener(v -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            descargarFormato(finalId, finalNombre);
+        });
+        btnLlenar.setOnClickListener(v -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            abrirWizard(finalId, finalNombre, docData);
+        });
 
         listaDocumentos.addView(cardView);
     }
 
-    private void actualizarEstadoVisual(TextView ivEstado, String estado, boolean tieneDocumento) {
-        switch (estado) {
-            case "completado":
-                ivEstado.setText("✓");
-                ivEstado.setTextColor(getResources().getColor(R.color.status_approved, null));
-                break;
-            case "aprobado":
-                ivEstado.setText("✓✓");
-                ivEstado.setTextColor(getResources().getColor(R.color.status_approved, null));
-                break;
-            case "en_proceso":
-                ivEstado.setText("⏱");
-                ivEstado.setTextColor(getResources().getColor(R.color.status_pending, null));
-                break;
-            default:
-                if (tieneDocumento) {
-                    ivEstado.setText("○");
-                    ivEstado.setTextColor(getResources().getColor(R.color.status_ongoing, null));
-                } else {
-                    ivEstado.setText("○");
-                    ivEstado.setTextColor(getResources().getColor(R.color.text_secondary, null));
-                }
-                break;
+    private void actualizarEstadoVisual(ImageView ivCheckEstado, com.google.android.material.card.MaterialCardView card, boolean completado) {
+        if (completado) {
+            ivCheckEstado.setImageResource(R.drawable.check_circle_completed);
+            card.setCardBackgroundColor(getResources().getColor(R.color.green_pastel, null));
+        } else {
+            ivCheckEstado.setImageResource(R.drawable.check_circle_pending);
+            card.setCardBackgroundColor(getResources().getColor(R.color.white, null));
         }
+    }
+
+    private void marcarComoCompletado(String documentoId, boolean completado) {
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Usuario no autenticado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Actualizar en Firebase
+        db.collection("user_profiles")
+                .document(currentUserId)
+                .collection("tramites_formatos")
+                .document("documentos")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        Map<String, Object> documentosData = new HashMap<>();
+                        if (task.getResult().exists()) {
+                            documentosData = task.getResult().getData();
+                        }
+
+                        // Obtener o crear el documento
+                        Map<String, Object> docData = new HashMap<>();
+                        if (documentosData.containsKey(documentoId)) {
+                            Object docObj = documentosData.get(documentoId);
+                            if (docObj instanceof Map) {
+                                docData = (Map<String, Object>) docObj;
+                            }
+                        }
+
+                        // Actualizar el estado de completado
+                        docData.put("completado", completado);
+                        documentosData.put(documentoId, docData);
+
+                        // Guardar en Firebase
+                        db.collection("user_profiles")
+                                .document(currentUserId)
+                                .collection("tramites_formatos")
+                                .document("documentos")
+                                .set(documentosData)
+                                .addOnCompleteListener(saveTask -> {
+                                    if (saveTask.isSuccessful()) {
+                                        Log.d(TAG, "Estado de completado actualizado para: " + documentoId);
+                                    } else {
+                                        Log.e(TAG, "Error al actualizar estado de completado", saveTask.getException());
+                                        Toast.makeText(getContext(), "Error al guardar el estado", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                });
     }
 
     private void verDocumento(String documentoId, Map<String, Object> docData) {
         if (docData != null && docData.containsKey("urlDocumento")) {
             String url = (String) docData.get("urlDocumento");
-            abrirVisorPDF(url);
+            // Verificar si es Word o PDF
+            boolean esWord = url.toLowerCase().endsWith(".docx") ||
+                    (docData.containsKey("urlWord") && url.equals(docData.get("urlWord")));
+            if (esWord) {
+                abrirVisorWord(url);
+            } else {
+                abrirVisorPDF(url);
+            }
         } else {
             Toast.makeText(getContext(), "No hay documento para visualizar", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void abrirVisorWord(String urlString) {
+        if (urlString == null || urlString.isEmpty()) {
+            Toast.makeText(getContext(), "No hay documento para visualizar.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+            builder.setTitle("Documento disponible");
+            builder.setMessage("¿Qué deseas hacer con el documento Word?");
+
+            builder.setPositiveButton("Ver", (dialog, which) -> {
+                try {
+                    String encodedUrl = java.net.URLEncoder.encode(urlString, "UTF-8");
+                    // Google Docs Viewer puede abrir Word también
+                    String googleDocsViewerUrl = "https://docs.google.com/gview?embedded=true&url=" + encodedUrl;
+
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                    intent.setData(android.net.Uri.parse(googleDocsViewerUrl));
+                    try {
+                        startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException e) {
+                        // Intentar abrir directamente con una app que pueda manejar Word
+                        try {
+                            android.content.Intent intent2 = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                            intent2.setData(android.net.Uri.parse(urlString));
+                            startActivity(intent2);
+                        } catch (Exception ex) {
+                            Toast.makeText(getContext(), "No se encontró una aplicación para abrir este documento.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } catch (java.io.UnsupportedEncodingException e) {
+                    Log.e(TAG, "Error codificando URL", e);
+                    Toast.makeText(getContext(), "Error al procesar el enlace", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNeutralButton("Descargar", (dialog, which) -> {
+                descargarWordDesdeURL(urlString);
+            });
+
+            builder.setNegativeButton("Cancelar", null);
+            builder.show();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error general al intentar ver Word: " + urlString, e);
+            Toast.makeText(getContext(), "No se pudo abrir el enlace del documento.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -230,84 +352,240 @@ public class TramitesTabFragment extends Fragment {
         }
 
         try {
-            String encodedUrl = java.net.URLEncoder.encode(urlString, "UTF-8");
-            String googleDocsViewerUrl = "https://docs.google.com/gview?embedded=true&url=" + encodedUrl;
+            // Crear un diálogo con opciones: Ver y Descargar
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+            builder.setTitle("Documento disponible");
+            builder.setMessage("¿Qué deseas hacer con el documento?");
 
-            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
-            intent.setData(android.net.Uri.parse(googleDocsViewerUrl));
-            startActivity(intent);
+            builder.setPositiveButton("Ver", (dialog, which) -> {
+                try {
+                    String encodedUrl = java.net.URLEncoder.encode(urlString, "UTF-8");
+                    String googleDocsViewerUrl = "https://docs.google.com/gview?embedded=true&url=" + encodedUrl;
 
-        } catch (android.content.ActivityNotFoundException e) {
-            Toast.makeText(getContext(), "No se encontró una aplicación para abrir este enlace.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "ActivityNotFoundException al intentar ver PDF: " + urlString, e);
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                    intent.setData(android.net.Uri.parse(googleDocsViewerUrl));
+                    try {
+                        startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(getContext(), "No se encontró una aplicación para abrir este enlace.", Toast.LENGTH_LONG).show();
+                    }
+                } catch (java.io.UnsupportedEncodingException e) {
+                    Log.e(TAG, "Error codificando URL", e);
+                    Toast.makeText(getContext(), "Error al procesar el enlace", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNeutralButton("Descargar PDF", (dialog, which) -> {
+                descargarPDFDesdeURL(urlString);
+            });
+
+            builder.setNegativeButton("Cancelar", null);
+            builder.show();
+
         } catch (Exception e) {
             Log.e(TAG, "Error general al intentar ver PDF: " + urlString, e);
             Toast.makeText(getContext(), "No se pudo abrir el enlace del documento.", Toast.LENGTH_LONG).show();
         }
     }
 
+    private void descargarPDFDesdeURL(String urlString) {
+        if (getContext() == null) return;
+
+        Toast.makeText(getContext(), "Descargando PDF...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(urlString);
+                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                if (connection.getResponseCode() != java.net.HttpURLConnection.HTTP_OK) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getContext(), "Error al descargar el PDF", Toast.LENGTH_SHORT).show();
+                    });
+                    return;
+                }
+
+                // Crear archivo PDF en descargas
+                String nombreArchivo = "documento_" + System.currentTimeMillis() + ".pdf";
+                java.io.File pdfFile;
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    android.content.ContentResolver resolver = getContext().getContentResolver();
+                    android.content.ContentValues contentValues = new android.content.ContentValues();
+                    contentValues.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, nombreArchivo);
+                    contentValues.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                    contentValues.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
+
+                    android.net.Uri uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+                    if (uri != null) {
+                        try (java.io.InputStream input = connection.getInputStream();
+                             java.io.OutputStream output = resolver.openOutputStream(uri)) {
+
+                            byte[] buffer = new byte[4096];
+                            int bytesRead;
+                            while ((bytesRead = input.read(buffer)) != -1) {
+                                output.write(buffer, 0, bytesRead);
+                            }
+
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), "PDF descargado exitosamente en Descargas", Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    }
+                } else {
+                    java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+                    if (!downloadsDir.exists()) {
+                        downloadsDir.mkdirs();
+                    }
+                    pdfFile = new java.io.File(downloadsDir, nombreArchivo);
+
+                    try (java.io.InputStream input = connection.getInputStream();
+                         java.io.FileOutputStream output = new java.io.FileOutputStream(pdfFile)) {
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = input.read(buffer)) != -1) {
+                            output.write(buffer, 0, bytesRead);
+                        }
+
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(), "PDF descargado exitosamente en Descargas", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error descargando PDF", e);
+                getActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Error al descargar el PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    private void descargarWordDesdeURL(String urlString) {
+        if (getContext() == null) return;
+
+        Toast.makeText(getContext(), "Descargando documento Word...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL(urlString);
+                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                if (connection.getResponseCode() != java.net.HttpURLConnection.HTTP_OK) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getContext(), "Error al descargar el documento", Toast.LENGTH_SHORT).show();
+                    });
+                    return;
+                }
+
+                String nombreArchivo = "documento_" + System.currentTimeMillis() + ".docx";
+                java.io.File wordFile;
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    android.content.ContentResolver resolver = getContext().getContentResolver();
+                    android.content.ContentValues contentValues = new android.content.ContentValues();
+                    contentValues.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, nombreArchivo);
+                    contentValues.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                    contentValues.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
+
+                    android.net.Uri uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+                    if (uri != null) {
+                        try (java.io.InputStream input = connection.getInputStream();
+                             java.io.OutputStream output = resolver.openOutputStream(uri)) {
+
+                            byte[] buffer = new byte[4096];
+                            int bytesRead;
+                            while ((bytesRead = input.read(buffer)) != -1) {
+                                output.write(buffer, 0, bytesRead);
+                            }
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), "Documento Word descargado en la carpeta Descargas", Toast.LENGTH_LONG).show();
+                            });
+                        }
+                    } else {
+                        throw new java.io.IOException("No se pudo crear el archivo en Descargas (API 29+)");
+                    }
+                } else {
+                    java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+                    if (!downloadsDir.exists()) {
+                        downloadsDir.mkdirs();
+                    }
+                    wordFile = new java.io.File(downloadsDir, nombreArchivo);
+
+                    try (java.io.InputStream input = connection.getInputStream();
+                         java.io.OutputStream output = new java.io.FileOutputStream(wordFile)) {
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = input.read(buffer)) != -1) {
+                            output.write(buffer, 0, bytesRead);
+                        }
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(), "Documento Word descargado en la carpeta Descargas", Toast.LENGTH_LONG).show();
+                        });
+                    }
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error al descargar Word desde URL", e);
+                getActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Error al descargar el documento: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
     private void descargarFormato(String documentoId, String nombre) {
         if (getContext() == null) return;
 
-        Toast.makeText(getContext(), "Descargando formato: " + nombre, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Obteniendo enlace de descarga...", Toast.LENGTH_SHORT).show();
 
-        // Intentar descargar desde Storage (primero .docx, luego .pdf)
-        com.google.firebase.storage.FirebaseStorage storage = com.google.firebase.storage.FirebaseStorage.getInstance();
+        // Obtener URL de descarga desde la configuración global (no por usuario)
+        db.collection("tramites_formatos_config")
+                .document("documentos")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                        Map<String, Object> documentosConfig = task.getResult().getData();
 
-        // Intentar primero con .docx, luego con .pdf
-        String pathDocx = "formatos_plantillas/" + documentoId + ".docx";
-        String pathPdf = "formatos_plantillas/" + documentoId + ".pdf";
+                        // Buscar el documento específico - el campo es directamente el string de la URL
+                        if (documentosConfig != null && documentosConfig.containsKey(documentoId)) {
+                            Object urlObj = documentosConfig.get(documentoId);
+                            String urlDescarga = null;
 
-        com.google.firebase.storage.StorageReference storageRefDocx = storage.getReference(pathDocx);
-        com.google.firebase.storage.StorageReference storageRefPdf = storage.getReference(pathPdf);
+                            // Si es un string directamente
+                            if (urlObj instanceof String) {
+                                urlDescarga = (String) urlObj;
+                            }
+                            // Si es un Map con urlDescarga (para compatibilidad)
+                            else if (urlObj instanceof Map) {
+                                Map<String, Object> docConfig = (Map<String, Object>) urlObj;
+                                urlDescarga = (String) docConfig.get("urlDescarga");
+                            }
 
-        // Crear archivo temporal para descarga
-        final java.io.File localFile = new java.io.File(getContext().getExternalFilesDir(null), nombre.replaceAll("[^a-zA-Z0-9]", "_") + ".docx");
-        final java.io.File localFilePdf = new java.io.File(getContext().getExternalFilesDir(null), nombre.replaceAll("[^a-zA-Z0-9]", "_") + ".pdf");
-
-        // Intentar descargar .docx primero
-        storageRefDocx.getFile(localFile)
-                .addOnSuccessListener(taskSnapshot -> {
-                    Toast.makeText(getContext(), "Formato descargado exitosamente", Toast.LENGTH_SHORT).show();
-                    // Abrir el archivo descargado
-                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
-                    android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
-                            requireContext(),
-                            requireContext().getApplicationContext().getPackageName() + ".provider",
-                            localFile
-                    );
-                    intent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-                    intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    try {
-                        startActivity(intent);
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(getContext(), "No se encontró una aplicación para abrir el documento Word", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(exception -> {
-                    // Si falla .docx, intentar con .pdf
-                    Log.d(TAG, "No se encontró .docx, intentando con .pdf");
-                    storageRefPdf.getFile(localFilePdf)
-                            .addOnSuccessListener(taskSnapshot -> {
-                                Toast.makeText(getContext(), "Formato descargado exitosamente", Toast.LENGTH_SHORT).show();
+                            if (urlDescarga != null && !urlDescarga.isEmpty()) {
+                                // Abrir el enlace en el navegador
                                 android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
-                                android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
-                                        requireContext(),
-                                        requireContext().getApplicationContext().getPackageName() + ".provider",
-                                        localFilePdf
-                                );
-                                intent.setDataAndType(uri, "application/pdf");
-                                intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                intent.setData(android.net.Uri.parse(urlDescarga));
                                 try {
                                     startActivity(intent);
+                                    Toast.makeText(getContext(), "Abriendo enlace de descarga", Toast.LENGTH_SHORT).show();
                                 } catch (android.content.ActivityNotFoundException e) {
-                                    Toast.makeText(getContext(), "No se encontró una aplicación para abrir el PDF", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getContext(), "No se pudo abrir el enlace", Toast.LENGTH_SHORT).show();
                                 }
-                            })
-                            .addOnFailureListener(exception2 -> {
-                                Log.e(TAG, "Error descargando formato", exception2);
-                                Toast.makeText(getContext(), "No se pudo descargar el formato. Puede que no esté disponible aún.", Toast.LENGTH_LONG).show();
-                            });
+                            } else {
+                                Toast.makeText(getContext(), "No hay enlace de descarga disponible para este formato", Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "No se encontró información del formato", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Error al obtener información del formato", Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 

@@ -447,152 +447,11 @@ public class WizardTramiteFragment extends Fragment {
     private void generarPDF() {
         if (getContext() == null || getActivity() == null) return;
 
-        // Si es reportes parciales, usar Word
-        if (documentoId.equals("reportes_parciales")) {
-            generarDesdeWord();
-            return;
-        }
-
-        Toast.makeText(getContext(), "Generando PDF...", Toast.LENGTH_SHORT).show();
-
-        new Thread(() -> {
-            Uri pdfUri = null;
-            File pdfFile = null;
-            boolean exito = false;
-
-            try {
-                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new java.util.Date());
-                String nombreArchivo = documentoNombre.replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".pdf";
-
-                // Obtener datos del alumno
-                JSONObject alumno = obtenerDatosAlumno();
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    ContentResolver resolver = getContext().getContentResolver();
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, nombreArchivo);
-                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
-                    contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
-
-                    pdfUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
-                    if (pdfUri == null) throw new IOException("No se pudo crear el archivo en Descargas (API 29+)");
-
-                    try (OutputStream outputStream = resolver.openOutputStream(pdfUri)) {
-                        PDFGeneratorTramites pdfGenerator = new PDFGeneratorTramites(getContext());
-                        Map<String, String> datosMap = convertirDatosParaPDF();
-                        exito = pdfGenerator.generarPDFTramiteEnOutputStream(documentoId, datosMap, alumno, outputStream);
-                    }
-
-                    if (!exito) {
-                        resolver.delete(pdfUri, null, null);
-                    }
-
-                } else {
-                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    if (!downloadsDir.exists()) {
-                        downloadsDir.mkdirs();
-                    }
-                    pdfFile = new File(downloadsDir, nombreArchivo);
-
-                    try (OutputStream outputStream = new FileOutputStream(pdfFile)) {
-                        PDFGeneratorTramites pdfGenerator = new PDFGeneratorTramites(getContext());
-                        Map<String, String> datosMap = convertirDatosParaPDF();
-                        exito = pdfGenerator.generarPDFTramiteEnOutputStream(documentoId, datosMap, alumno, outputStream);
-                    }
-                }
-
-                if (!exito) {
-                    throw new Exception("El generador de PDF reportó un error.");
-                }
-
-                // Subir PDF a Firebase Storage
-                final Uri uriParaSubir = pdfFile != null ?
-                        FileProvider.getUriForFile(getContext(), getContext().getApplicationContext().getPackageName() + ".provider", pdfFile) : pdfUri;
-
-                subirPDFaFirebase(uriParaSubir);
-
-            } catch (Exception e) {
-                Log.e(TAG, "Error generando PDF", e);
-                getActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Error al generar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        }).start();
+        // Todos los documentos usan Word con placeholders desde Firebase Storage
+        // El método generarDesdeWord() descarga el template, lo llena con {{placeholders}} y convierte a PDF
+        generarDesdeWord();
     }
 
-    private JSONObject obtenerDatosAlumno() {
-        // Obtener datos del perfil del estudiante desde Firestore
-        try {
-            DocumentSnapshot doc = FirebaseFirestore.getInstance()
-                    .collection("user_profiles")
-                    .document(currentUserId)
-                    .get()
-                    .getResult();
-
-            if (doc != null && doc.exists()) {
-                JSONObject alumno = new JSONObject();
-                alumno.put("fullName", doc.getString("fullName"));
-                alumno.put("controlNumber", doc.getString("controlNumber"));
-                alumno.put("career", doc.getString("career"));
-                alumno.put("email", doc.getString("email"));
-                return alumno;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error obteniendo datos del alumno", e);
-        }
-        return null;
-    }
-
-    private void subirPDFaFirebase(Uri fileUri) {
-        if (currentUserId == null || fileUri == null) {
-            getActivity().runOnUiThread(() -> {
-                Toast.makeText(getContext(), "Error: No se pudo subir el PDF", Toast.LENGTH_SHORT).show();
-            });
-            return;
-        }
-
-        FirebaseManager firebaseManager = new FirebaseManager();
-        firebaseManager.subirPdfTramite(
-                currentUserId,
-                documentoId,
-                fileUri,
-                url -> {
-                    // Guardar URL en Firestore
-                    Map<String, Object> documentoData = new HashMap<>();
-                    documentoData.put("urlDocumento", url);
-                    documentoData.put("estado", "completado");
-                    documentoData.put("fechaSubida", System.currentTimeMillis());
-                    documentoData.put("datos", datosFormulario);
-
-                    firebaseManager.guardarDocumentoTramite(
-                            currentUserId,
-                            documentoId,
-                            documentoData,
-                            () -> {
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), "PDF generado y guardado exitosamente", Toast.LENGTH_SHORT).show();
-                                    // Volver al fragment anterior
-                                    if (getActivity() != null) {
-                                        getActivity().getSupportFragmentManager().popBackStack();
-                                    }
-                                });
-                            },
-                            error -> {
-                                Log.e(TAG, "Error guardando documento", error);
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), "Error al guardar documento", Toast.LENGTH_SHORT).show();
-                                });
-                            }
-                    );
-                },
-                error -> {
-                    Log.e(TAG, "Error subiendo PDF", error);
-                    getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Error al subir PDF", Toast.LENGTH_SHORT).show();
-                    });
-                }
-        );
-    }
 
     private void cargarBorrador() {
         if (currentUserId == null) return;
@@ -733,7 +592,8 @@ public class WizardTramiteFragment extends Fragment {
                                     outputStream.close();
 
                                     if (exito) {
-                                        // Subir el Word llenado
+                                        // Subir el Word llenado directamente (preserva el formato original)
+                                        // Luego lo convertiremos a PDF usando un servicio mejor o mantendremos el Word
                                         subirWordLlenado(filledWordFile);
                                     } else {
                                         getActivity().runOnUiThread(() -> {
@@ -780,14 +640,16 @@ public class WizardTramiteFragment extends Fragment {
         );
 
         FirebaseManager firebaseManager = new FirebaseManager();
-        firebaseManager.subirPdfTramite(
+        // Subir el Word llenado directamente (preserva el formato original)
+        firebaseManager.subirWordTramite(
                 currentUserId,
                 documentoId,
                 fileUri,
-                url -> {
-                    // Guardar URL en Firestore
+                urlWord -> {
+                    // Guardar URL del Word en Firestore
                     Map<String, Object> documentoData = new HashMap<>();
-                    documentoData.put("urlDocumento", url);
+                    documentoData.put("urlDocumento", urlWord); // Guardamos la URL del Word
+                    documentoData.put("urlWord", urlWord); // También guardamos una referencia específica
                     documentoData.put("estado", "completado");
                     documentoData.put("fechaSubida", System.currentTimeMillis());
                     documentoData.put("datos", datosFormulario);

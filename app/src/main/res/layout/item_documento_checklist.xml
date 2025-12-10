@@ -6,32 +6,25 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
     app:cardBackgroundColor="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <!-- Fila superior: Nombre y Estado -->
+        <!-- Fila principal: Nombre + Check -->
         <LinearLayout
+            android:id="@+id/cardContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <!-- Icono de estado -->
-            <TextView
-                android:id="@+id/ivEstado"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:text="○"
-                android:textSize="24sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center" />
+            android:padding="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
 
             <!-- Nombre del documento -->
             <TextView
@@ -43,27 +36,45 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="16dp" />
+
+            <!-- Círculo de check a la derecha -->
+            <ImageView
+                android:id="@+id/ivCheckEstado"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/check_circle_pending"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
 
-        <!-- Fila de botones -->
+        <!-- Layout de botones (expandible) -->
         <LinearLayout
+            android:id="@+id/layoutBotones"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="end"
-            android:layout_marginTop="8dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp"
+            android:paddingTop="8dp"
+            android:visibility="gone">
 
             <!-- Botón Ver (solo si hay documento) -->
             <LinearLayout
                 android:id="@+id/btnVer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:minWidth="80dp"
                 android:orientation="horizontal"
+                android:gravity="center"
                 android:background="@drawable/btn_primary"
-                android:padding="12dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="12dp"
                 android:layout_marginEnd="8dp"
                 android:clickable="true"
                 android:focusable="true"
@@ -73,7 +84,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@android:drawable/ic_menu_view"
-                    android:tint="@android:color/white" />
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -81,7 +92,9 @@
                     android:text="Ver"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="8dp"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
 
             </LinearLayout>
 
@@ -90,9 +103,13 @@
                 android:id="@+id/btnDescargar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:minWidth="100dp"
                 android:orientation="horizontal"
+                android:gravity="center"
                 android:background="@drawable/btn_secondary"
-                android:padding="12dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="12dp"
                 android:layout_marginEnd="8dp"
                 android:clickable="true"
                 android:focusable="true">
@@ -101,7 +118,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@android:drawable/ic_menu_save"
-                    android:tint="@color/text_primary" />
+                    app:tint="@color/text_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -109,7 +126,9 @@
                     android:text="Descargar"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="8dp"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
 
             </LinearLayout>
 
@@ -118,9 +137,13 @@
                 android:id="@+id/btnLlenar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:minWidth="80dp"
                 android:orientation="horizontal"
+                android:gravity="center"
                 android:background="@drawable/btn_primary"
-                android:padding="12dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="12dp"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -128,7 +151,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@android:drawable/ic_menu_edit"
-                    android:tint="@android:color/white" />
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -136,7 +159,9 @@
                     android:text="Llenar"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="8dp"
+                    android:maxLines="1"
+                    android:ellipsize="none" />
 
             </LinearLayout>
 
@@ -145,4 +170,3 @@
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
-
