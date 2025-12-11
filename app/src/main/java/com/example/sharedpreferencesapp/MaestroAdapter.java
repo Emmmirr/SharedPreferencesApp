@@ -16,6 +16,15 @@ public class MaestroAdapter extends RecyclerView.Adapter<MaestroAdapter.MaestroV
 
     private final List<UserProfile> maestrosList;
     private final Context context;
+    private OnMaestroClickListener onMaestroClickListener;
+
+    public interface OnMaestroClickListener {
+        void onMaestroClick(UserProfile maestro);
+    }
+
+    public void setOnMaestroClickListener(OnMaestroClickListener listener) {
+        this.onMaestroClickListener = listener;
+    }
 
     public MaestroAdapter(Context context, List<UserProfile> maestrosList) {
         this.context = context;
@@ -50,6 +59,13 @@ public class MaestroAdapter extends RecyclerView.Adapter<MaestroAdapter.MaestroV
         String email = maestro.getEmail() != null && !maestro.getEmail().isEmpty() ?
                 maestro.getEmail() : "Sin email";
         holder.tvEmail.setText(email);
+
+        // Click en la card completa
+        holder.cardView.setOnClickListener(v -> {
+            if (onMaestroClickListener != null) {
+                onMaestroClickListener.onMaestroClick(maestro);
+            }
+        });
     }
 
     @Override

@@ -54,6 +54,32 @@ public class ListaMaestrosFragment extends Fragment {
         // Configurar RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new MaestroAdapter(getContext(), filteredList);
+
+        // Configurar listener para click en maestro
+        adapter.setOnMaestroClickListener(maestro -> {
+            // Navegar a detalle del maestro
+            String nombre = "";
+            if (maestro.getFullName() != null && !maestro.getFullName().isEmpty()) {
+                nombre = maestro.getFullName();
+            } else if (maestro.getDisplayName() != null && !maestro.getDisplayName().isEmpty()) {
+                nombre = maestro.getDisplayName();
+            } else if (maestro.getEmail() != null && !maestro.getEmail().isEmpty()) {
+                nombre = maestro.getEmail();
+            } else {
+                nombre = "Sin nombre";
+            }
+
+            DetalleMaestroAdminFragment fragment = DetalleMaestroAdminFragment.newInstance(
+                    maestro.getUserId(), nombre
+            );
+
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         recyclerView.setAdapter(adapter);
 
         // Inicializar Firebase
