@@ -12,70 +12,103 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header con foto de perfil, nombre y email -->
-        <LinearLayout
+        <!-- Header: PROFILE SETTING -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp"
+            android:text="CONFIGURACIÓN DE PERFIL"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
             android:gravity="center"
-            android:background="@color/white"
-            android:layout_marginBottom="8dp">
+            android:paddingTop="24dp"
+            android:paddingBottom="16dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
 
-            <!-- Imagen de perfil circular -->
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/ivProfileImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/user"
-                android:contentDescription="Imagen de perfil"
-                android:layout_marginBottom="16dp"
-                app:civ_border_width="2dp"
-                app:civ_border_color="@color/primary" />
-
-            <!-- Botón cambiar foto -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChangePhoto"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cambiar Foto"
-                android:textSize="14sp"
-                android:textColor="@color/primary"
-                android:layout_marginBottom="16dp" />
-
-            <!-- Nombre completo del usuario -->
-            <TextView
-                android:id="@+id/tvDisplayName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Usuario"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="4dp"
-                android:gravity="center" />
-
-            <!-- Email/Cuenta del usuario -->
-            <TextView
-                android:id="@+id/tvEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="usuario@ejemplo.com"
-                android:textSize="16sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center" />
-
-        </LinearLayout>
-
-        <!-- Lista de opciones de configuración -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Card de Perfil de Usuario -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <!-- Imagen de perfil circular -->
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/ivProfileImage"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/user"
+                    android:contentDescription="Imagen de perfil"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="@color/primary" />
+
+                <!-- Información del usuario -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <TextView
+                        android:id="@+id/tvDisplayName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Usuario"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="usuario@ejemplo.com"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Sección: General -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="General"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <!-- Card General: Contiene todas las opciones -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
             app:cardBackgroundColor="@color/white">
 
             <LinearLayout
@@ -83,42 +116,36 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Opción: Detalles Personales -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <!-- Opción: Editar Perfil -->
+                <LinearLayout
                     android:id="@+id/optionPersonalDetails"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:padding="16dp"
+                    android:gravity="center_vertical"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:id="@+id/iconPersonalDetails"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_myplaces"
-                        android:tint="@color/primary"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        android:src="@android:drawable/ic_menu_edit"
+                        app:tint="@color/primary" />
 
                     <LinearLayout
-                        android:id="@+id/layoutPersonalDetails"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:orientation="vertical"
                         android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        app:layout_constraintStart_toEndOf="@id/iconPersonalDetails"
-                        app:layout_constraintEnd_toStartOf="@id/arrowPersonalDetails"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent">
+                        android:layout_marginEnd="0dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Detalles Personales"
+                            android:text="Editar Perfil"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
@@ -127,24 +154,14 @@
                             android:id="@+id/tvFullName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Ver y editar información personal"
+                            android:text="Cambiar foto de perfil, número, E-mail"
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp" />
+
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/arrowPersonalDetails"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_more"
-                        android:tint="@color/text_secondary"
-                        android:rotation="90"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
@@ -153,41 +170,35 @@
                     android:layout_marginStart="56dp" />
 
                 <!-- Opción: Cambiar Contraseña -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/optionChangePassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:padding="16dp"
+                    android:gravity="center_vertical"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:id="@+id/iconChangePassword"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/round_lock_24"
-                        android:tint="@color/primary"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        app:tint="@color/primary" />
 
                     <LinearLayout
-                        android:id="@+id/layoutChangePassword"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:orientation="vertical"
                         android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        app:layout_constraintStart_toEndOf="@id/iconChangePassword"
-                        app:layout_constraintEnd_toStartOf="@id/arrowChangePassword"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent">
+                        android:layout_marginEnd="0dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Cambiar contraseña"
+                            android:text="Cambiar Contraseña"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
@@ -196,24 +207,14 @@
                             android:id="@+id/tvPasswordStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="********"
+                            android:text="Actualizar y fortalecer la seguridad de la cuenta"
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp" />
+
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/arrowChangePassword"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_more"
-                        android:tint="@color/text_secondary"
-                        android:rotation="90"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
@@ -221,42 +222,36 @@
                     android:background="#E0E0E0"
                     android:layout_marginStart="56dp" />
 
-                <!-- Opción: Exportar Perfil a PDF -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <!-- Opción: Términos de Uso / Exportar PDF -->
+                <LinearLayout
                     android:id="@+id/optionExportPdf"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:padding="16dp"
+                    android:gravity="center_vertical"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:id="@+id/iconExportPdf"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@android:drawable/ic_menu_save"
-                        android:tint="@color/primary"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        app:tint="@color/primary" />
 
                     <LinearLayout
-                        android:id="@+id/layoutExportPdf"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:orientation="vertical"
                         android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        app:layout_constraintStart_toEndOf="@id/iconExportPdf"
-                        app:layout_constraintEnd_toStartOf="@id/arrowExportPdf"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent">
+                        android:layout_marginEnd="0dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Exportar Perfil a PDF"
+                            android:text="Exportar Perfil"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
@@ -268,20 +263,10 @@
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp" />
+
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/arrowExportPdf"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_more"
-                        android:tint="@color/text_secondary"
-                        android:rotation="90"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
@@ -290,87 +275,45 @@
                     android:layout_marginStart="56dp" />
 
                 <!-- Opción: Cerrar Sesión -->
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <LinearLayout
                     android:id="@+id/optionLogout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:padding="16dp"
+                    android:gravity="center_vertical"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:id="@+id/iconLogout"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_logout"
-                        android:tint="#E53E3E"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        app:tint="#E53E3E" />
 
                     <TextView
                         android:id="@+id/btnLogout"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Cerrar Sesión"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#E53E3E"
-                        android:layout_marginStart="16dp"
-                        app:layout_constraintStart_toEndOf="@id/iconLogout"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        android:layout_marginStart="16dp" />
 
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
 
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card de completitud del perfil (oculto por ahora, se puede mostrar si es necesario) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardCompleteness"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/white">
+        </androidx.cardview.widget.CardView>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tvProfileCompleteness"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Perfil completado: 0%"
-                    android:textSize="14sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <ProgressBar
-                    android:id="@+id/progressCompleteness"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="12dp"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressTint="@color/primary"
-                    android:progressBackgroundTint="#E2E8F0" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+        <!-- Espaciado final -->
         <View
             android:layout_width="match_parent"
             android:layout_height="32dp" />
 
     </LinearLayout>
+
 </ScrollView>

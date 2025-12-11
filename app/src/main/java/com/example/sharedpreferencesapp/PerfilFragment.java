@@ -17,12 +17,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -64,11 +64,9 @@ public class PerfilFragment extends Fragment {
 
     // Vistas y otros...
     private ImageView ivProfileImage;
-    private TextView tvDisplayName, tvEmail, tvProfileCompleteness;
+    private TextView tvDisplayName, tvEmail;
     private TextView tvFullName, tvPasswordStatus, btnLogout;
     private View optionPersonalDetails, optionChangePassword, optionExportPdf, optionLogout;
-    private Button btnChangePhoto;
-    private ProgressBar progressCompleteness;
     private ProfileManager profileManager;
     private FirebaseManager firebaseManager;
     private UserProfile currentProfile;
@@ -111,12 +109,9 @@ public class PerfilFragment extends Fragment {
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
         tvDisplayName = view.findViewById(R.id.tvDisplayName);
         tvEmail = view.findViewById(R.id.tvEmail);
-        tvProfileCompleteness = view.findViewById(R.id.tvProfileCompleteness);
-        progressCompleteness = view.findViewById(R.id.progressCompleteness);
         btnLogout = view.findViewById(R.id.btnLogout);
         tvFullName = view.findViewById(R.id.tvFullName);
         tvPasswordStatus = view.findViewById(R.id.tvPasswordStatus);
-        btnChangePhoto = view.findViewById(R.id.btnChangePhoto);
 
         // Opciones de menú
         optionPersonalDetails = view.findViewById(R.id.optionPersonalDetails);
@@ -206,9 +201,6 @@ public class PerfilFragment extends Fragment {
 
         // Cambiar foto de perfil
         ivProfileImage.setOnClickListener(v -> mostrarDialogElegirFoto());
-        if (btnChangePhoto != null) {
-            btnChangePhoto.setOnClickListener(v -> mostrarDialogElegirFoto());
-        }
     }
 
     private void cargarPerfilUsuario() {
@@ -243,13 +235,6 @@ public class PerfilFragment extends Fragment {
             String passwordStatus = "google".equals(profile.getAuthMethod()) ? "Gestionada por Google" : "********";
             tvPasswordStatus.setText(passwordStatus);
         }
-
-        // Actualizar completitud del perfil
-        int completeness = profile.getProfileCompleteness();
-        if (tvProfileCompleteness != null) {
-            tvProfileCompleteness.setText("Perfil completado: " + completeness + "%");
-        }
-        progressCompleteness.setProgress(completeness);
 
         cargarImagenPerfilDesdeUrl(profile);
     }
@@ -432,7 +417,6 @@ public class PerfilFragment extends Fragment {
         Spinner spinnerGender = dialogView.findViewById(R.id.spinnerGender);
         EditText etCurp = dialogView.findViewById(R.id.etCurp);
         Button btnUploadIne = dialogView.findViewById(R.id.btnUploadIne);
-        ImageButton btnViewIne = dialogView.findViewById(R.id.btnViewIne);
         Spinner spinnerCareer = dialogView.findViewById(R.id.spinnerCareer);
         EditText etControlNumber = dialogView.findViewById(R.id.etControlNumber);
         EditText etMedicalConditions = dialogView.findViewById(R.id.etMedicalConditions);
@@ -446,11 +430,8 @@ public class PerfilFragment extends Fragment {
         String ineUrl = currentProfile.getIneScanUrl();
         if (ineUrl != null && !ineUrl.isEmpty()) {
             btnUploadIne.setText("Reemplazar Credencial");
-            btnViewIne.setVisibility(View.VISIBLE);
-            btnViewIne.setOnClickListener(v -> verDocumentoUrl(ineUrl));
         } else {
             btnUploadIne.setText("Subir Credencial");
-            btnViewIne.setVisibility(View.GONE);
         }
         btnUploadIne.setOnClickListener(v -> {
             inePickerLauncher.launch(new String[]{"image/*", "application/pdf"});

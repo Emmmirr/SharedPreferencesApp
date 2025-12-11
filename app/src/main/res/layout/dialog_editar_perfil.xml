@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#F5F5F5"
+    android:background="@color/background_light"
     android:padding="16dp">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:text="Editar Perfil"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="#1A202C"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
@@ -29,7 +29,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/white">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -43,7 +43,7 @@
                     android:text="📝 Información Personal y Académica"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#4299E1"
+                    android:textColor="@color/primary"
                     android:layout_marginBottom="16dp" />
 
                 <!-- ... (Campos de Nombre, Fecha de Nacimiento, Género, CURP sin cambios) ... -->
@@ -52,8 +52,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Nombre completo (Apellidos Nombre)"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etFullName"
                         android:layout_width="match_parent"
@@ -66,8 +66,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Fecha de Nacimiento (DD/MM/AAAA)"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etDateOfBirth"
                         android:layout_width="match_parent"
@@ -81,7 +81,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Género"
-                    android:textColor="#4A5568"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="4dp"/>
                 <Spinner
                     android:id="@+id/spinnerGender"
@@ -94,8 +94,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="CURP"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etCurp"
                         android:layout_width="match_parent"
@@ -105,34 +105,13 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
 
-                <LinearLayout
+                <!-- Botón para Subir/Reemplazar Credencial -->
+                <Button
+                    android:id="@+id/btnUploadIne"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <!-- Botón para Subir/Reemplazar Credencial -->
-                    <Button
-                        android:id="@+id/btnUploadIne"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Subir Credencial de Elector" />
-
-                    <!-- Botón para Ver Credencial (Inicialmente invisible) -->
-                    <ImageButton
-                        android:id="@+id/btnViewIne"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_view"
-                        android:contentDescription="Ver credencial"
-                        app:tint="#4299E1"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:layout_marginStart="8dp"
-                        android:visibility="gone" />  <!-- Importante: Empieza oculto -->
-
-                </LinearLayout>
+                    android:layout_marginBottom="12dp"
+                    android:text="Subir Credencial de Elector" />
 
 
                 <!-- ... (Campos de Carrera y Número de Control sin cambios) ... -->
@@ -140,7 +119,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Carrera"
-                    android:textColor="#4A5568"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="4dp"/>
                 <Spinner
                     android:id="@+id/spinnerCareer"
@@ -153,8 +132,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Número de Control"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etControlNumber"
                         android:layout_width="match_parent"
@@ -171,7 +150,7 @@
             android:layout_marginBottom="24dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/white">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -185,7 +164,7 @@
                     android:text="⚕️ Información Médica y de Contacto"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#4299E1"
+                    android:textColor="@color/primary"
                     android:layout_marginBottom="16dp" />
 
                 <!-- Condiciones Médicas -->
@@ -194,8 +173,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Condiciones Médicas"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etMedicalConditions"
                         android:layout_width="match_parent"
@@ -210,8 +189,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Número de Teléfono"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etPhoneNumber"
                         android:layout_width="match_parent"
@@ -225,8 +204,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Nombre de Contacto de Emergencia"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etEmergencyContactName"
                         android:layout_width="match_parent"
@@ -240,8 +219,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:hint="Teléfono de Contacto de Emergencia"
-                    app:boxStrokeColor="#4299E1"
-                    app:hintTextColor="#4299E1">
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/primary">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etEmergencyContactPhone"
                         android:layout_width="match_parent"
