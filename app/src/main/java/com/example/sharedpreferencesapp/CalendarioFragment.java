@@ -256,16 +256,23 @@ public class CalendarioFragment extends Fragment {
                                 if (scrollViewDetalle != null) {
                                     scrollViewDetalle.setVisibility(View.VISIBLE);
                                 }
-                                layoutDetalleFecha.setVisibility(View.VISIBLE);
-                                layoutFechasLista.setVisibility(View.VISIBLE);
+                                if (layoutDetalleFecha != null) {
+                                    layoutDetalleFecha.setVisibility(View.VISIBLE);
+                                }
+                                if (layoutFechasLista != null) {
+                                    layoutFechasLista.setVisibility(View.VISIBLE);
+                                }
                                 if (calendarView != null) {
                                     calendarView.setVisibility(View.VISIBLE);
                                 }
-                                cargarFechas();
-                                // Seleccionar la primera fecha por defecto
-                                if (selectedFechaIndex < 0) {
-                                    seleccionarFecha(0);
+
+                                // Asegurar que las vistas de detalle sean visibles
+                                if (tvDiasRestantes != null) {
+                                    tvDiasRestantes.setVisibility(View.VISIBLE);
                                 }
+
+                                cargarFechas();
+                                // cargarFechas() ahora selecciona automáticamente la primera fecha disponible
                             });
                         } else {
                             tvNoCalendario.setText("Aún no hay fechas asignadas. El administrador configurará las fechas próximamente.");
@@ -374,16 +381,42 @@ public class CalendarioFragment extends Fragment {
 
             layoutFechasLista.addView(fechaItem);
         }
+
+        // Después de cargar todas las fechas, seleccionar automáticamente la primera disponible
+        // si no hay ninguna seleccionada
+        if (selectedFechaIndex < 0) {
+            for (int i = 0; i < 3; i++) {
+                String fecha = calendarioGlobalDocument.getString(camposFecha[i]);
+                if (fecha != null && !fecha.isEmpty()) {
+                    Log.d(TAG, "Seleccionando automáticamente primera fecha disponible, índice: " + i);
+                    seleccionarFecha(i);
+                    break;
+                }
+            }
+        }
     }
 
     private void seleccionarFecha(int index) {
-        if (calendarioGlobalDocument == null || index < 0 || index >= 3) return;
+        if (calendarioGlobalDocument == null || index < 0 || index >= 3) {
+            Log.w(TAG, "seleccionarFecha: condiciones no cumplidas - calendarioGlobalDocument: " + (calendarioGlobalDocument != null) + ", index: " + index);
+            return;
+        }
 
         selectedFechaIndex = index;
+
+        // Asegurar que el layout de detalle sea visible
+        if (layoutDetalleFecha != null) {
+            layoutDetalleFecha.setVisibility(View.VISIBLE);
+        }
+        if (scrollViewDetalle != null) {
+            scrollViewDetalle.setVisibility(View.VISIBLE);
+        }
 
         // Fechas y labels vienen del calendario global
         String label = calendarioGlobalDocument.getString(camposLabel[index]);
         String fecha = calendarioGlobalDocument.getString(camposFecha[index]);
+
+        Log.d(TAG, "seleccionarFecha: index=" + index + ", fecha=" + fecha + ", label=" + label);
 
         // PDFs vienen del calendario del estudiante (si existe)
         String pdfUrl = null;
@@ -392,35 +425,62 @@ public class CalendarioFragment extends Fragment {
         }
 
         // Actualizar nombre de actividad
-        tvNombreActividad.setText(label != null && !label.isEmpty() ? label : defaultLabels[index]);
+        if (tvNombreActividad != null) {
+            tvNombreActividad.setText(label != null && !label.isEmpty() ? label : defaultLabels[index]);
+        }
 
         // Formatear y actualizar fecha
         if (fecha != null && !fecha.isEmpty()) {
             String[] fechaFormateada = formatearFecha(fecha);
-            tvDiaNumero.setText(fechaFormateada[0]);
-            tvMesAno.setText(fechaFormateada[1]);
+            if (tvDiaNumero != null) {
+                tvDiaNumero.setText(fechaFormateada[0]);
+            }
+            if (tvMesAno != null) {
+                tvMesAno.setText(fechaFormateada[1]);
+            }
 
             // Actualizar calendario visual con la fecha seleccionada
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                Date fechaDate = sdf.parse(fecha);
-                if (fechaDate != null) {
-                    calendarView.setDate(fechaDate.getTime(), false, true);
+            if (calendarView != null) {
+                try {
+                    // Intentar ambos formatos
+                    SimpleDateFormat sdf1 = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                    SimpleDateFormat sdf2 = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+                    Date fechaDate = null;
+                    try {
+                        fechaDate = sdf1.parse(fecha);
+                    } catch (ParseException e1) {
+                        try {
+                            fechaDate = sdf2.parse(fecha);
+                        } catch (ParseException e2) {
+                            Log.e(TAG, "Error al parsear fecha para calendario: " + fecha, e2);
+                        }
+                    }
+                    if (fechaDate != null) {
+                        calendarView.setDate(fechaDate.getTime(), false, true);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error al establecer fecha en calendario: " + fecha, e);
                 }
-            } catch (ParseException e) {
-                Log.e(TAG, "Error al parsear fecha para calendario: " + fecha, e);
             }
         } else {
-            tvDiaNumero.setText("--");
-            tvMesAno.setText("Sin asignar");
+            if (tvDiaNumero != null) {
+                tvDiaNumero.setText("--");
+            }
+            if (tvMesAno != null) {
+                tvMesAno.setText("Sin asignar");
+            }
         }
 
         // Calcular y mostrar días restantes
         int diasRestantes = calcularDiasRestantes(fecha);
-        if (diasRestantes >= 0) {
-            tvDiasRestantes.setText("Días restantes: " + diasRestantes);
-        } else {
-            tvDiasRestantes.setText("Fecha vencida");
+        // Asegurar que tvDiasRestantes siempre sea visible y muestre información
+        if (tvDiasRestantes != null) {
+            tvDiasRestantes.setVisibility(View.VISIBLE);
+            if (diasRestantes >= 0) {
+                tvDiasRestantes.setText("Días restantes: " + diasRestantes);
+            } else {
+                tvDiasRestantes.setText("Fecha vencida");
+            }
         }
 
         // Verificar si hay documento subido
@@ -428,26 +488,36 @@ public class CalendarioFragment extends Fragment {
         boolean fechaVencida = diasRestantes < 0;
         boolean puedeSubir = puedeSubirDocumento(index);
 
-        // Actualizar botón de subir/sustituir
-        if (puedeSubir && !fechaVencida) {
-            btnSubirDocumento.setVisibility(View.VISIBLE);
-            btnSubirDocumento.setEnabled(true);
+        Log.d(TAG, "seleccionarFecha: puedeSubir=" + puedeSubir + ", fechaVencida=" + fechaVencida + ", tieneDocumento=" + tieneDocumento);
 
-            // Cambiar texto según si hay documento o no
-            if (tieneDocumento) {
-                tvTextoSubir.setText("Sustituir Documento");
+        // Actualizar botón de subir/sustituir
+        // Para la primera fecha (índice 0), siempre se puede subir si no está vencida
+        if (btnSubirDocumento != null) {
+            if (puedeSubir && !fechaVencida) {
+                btnSubirDocumento.setVisibility(View.VISIBLE);
+                btnSubirDocumento.setEnabled(true);
+
+                // Cambiar texto según si hay documento o no
+                if (tvTextoSubir != null) {
+                    if (tieneDocumento) {
+                        tvTextoSubir.setText("Sustituir Documento");
+                    } else {
+                        tvTextoSubir.setText("Subir Documento");
+                    }
+                }
             } else {
-                tvTextoSubir.setText("Subir Documento");
+                // Si no se puede subir, ocultar el botón
+                btnSubirDocumento.setVisibility(View.GONE);
             }
-        } else {
-            btnSubirDocumento.setVisibility(View.GONE);
         }
 
         // Mostrar/ocultar botón de ver documento
-        if (tieneDocumento) {
-            btnVerDocumento.setVisibility(View.VISIBLE);
-        } else {
-            btnVerDocumento.setVisibility(View.GONE);
+        if (btnVerDocumento != null) {
+            if (tieneDocumento) {
+                btnVerDocumento.setVisibility(View.VISIBLE);
+            } else {
+                btnVerDocumento.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -456,28 +526,36 @@ public class CalendarioFragment extends Fragment {
             return new String[]{"--", "Sin asignar"};
         }
 
-        SimpleDateFormat sdfInput = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        // Intentar ambos formatos: dd/MM/yyyy y MM/dd/yyyy
+        SimpleDateFormat sdfInput1 = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        SimpleDateFormat sdfInput2 = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
 
         // Nombres de meses en español (abreviados)
         String[] meses = {"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"};
 
+        Date fecha = null;
         try {
-            Date fecha = sdfInput.parse(fechaString);
-            if (fecha != null) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(fecha);
-
-                int dia = cal.get(Calendar.DAY_OF_MONTH);
-                int mes = cal.get(Calendar.MONTH);
-                int ano = cal.get(Calendar.YEAR);
-
-                String diaStr = String.valueOf(dia);
-                String mesAno = meses[mes] + ", " + ano;
-
-                return new String[]{diaStr, mesAno};
+            fecha = sdfInput1.parse(fechaString);
+        } catch (ParseException e1) {
+            try {
+                fecha = sdfInput2.parse(fechaString);
+            } catch (ParseException e2) {
+                Log.e(TAG, "Error al formatear fecha: " + fechaString, e2);
             }
-        } catch (ParseException e) {
-            Log.e(TAG, "Error al formatear fecha: " + fechaString, e);
+        }
+
+        if (fecha != null) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(fecha);
+
+            int dia = cal.get(Calendar.DAY_OF_MONTH);
+            int mes = cal.get(Calendar.MONTH);
+            int ano = cal.get(Calendar.YEAR);
+
+            String diaStr = String.valueOf(dia);
+            String mesAno = meses[mes] + ", " + ano;
+
+            return new String[]{diaStr, mesAno};
         }
 
         return new String[]{"--", "Error"};
@@ -488,28 +566,41 @@ public class CalendarioFragment extends Fragment {
             return -1;
         }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        // Intentar ambos formatos: dd/MM/yyyy y MM/dd/yyyy
+        SimpleDateFormat sdf1 = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        SimpleDateFormat sdf2 = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+
+        Date fechaLimite = null;
         try {
-            Date fechaLimite = sdf.parse(fechaString);
-            Calendar hoy = Calendar.getInstance();
-            hoy.set(Calendar.HOUR_OF_DAY, 0);
-            hoy.set(Calendar.MINUTE, 0);
-            hoy.set(Calendar.SECOND, 0);
-            hoy.set(Calendar.MILLISECOND, 0);
+            fechaLimite = sdf1.parse(fechaString);
+        } catch (ParseException e1) {
+            try {
+                fechaLimite = sdf2.parse(fechaString);
+            } catch (ParseException e2) {
+                Log.e(TAG, "Error al parsear fecha: " + fechaString, e2);
+                return -1;
+            }
+        }
 
-            Calendar fechaLimiteCal = Calendar.getInstance();
-            fechaLimiteCal.setTime(fechaLimite);
-            fechaLimiteCal.set(Calendar.HOUR_OF_DAY, 0);
-            fechaLimiteCal.set(Calendar.MINUTE, 0);
-            fechaLimiteCal.set(Calendar.SECOND, 0);
-            fechaLimiteCal.set(Calendar.MILLISECOND, 0);
-
-            long diff = fechaLimiteCal.getTimeInMillis() - hoy.getTimeInMillis();
-            return (int) (diff / (1000 * 60 * 60 * 24));
-        } catch (ParseException e) {
-            Log.e(TAG, "Error al parsear fecha: " + fechaString, e);
+        if (fechaLimite == null) {
             return -1;
         }
+
+        Calendar hoy = Calendar.getInstance();
+        hoy.set(Calendar.HOUR_OF_DAY, 0);
+        hoy.set(Calendar.MINUTE, 0);
+        hoy.set(Calendar.SECOND, 0);
+        hoy.set(Calendar.MILLISECOND, 0);
+
+        Calendar fechaLimiteCal = Calendar.getInstance();
+        fechaLimiteCal.setTime(fechaLimite);
+        fechaLimiteCal.set(Calendar.HOUR_OF_DAY, 0);
+        fechaLimiteCal.set(Calendar.MINUTE, 0);
+        fechaLimiteCal.set(Calendar.SECOND, 0);
+        fechaLimiteCal.set(Calendar.MILLISECOND, 0);
+
+        long diff = fechaLimiteCal.getTimeInMillis() - hoy.getTimeInMillis();
+        return (int) (diff / (1000 * 60 * 60 * 24));
     }
 
     private boolean puedeSubirDocumento(int index) {

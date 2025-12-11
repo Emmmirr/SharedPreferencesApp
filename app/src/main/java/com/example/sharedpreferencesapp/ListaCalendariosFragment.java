@@ -83,13 +83,16 @@ public class ListaCalendariosFragment extends Fragment {
 
         layoutCalendarios = view.findViewById(R.id.layoutCalendarios);
         tvNoCalendarios = view.findViewById(R.id.tvNoCalendarios);
-        Button btnAgregar = view.findViewById(R.id.btnAgregarCalendario);
 
         firebaseManager = new FirebaseManager();
         fileManager = new FileManager(requireContext());
         alarmScheduler = new AlarmScheduler(requireContext());
 
-        btnAgregar.setOnClickListener(v -> mostrarDialogCalendario(null));
+        // Ya no se permite agregar calendarios - las fechas las configura el administrador
+        // Mostrar mensaje informativo
+        layoutCalendarios.setVisibility(View.GONE);
+        tvNoCalendarios.setVisibility(View.VISIBLE);
+        tvNoCalendarios.setText("Las fechas del calendario son configuradas por el administrador. Puedes ver los documentos subidos por tus estudiantes en la pestaña 'Documentos'.");
 
         return view;
     }
@@ -104,12 +107,12 @@ public class ListaCalendariosFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             this.currentUserId = user.getUid();
-            cargarCalendarios();
+            // Ya no cargamos calendarios - las fechas las configura el administrador
+            // El mensaje informativo ya se muestra en onCreateView
         } else {
             tvNoCalendarios.setText("Error de sesión. Por favor, inicie sesión de nuevo.");
             tvNoCalendarios.setVisibility(View.VISIBLE);
             layoutCalendarios.setVisibility(View.GONE);
-            view.findViewById(R.id.btnAgregarCalendario).setEnabled(false);
         }
     }
 

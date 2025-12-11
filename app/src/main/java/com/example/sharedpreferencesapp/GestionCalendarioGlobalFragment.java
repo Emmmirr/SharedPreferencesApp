@@ -35,7 +35,7 @@ public class GestionCalendarioGlobalFragment extends Fragment {
     private TextView tvFecha1, tvFecha2, tvFecha3;
     private TextView tvLabel1, tvLabel2, tvLabel3;
     private LinearLayout btnCalendario1, btnCalendario2, btnCalendario3;
-    private LinearLayout btnGuardar1, btnGuardar2, btnGuardar3;
+    private LinearLayout btnGuardarTodas;
     private LinearLayout btnBorrarFechas;
     private ImageView btnBack;
     private ProgressBar progressBar;
@@ -70,9 +70,7 @@ public class GestionCalendarioGlobalFragment extends Fragment {
         btnCalendario1 = view.findViewById(R.id.btn_calendario_1);
         btnCalendario2 = view.findViewById(R.id.btn_calendario_2);
         btnCalendario3 = view.findViewById(R.id.btn_calendario_3);
-        btnGuardar1 = view.findViewById(R.id.btn_guardar_1);
-        btnGuardar2 = view.findViewById(R.id.btn_guardar_2);
-        btnGuardar3 = view.findViewById(R.id.btn_guardar_3);
+        btnGuardarTodas = view.findViewById(R.id.btn_guardar_todas);
         btnBorrarFechas = view.findViewById(R.id.btn_borrar_fechas);
         btnBack = view.findViewById(R.id.btn_back);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -82,9 +80,7 @@ public class GestionCalendarioGlobalFragment extends Fragment {
         btnCalendario2.setOnClickListener(v -> mostrarDatePicker(1));
         btnCalendario3.setOnClickListener(v -> mostrarDatePicker(2));
 
-        btnGuardar1.setOnClickListener(v -> guardarFecha(0));
-        btnGuardar2.setOnClickListener(v -> guardarFecha(1));
-        btnGuardar3.setOnClickListener(v -> guardarFecha(2));
+        btnGuardarTodas.setOnClickListener(v -> guardarTodasLasFechas());
 
         tvLabel1.setOnClickListener(v -> editarLabel(0));
         tvLabel2.setOnClickListener(v -> editarLabel(1));
@@ -98,6 +94,10 @@ public class GestionCalendarioGlobalFragment extends Fragment {
             }
         });
 
+        // Inicializar botón como deshabilitado
+        btnGuardarTodas.setEnabled(false);
+        btnGuardarTodas.setAlpha(0.5f);
+
         // Cargar fechas existentes
         cargarCalendarioGlobal();
     }
@@ -105,22 +105,51 @@ public class GestionCalendarioGlobalFragment extends Fragment {
     private void mostrarDatePicker(int indice) {
         Calendar calendar = Calendar.getInstance();
 
-        // Si hay una fecha anterior, usarla como mínima
-        String fechaMinima = null;
+        // Si hay una fecha anterior, usarla como mínima (hacer final para usar en lambda)
+        final String fechaMinima;
         if (indice > 0 && fechasTemp[indice - 1] != null && !fechasTemp[indice - 1].isEmpty()) {
             fechaMinima = fechasTemp[indice - 1];
+        } else {
+            fechaMinima = null;
         }
+
+        // Hacer el índice final para usar en lambda
+        final int fechaIndex = indice;
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 requireContext(),
                 (view, year, month, dayOfMonth) -> {
                     Calendar selectedDate = Calendar.getInstance();
                     selectedDate.set(year, month, dayOfMonth);
-                    String fechaFormateada = formatoFecha.format(selectedDate.getTime());
-                    fechasTemp[indice] = fechaFormateada;
 
-                    TextView tvFecha = indice == 0 ? tvFecha1 : (indice == 1 ? tvFecha2 : tvFecha3);
+                    // Validar que no sea sábado ni domingo
+                    if (esFindeSemana(selectedDate)) {
+                        Toast.makeText(getContext(), "No se pueden seleccionar sábados ni domingos", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Validar que la fecha sea posterior a la anterior
+                    if (fechaMinima != null && !fechaMinima.isEmpty()) {
+                        try {
+                            Date fechaMin = formatoFecha.parse(fechaMinima);
+                            if (fechaMin != null && !selectedDate.getTime().after(fechaMin)) {
+                                Toast.makeText(getContext(), "La fecha debe ser posterior a la fecha anterior", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error al validar fecha mínima", e);
+                        }
+                    }
+
+                    String fechaFormateada = formatoFecha.format(selectedDate.getTime());
+                    fechasTemp[fechaIndex] = fechaFormateada;
+
+                    TextView tvFecha = fechaIndex == 0 ? tvFecha1 : (fechaIndex == 1 ? tvFecha2 : tvFecha3);
                     tvFecha.setText(fechaFormateada);
+                    tvFecha.setTextColor(getResources().getColor(R.color.primary));
+
+                    // Verificar si las 3 fechas están completas para habilitar el guardado
+                    verificarFechasCompletas();
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -132,29 +161,68 @@ public class GestionCalendarioGlobalFragment extends Fragment {
             try {
                 Date fechaMin = formatoFecha.parse(fechaMinima);
                 if (fechaMin != null) {
-                    calendar.setTime(fechaMin);
-                    datePickerDialog.getDatePicker().setMinDate(calendar.getTimeInMillis());
+                    Calendar calMin = Calendar.getInstance();
+                    calMin.setTime(fechaMin);
+                    calMin.add(Calendar.DAY_OF_MONTH, 1);
+                    datePickerDialog.getDatePicker().setMinDate(calMin.getTimeInMillis());
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error al parsear fecha mínima", e);
             }
+        } else {
+            // Establecer fecha mínima como hoy
+            datePickerDialog.getDatePicker().setMinDate(calendar.getTimeInMillis());
         }
 
         datePickerDialog.show();
     }
 
-    private void guardarFecha(int indice) {
-        if (fechasTemp[indice] == null || fechasTemp[indice].isEmpty()) {
-            Toast.makeText(getContext(), "Por favor selecciona una fecha primero", Toast.LENGTH_SHORT).show();
-            return;
+    private boolean esFindeSemana(Calendar fecha) {
+        int diaSemana = fecha.get(Calendar.DAY_OF_WEEK);
+        return diaSemana == Calendar.SATURDAY || diaSemana == Calendar.SUNDAY;
+    }
+
+    private void verificarFechasCompletas() {
+        boolean todasCompletas = true;
+        for (int i = 0; i < 3; i++) {
+            if (fechasTemp[i] == null || fechasTemp[i].isEmpty()) {
+                todasCompletas = false;
+                break;
+            }
         }
 
-        String label = indice == 0 ? tvLabel1.getText().toString() :
-                (indice == 1 ? tvLabel2.getText().toString() : tvLabel3.getText().toString());
+        // Habilitar/deshabilitar botón de guardar según si todas las fechas están completas
+        boolean habilitado = todasCompletas;
+        btnGuardarTodas.setEnabled(habilitado);
+
+        if (habilitado) {
+            btnGuardarTodas.setAlpha(1.0f);
+        } else {
+            btnGuardarTodas.setAlpha(0.5f);
+        }
+    }
+
+    private void guardarTodasLasFechas() {
+        // Validar que todas las fechas estén completas
+        for (int i = 0; i < 3; i++) {
+            if (fechasTemp[i] == null || fechasTemp[i].isEmpty()) {
+                Toast.makeText(getContext(), "Debes completar las 3 fechas antes de guardar", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        // Guardar todas las fechas juntas
+        String label1 = tvLabel1.getText().toString();
+        String label2 = tvLabel2.getText().toString();
+        String label3 = tvLabel3.getText().toString();
 
         Map<String, Object> data = new HashMap<>();
-        data.put(nombresCamposFecha[indice], fechasTemp[indice]);
-        data.put(nombresCamposLabel[indice], label);
+        data.put(nombresCamposFecha[0], fechasTemp[0]);
+        data.put(nombresCamposFecha[1], fechasTemp[1]);
+        data.put(nombresCamposFecha[2], fechasTemp[2]);
+        data.put(nombresCamposLabel[0], label1);
+        data.put(nombresCamposLabel[1], label2);
+        data.put(nombresCamposLabel[2], label3);
         data.put("fechaCreacion", formatoFecha.format(new Date()));
 
         progressBar.setVisibility(View.VISIBLE);
@@ -162,13 +230,13 @@ public class GestionCalendarioGlobalFragment extends Fragment {
                 data,
                 () -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(getContext(), "Fecha guardada exitosamente", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Todas las fechas guardadas exitosamente", Toast.LENGTH_SHORT).show();
                     cargarCalendarioGlobal();
                 },
                 e -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(getContext(), "Error al guardar la fecha: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Error al guardar fecha", e);
+                    Toast.makeText(getContext(), "Error al guardar las fechas: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error al guardar fechas", e);
                 }
         );
     }
@@ -269,9 +337,11 @@ public class GestionCalendarioGlobalFragment extends Fragment {
             if (fecha != null && !fecha.isEmpty()) {
                 fechasTemp[i] = fecha;
                 textViewsFecha[i].setText(fecha);
+                textViewsFecha[i].setTextColor(getResources().getColor(R.color.primary));
             } else {
                 fechasTemp[i] = null;
                 textViewsFecha[i].setText("Sin fecha asignada");
+                textViewsFecha[i].setTextColor(getResources().getColor(R.color.text_secondary));
             }
 
             if (label != null && !label.isEmpty()) {
@@ -280,6 +350,9 @@ public class GestionCalendarioGlobalFragment extends Fragment {
                 textViewsLabel[i].setText(defaultLabels[i]);
             }
         }
+
+        // Verificar si todas las fechas están completas
+        verificarFechasCompletas();
     }
 
     private void inicializarValoresPorDefecto() {

@@ -98,19 +98,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Procesa el Intent para ver si contiene la instrucción de navegar a una pestaña.
+     * Procesa el Intent para ver si contiene la instrucción de navegar al calendario.
      * @param intent El Intent que inició o trajo al frente la actividad.
      */
     private void handleIntent(Intent intent) {
         if (intent != null) {
-            int tabToOpen = intent.getIntExtra("NAVIGATE_TO_TAB", -1);
-            if (tabToOpen != -1 && navController != null) {
-                // Creamos un Bundle para pasar los argumentos al fragmento de destino.
-                Bundle args = new Bundle();
-                args.putInt("TAB_TO_OPEN", tabToOpen);
-
-                // Navegamos al destino que contiene el ViewPager (GestionCalendarioFragment).
-                navController.navigate(R.id.gestionCalendarioFragment, args);
+            int navigateToCalendar = intent.getIntExtra("NAVIGATE_TO_TAB", -1);
+            if (navigateToCalendar != -1 && navController != null) {
+                // Navegamos al fragmento de gestión de calendarios (solo muestra documentos ahora)
+                navController.navigate(R.id.gestionCalendarioFragment);
             }
         }
     }

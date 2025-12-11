@@ -80,74 +80,129 @@ public class DocumentosTabFragment extends Fragment {
         }
         layoutDocumentos.removeAllViews();
         tvNoDocumentos.setVisibility(View.VISIBLE);
-        tvNoDocumentos.setText("No hay calendarios de alumnos asignados.");
-        firebaseManager.cargarCalendarios(currentUserId, task -> {
-            if (task.isSuccessful() && task.getResult() != null) {
-                if (task.getResult().isEmpty()) {
-                    tvNoDocumentos.setVisibility(View.VISIBLE);
-                } else {
-                    tvNoDocumentos.setVisibility(View.GONE);
-                    for (QueryDocumentSnapshot calendarioDoc : task.getResult()) {
-                        crearCardDocumentos(calendarioDoc);
-                    }
-                }
-            } else {
+        tvNoDocumentos.setText("Cargando documentos de estudiantes...");
+
+        // Primero obtener el calendario global para las fechas
+        firebaseManager.obtenerCalendarioGlobal(taskGlobal -> {
+            if (!taskGlobal.isSuccessful() || taskGlobal.getResult() == null || !taskGlobal.getResult().exists()) {
+                tvNoDocumentos.setText("No hay calendario global configurado. El administrador debe configurar las fechas primero.");
                 tvNoDocumentos.setVisibility(View.VISIBLE);
-                Log.e(TAG, "Error cargando calendarios para documentos", task.getException());
+                return;
             }
+
+            DocumentSnapshot calendarioGlobal = taskGlobal.getResult();
+
+            // Luego cargar los estudiantes asignados al maestro
+            firebaseManager.cargarEstudiantesAprobados(currentUserId, taskEstudiantes -> {
+                if (taskEstudiantes.isSuccessful() && taskEstudiantes.getResult() != null) {
+                    if (taskEstudiantes.getResult().isEmpty()) {
+                        tvNoDocumentos.setText("No tienes estudiantes asignados.");
+                        tvNoDocumentos.setVisibility(View.VISIBLE);
+                        return;
+                    }
+
+                    // Para cada estudiante, cargar su calendario individual
+                    int totalEstudiantes = taskEstudiantes.getResult().size();
+                    final int[] estudiantesCargados = {0};
+
+                    if (totalEstudiantes == 0) {
+                        tvNoDocumentos.setText("No tienes estudiantes asignados.");
+                        tvNoDocumentos.setVisibility(View.VISIBLE);
+                        return;
+                    }
+
+                    for (QueryDocumentSnapshot estudianteDoc : taskEstudiantes.getResult()) {
+                        UserProfile estudiante = UserProfile.fromMap(estudianteDoc.getData());
+                        String estudianteId = estudiante.getUserId();
+                        String calendarioId = "calendario_" + estudianteId;
+
+                        // Cargar el calendario del estudiante (donde están los documentos)
+                        firebaseManager.buscarCalendarioPorId(estudianteId, calendarioId, taskCalendario -> {
+                            estudiantesCargados[0]++;
+
+                            if (taskCalendario.isSuccessful() && taskCalendario.getResult() != null && taskCalendario.getResult().exists()) {
+                                // Crear card con calendario global (fechas) y calendario del estudiante (documentos)
+                                crearCardDocumentosConCalendarioGlobal(calendarioGlobal, taskCalendario.getResult(), estudiante);
+                            }
+
+                            // Si ya cargamos todos los estudiantes, ocultar mensaje de carga
+                            if (estudiantesCargados[0] >= totalEstudiantes) {
+                                if (layoutDocumentos.getChildCount() == 0) {
+                                    tvNoDocumentos.setText("Tus estudiantes aún no han subido documentos.");
+                                    tvNoDocumentos.setVisibility(View.VISIBLE);
+                                } else {
+                                    tvNoDocumentos.setVisibility(View.GONE);
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    tvNoDocumentos.setText("Error al cargar estudiantes asignados.");
+                    tvNoDocumentos.setVisibility(View.VISIBLE);
+                    Log.e(TAG, "Error cargando estudiantes", taskEstudiantes.getException());
+                }
+            });
         });
     }
 
-    private void crearCardDocumentos(DocumentSnapshot calendarioFirebase) {
+    private void crearCardDocumentosConCalendarioGlobal(DocumentSnapshot calendarioGlobal, DocumentSnapshot calendarioEstudiante, UserProfile estudiante) {
         if (getContext() == null) return;
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.card_documentos_calendario, layoutDocumentos, false);
 
         TextView tvNombre = cardView.findViewById(R.id.tvNombreAlumnoDoc);
         TextView tvNumControl = cardView.findViewById(R.id.tvNumControlDoc);
 
-        // --- INICIO DE SECCIÓN MODIFICADA ---
+        // Mostrar información del estudiante
+        String nombre = estudiante.getFullName().isEmpty() ? estudiante.getDisplayName() : estudiante.getFullName();
+        tvNombre.setText(nombre);
+        tvNumControl.setText("No. Control: " + estudiante.getControlNumber());
+
         TextView[] labels = {cardView.findViewById(R.id.tvLabelDoc1), cardView.findViewById(R.id.tvLabelDoc2), cardView.findViewById(R.id.tvLabelDoc3)};
         Button[] btnsSubir = {cardView.findViewById(R.id.btnSubirDoc1), cardView.findViewById(R.id.btnSubirDoc2), cardView.findViewById(R.id.btnSubirDoc3)};
         ImageView[] btnsVer = {cardView.findViewById(R.id.btnVerDoc1), cardView.findViewById(R.id.btnVerDoc2), cardView.findViewById(R.id.btnVerDoc3)};
-        ImageView[] btnsRevisar = {cardView.findViewById(R.id.btnRevisarDoc1), cardView.findViewById(R.id.btnRevisarDoc2), cardView.findViewById(R.id.btnRevisarDoc3)}; // <-- NUEVO
+        ImageView[] btnsRevisar = {cardView.findViewById(R.id.btnRevisarDoc1), cardView.findViewById(R.id.btnRevisarDoc2), cardView.findViewById(R.id.btnRevisarDoc3)};
 
-        String calendarioId = calendarioFirebase.getId();
-        String alumnoId = calendarioFirebase.getString("alumnoId");
+        String calendarioId = calendarioEstudiante.getId();
+        String alumnoId = estudiante.getUserId();
 
-        if (alumnoId != null) {
-            firebaseManager.buscarPerfilDeEstudiantePorId(alumnoId, task -> {
-                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                    UserProfile alumnoProfile = UserProfile.fromMap(task.getResult().getData());
-                    String nombre = alumnoProfile.getFullName().isEmpty() ? alumnoProfile.getDisplayName() : alumnoProfile.getFullName();
-                    tvNombre.setText(nombre);
-                    tvNumControl.setText("No. Control: " + alumnoProfile.getControlNumber());
-                } else {
-                    tvNombre.setText("Perfil de Alumno no Encontrado");
-                    tvNumControl.setText("ID: " + alumnoId);
-                }
-            });
-        }
-
-        String[] camposPdfUri = {"pdfUriPrimeraEntrega", "pdfUriSegundaEntrega", "pdfUriResultado"};
-        String[] camposLabel = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
+        // Las fechas y labels vienen del calendario global
+        String[] camposFechaGlobal = {"fechaPrimeraEntrega", "fechaSegundaEntrega", "fechaResultado"};
+        String[] camposLabelGlobal = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
         String[] defaultLabels = {"1ª Entrega", "2ª Entrega", "Resultado Final"};
-        // --- NUEVO: Campos para el estado de aprobación y nueva fecha ---
+
+        // Los documentos vienen del calendario del estudiante
+        String[] camposPdfUri = {"pdfUriPrimeraEntrega", "pdfUriSegundaEntrega", "pdfUriResultado"};
         String[] camposEstado = {"estadoPrimeraEntrega", "estadoSegundaEntrega", "estadoResultado"};
 
         for (int i = 0; i < 3; i++) {
-            final int index = i; // Usar en lambdas
-            String label = calendarioFirebase.getString(camposLabel[i]);
-            String pdfUrlString = calendarioFirebase.getString(camposPdfUri[i]);
-            String estado = calendarioFirebase.getString(camposEstado[i]); // "Aprobado", "Rechazado", o null
+            final int index = i;
+
+            // Obtener label y fecha del calendario global
+            String label = calendarioGlobal.getString(camposLabelGlobal[i]);
+            String fecha = calendarioGlobal.getString(camposFechaGlobal[i]);
+
+            // Obtener documento y estado del calendario del estudiante
+            String pdfUrlString = calendarioEstudiante.getString(camposPdfUri[i]);
+            String estado = calendarioEstudiante.getString(camposEstado[i]);
+
+            // Solo mostrar si hay fecha asignada en el calendario global
+            if (fecha == null || fecha.isEmpty()) {
+                // Ocultar esta entrega si no hay fecha asignada
+                View parentView = (View) labels[i].getParent();
+                if (parentView != null) {
+                    parentView.setVisibility(View.GONE);
+                }
+                continue;
+            }
 
             labels[i].setText(label != null && !label.isEmpty() ? label : defaultLabels[i]);
 
-            // Lógica de UI para el maestro (solo lectura)
+            // El maestro no puede subir documentos
             btnsSubir[i].setVisibility(View.GONE);
 
             if (pdfUrlString == null || pdfUrlString.isEmpty()) {
                 btnsVer[i].setVisibility(View.GONE);
-                btnsRevisar[i].setVisibility(View.GONE); // No se puede revisar si no hay nada
+                btnsRevisar[i].setVisibility(View.GONE);
                 labels[i].setText(labels[i].getText() + " (Pendiente de entrega)");
             } else {
                 btnsVer[i].setVisibility(View.VISIBLE);
@@ -156,13 +211,13 @@ public class DocumentosTabFragment extends Fragment {
                 // Configurar el botón de revisión
                 btnsRevisar[i].setVisibility(View.VISIBLE);
                 if ("Aprobado".equals(estado)) {
-                    btnsRevisar[i].setImageResource(android.R.drawable.ic_menu_myplaces); // Ícono de check/aprobado
+                    btnsRevisar[i].setImageResource(android.R.drawable.ic_menu_myplaces);
                     btnsRevisar[i].setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
                     labels[i].setText(labels[i].getText() + " (Aprobado)");
-                    btnsRevisar[i].setOnClickListener(null); // Deshabilitar click si ya está aprobado
+                    btnsRevisar[i].setOnClickListener(null);
                 } else {
-                    btnsRevisar[i].setImageResource(android.R.drawable.ic_menu_manage); // Ícono de revisión
-                    btnsRevisar[i].setColorFilter(getResources().getColor(R.color.primary)); // Color por defecto
+                    btnsRevisar[i].setImageResource(android.R.drawable.ic_menu_manage);
+                    btnsRevisar[i].setColorFilter(getResources().getColor(R.color.primary));
 
                     if ("Rechazado".equals(estado)) {
                         labels[i].setText(labels[i].getText() + " (Rechazado, esperando re-entrega)");
@@ -175,7 +230,6 @@ public class DocumentosTabFragment extends Fragment {
         }
         layoutDocumentos.addView(cardView);
     }
-    // --- FIN DE SECCIÓN MODIFICADA ---
 
     // --- INICIO DE NUEVOS MÉTODOS ---
     private void mostrarDialogoRevision(String calendarioId, String alumnoId, int entregaIndex) {
@@ -185,7 +239,7 @@ public class DocumentosTabFragment extends Fragment {
         builder.setTitle("Revisar Documento");
         builder.setItems(options, (dialog, item) -> {
             if (options[item].equals("Aprobar Entrega")) {
-                actualizarEstadoEntrega(calendarioId, entregaIndex, "Aprobado", null);
+                actualizarEstadoEntrega(calendarioId, alumnoId, entregaIndex, "Aprobado", null);
             } else if (options[item].equals("Rechazar y Asignar Nueva Fecha")) {
                 mostrarSelectorDeFecha(calendarioId, alumnoId, entregaIndex);
             } else if (options[item].equals("Cancelar")) {
@@ -204,7 +258,7 @@ public class DocumentosTabFragment extends Fragment {
                     String nuevaFecha = sdf.format(calendar.getTime());
 
                     // Guardamos la nueva fecha y reiniciamos el estado
-                    actualizarEstadoEntrega(calendarioId, entregaIndex, "Rechazado", nuevaFecha);
+                    actualizarEstadoEntrega(calendarioId, alumnoId, entregaIndex, "Rechazado", nuevaFecha);
 
                     // Reprogramamos las alarmas para el alumno
                     reprogramarAlarmas(calendarioId, alumnoId, entregaIndex, nuevaFecha);
@@ -215,7 +269,7 @@ public class DocumentosTabFragment extends Fragment {
         datePickerDialog.show();
     }
 
-    private void actualizarEstadoEntrega(String calendarioId, int entregaIndex, String estado, @Nullable String nuevaFecha) {
+    private void actualizarEstadoEntrega(String calendarioId, String alumnoId, int entregaIndex, String estado, @Nullable String nuevaFecha) {
         String[] camposFecha = {"fechaPrimeraEntrega", "fechaSegundaEntrega", "fechaResultado"};
         String[] camposEstado = {"estadoPrimeraEntrega", "estadoSegundaEntrega", "estadoResultado"};
         String[] camposPdfUri = {"pdfUriPrimeraEntrega", "pdfUriSegundaEntrega", "pdfUriResultado"};
@@ -229,7 +283,8 @@ public class DocumentosTabFragment extends Fragment {
             updates.put(camposPdfUri[entregaIndex], "");
         }
 
-        firebaseManager.guardarOActualizarCalendario(currentUserId, calendarioId, updates,
+        // Usar alumnoId en lugar de currentUserId porque el calendario está en la colección del estudiante
+        firebaseManager.guardarOActualizarCalendario(alumnoId, calendarioId, updates,
                 () -> {
                     Toast.makeText(getContext(), "Estado de entrega actualizado.", Toast.LENGTH_SHORT).show();
                     cargarCalendariosDocumentos(); // Recargar la vista para reflejar los cambios
@@ -238,12 +293,12 @@ public class DocumentosTabFragment extends Fragment {
     }
 
     private void reprogramarAlarmas(String calendarioId, String alumnoId, int entregaIndex, String nuevaFecha) {
-        // Obtenemos la etiqueta de la entrega para que la notificación sea correcta
-        firebaseManager.buscarCalendarioPorId(currentUserId, calendarioId, task -> {
-            if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+        // Obtenemos la etiqueta de la entrega del calendario global
+        firebaseManager.obtenerCalendarioGlobal(taskGlobal -> {
+            if (taskGlobal.isSuccessful() && taskGlobal.getResult() != null && taskGlobal.getResult().exists()) {
                 String[] camposLabel = {"labelPrimeraEntrega", "labelSegundaEntrega", "labelResultado"};
                 String[] defaultLabels = {"1ª Entrega", "2ª Entrega", "Resultado Final"};
-                String label = task.getResult().getString(camposLabel[entregaIndex]);
+                String label = taskGlobal.getResult().getString(camposLabel[entregaIndex]);
                 if (label == null || label.isEmpty()) {
                     label = defaultLabels[entregaIndex];
                 }
