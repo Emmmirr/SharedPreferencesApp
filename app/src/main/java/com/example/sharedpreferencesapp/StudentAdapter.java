@@ -42,12 +42,18 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
     @NonNull
     @Override
     public StudentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        android.util.Log.d("StudentAdapter", "onCreateViewHolder - position: " + viewType);
         View view = LayoutInflater.from(context).inflate(R.layout.item_student, parent, false);
         return new StudentViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull StudentViewHolder holder, int position) {
+        android.util.Log.d("StudentAdapter", "onBindViewHolder - position: " + position + ", list size: " + studentList.size());
+        if (position >= studentList.size()) {
+            android.util.Log.e("StudentAdapter", "Error: position " + position + " >= list size " + studentList.size());
+            return;
+        }
         UserProfile student = studentList.get(position);
 
         // Nombre del estudiante
@@ -125,7 +131,9 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
 
     @Override
     public int getItemCount() {
-        return studentList.size();
+        int count = studentList.size();
+        android.util.Log.d("StudentAdapter", "getItemCount: " + count);
+        return count;
     }
 
     public void updateStudent(UserProfile updatedStudent, int position) {
@@ -134,6 +142,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
     }
 
     public void updateList(List<UserProfile> newList) {
+        android.util.Log.d("StudentAdapter", "updateList - newList size: " + (newList != null ? newList.size() : 0));
         // Eliminar duplicados basados en userId
         java.util.Set<String> seenIds = new java.util.HashSet<>();
         java.util.List<UserProfile> uniqueList = new java.util.ArrayList<>();
@@ -145,9 +154,12 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
             }
         }
 
+        android.util.Log.d("StudentAdapter", "updateList - uniqueList size: " + uniqueList.size());
         studentList.clear();
         studentList.addAll(uniqueList);
+        android.util.Log.d("StudentAdapter", "updateList - studentList size after addAll: " + studentList.size());
         notifyDataSetChanged();
+        android.util.Log.d("StudentAdapter", "updateList - notifyDataSetChanged called");
     }
 
     static class StudentViewHolder extends RecyclerView.ViewHolder {

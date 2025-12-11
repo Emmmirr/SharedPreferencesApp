@@ -76,8 +76,28 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
 
         // Configurar RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setHasFixedSize(false); // Permitir que el RecyclerView calcule el tamaño dinámicamente
         adapter = new StudentAdapter(getContext(), filteredStudentsList, this);
         recyclerView.setAdapter(adapter);
+        Log.d(TAG, "RecyclerView configurado - adapter itemCount inicial: " + adapter.getItemCount());
+
+        // Asegurar que el RecyclerView tenga altura válida cuando el layout se complete
+        recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (recyclerView.getHeight() > 0 && adapter != null && adapter.getItemCount() > 0) {
+                    Log.d(TAG, "Layout completo - RecyclerView height: " + recyclerView.getHeight() +
+                            ", adapter items: " + adapter.getItemCount());
+                    // Forzar actualización si hay items pero no se están mostrando
+                    if (recyclerView.getChildCount() == 0 && adapter.getItemCount() > 0) {
+                        Log.d(TAG, "Forzando actualización después de layout completo");
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+                // Remover el listener después de la primera ejecución
+                recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
 
         // Inicializar Firebase
         db = FirebaseFirestore.getInstance();
@@ -187,24 +207,30 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
             }
         }
 
+        Log.d(TAG, "filterStudents - filteredStudentsList size: " + filteredStudentsList.size());
+
         if (adapter != null) {
             adapter.updateList(filteredStudentsList);
+            Log.d(TAG, "Adapter actualizado en filterStudents, itemCount: " + adapter.getItemCount());
 
             // Forzar actualización del RecyclerView
             if (recyclerView != null) {
                 recyclerView.post(() -> {
                     recyclerView.invalidate();
                     recyclerView.requestLayout();
+                    Log.d(TAG, "RecyclerView invalidado en filterStudents");
                 });
             }
+        } else {
+            Log.e(TAG, "Adapter es null en filterStudents!");
         }
 
-        // Mostrar mensaje si no hay estudiantes
+        // Actualizar mensaje según si hay búsqueda activa
         if (filteredStudentsList.isEmpty()) {
             if (tvNoStudents != null) {
                 tvNoStudents.setVisibility(View.VISIBLE);
                 if (searchQuery.isEmpty()) {
-                    tvNoStudents.setText("No hay estudiantes");
+                    tvNoStudents.setText("No hay estudiantes asignados");
                 } else {
                     tvNoStudents.setText("No se encontraron estudiantes");
                 }
@@ -226,10 +252,13 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
         progressBar.setVisibility(View.VISIBLE);
         tvNoStudents.setVisibility(View.GONE);
 
-        // Solo cargar alumnos asignados y aprobados (asignados por el administrador)
+        Log.d(TAG, "Cargando estudiantes asignados para maestro ID: " + currentUserId);
+
+        // Cargar alumnos asignados: usar supervisorId y userType en la consulta
+        // Filtrar isApproved manualmente para evitar problemas con índices compuestos
         db.collection("user_profiles")
                 .whereEqualTo("supervisorId", currentUserId)
-                .whereEqualTo("isApproved", true)
+                .whereEqualTo("userType", "student")
                 .get()
                 .addOnCompleteListener(task -> {
                     progressBar.setVisibility(View.GONE);
@@ -237,34 +266,163 @@ public class StudentsManagementFragment extends Fragment implements StudentAdapt
                     if (task.isSuccessful()) {
                         allStudentsList.clear();
 
-                        // Filtrar manualmente por userType
+                        Log.d(TAG, "Consulta exitosa, documentos encontrados: " + task.getResult().size());
+
+                        // Filtrar manualmente por isApproved (solo mostrar aprobados)
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             try {
-                                String userType = document.getString("userType");
-                                if (userType != null && userType.equals("student")) {
-                                    UserProfile student = UserProfile.fromMap(document.getData());
-                                    // Asegurar que el userId esté establecido
-                                    if (student.getUserId() == null || student.getUserId().isEmpty()) {
-                                        student.setUserId(document.getId());
-                                    }
+                                UserProfile student = UserProfile.fromMap(document.getData());
+
+                                // Asegurar que el userId esté establecido
+                                if (student.getUserId() == null || student.getUserId().isEmpty()) {
+                                    student.setUserId(document.getId());
+                                }
+
+                                // Solo agregar estudiantes aprobados (asignados por el administrador)
+                                if (student.isApproved()) {
+                                    Log.d(TAG, "Estudiante aprobado encontrado: " +
+                                            (student.getFullName().isEmpty() ? student.getDisplayName() : student.getFullName()) +
+                                            ", ID: " + student.getUserId());
                                     allStudentsList.add(student);
+                                } else {
+                                    Log.d(TAG, "Estudiante no aprobado omitido: " + student.getUserId());
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error parseando estudiante: " + document.getId(), e);
                             }
                         }
 
-                        // Verificar que las vistas estén inicializadas antes de filtrar
-                        if (etSearch != null && tabAll != null) {
-                            filterStudents();
+                        Log.d(TAG, "Total estudiantes aprobados cargados: " + allStudentsList.size());
+
+                        // Actualizar la lista filtrada
+                        filteredStudentsList.clear();
+                        filteredStudentsList.addAll(allStudentsList);
+
+                        Log.d(TAG, "Actualizando adapter con " + filteredStudentsList.size() + " estudiantes");
+                        Log.d(TAG, "Adapter es null: " + (adapter == null));
+                        Log.d(TAG, "RecyclerView es null: " + (recyclerView == null));
+
+                        // Actualizar el adapter (el callback ya está en el hilo principal)
+                        if (adapter != null) {
+                            adapter.updateList(filteredStudentsList);
+                            Log.d(TAG, "Adapter actualizado, itemCount: " + adapter.getItemCount());
+                        } else {
+                            Log.e(TAG, "Adapter es null!");
+                        }
+
+                        // Actualizar estado de vistas
+                        updateEmptyState();
+
+                        // Forzar actualización del RecyclerView
+                        if (recyclerView != null) {
+                            // Asegurar que el RecyclerView esté visible
+                            recyclerView.setVisibility(View.VISIBLE);
+
+                            // Esperar a que el layout se complete completamente
+                            // Usar múltiples posts para asegurar que el layout se haya medido
+                            recyclerView.post(() -> {
+                                recyclerView.post(() -> {
+                                    // Verificar que el RecyclerView tenga altura válida
+                                    View parent = (View) recyclerView.getParent();
+                                    if (parent != null) {
+                                        Log.d(TAG, "FrameLayout parent height: " + parent.getHeight());
+                                        if (parent.getHeight() > 0) {
+                                            forceRecyclerViewUpdate();
+                                        } else {
+                                            // Si aún no tiene altura, esperar un poco más
+                                            recyclerView.postDelayed(() -> {
+                                                forceRecyclerViewUpdate();
+                                            }, 200);
+                                        }
+                                    } else {
+                                        forceRecyclerViewUpdate();
+                                    }
+                                });
+                            });
+                        } else {
+                            Log.e(TAG, "RecyclerView es null!");
                         }
 
                     } else {
                         Log.e(TAG, "Error obteniendo estudiantes", task.getException());
+                        if (task.getException() != null) {
+                            Log.e(TAG, "Detalles del error: " + task.getException().getMessage());
+                        }
                         Toast.makeText(getContext(), "Error al cargar estudiantes", Toast.LENGTH_SHORT).show();
                         tvNoStudents.setVisibility(View.VISIBLE);
+                        tvNoStudents.setText("Error al cargar estudiantes. Verifique su conexión.");
                     }
                 });
+    }
+
+    private void forceRecyclerViewUpdate() {
+        if (recyclerView == null || adapter == null) {
+            Log.e(TAG, "forceRecyclerViewUpdate - recyclerView o adapter es null");
+            return;
+        }
+
+        Log.d(TAG, "forceRecyclerViewUpdate - Forzando actualización del RecyclerView");
+        Log.d(TAG, "Adapter itemCount: " + adapter.getItemCount());
+
+        // Verificar LayoutManager
+        if (recyclerView.getLayoutManager() == null) {
+            Log.e(TAG, "LayoutManager es null, configurando...");
+            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        }
+
+        // Verificar dimensiones del RecyclerView y su parent
+        View parent = (View) recyclerView.getParent();
+        int parentHeight = parent != null ? parent.getHeight() : 0;
+        int rvHeight = recyclerView.getHeight();
+
+        Log.d(TAG, "RecyclerView dimensions antes: width=" + recyclerView.getWidth() +
+                ", height=" + rvHeight + ", parent height=" + parentHeight);
+
+        // Si el RecyclerView no tiene altura pero el parent sí, forzar layout
+        if (rvHeight == 0 && parentHeight > 0) {
+            Log.d(TAG, "Forzando layout del RecyclerView...");
+            recyclerView.getLayoutParams().height = parentHeight;
+            recyclerView.requestLayout();
+        }
+
+        // Forzar notificación
+        adapter.notifyDataSetChanged();
+
+        // Forzar invalidación y layout
+        recyclerView.invalidate();
+        recyclerView.requestLayout();
+
+        // Verificar después de un momento
+        recyclerView.post(() -> {
+            Log.d(TAG, "RecyclerView dimensions después: width=" +
+                    recyclerView.getWidth() + ", height=" + recyclerView.getHeight());
+            Log.d(TAG, "onCreateViewHolder llamado: " +
+                    (recyclerView.getChildCount() > 0 ? "SÍ (hay " + recyclerView.getChildCount() + " hijos)" : "NO"));
+        });
+    }
+
+    private void updateEmptyState() {
+        Log.d(TAG, "updateEmptyState - filteredStudentsList size: " + filteredStudentsList.size());
+
+        if (filteredStudentsList.isEmpty()) {
+            Log.d(TAG, "Lista vacía, mostrando mensaje");
+            if (tvNoStudents != null) {
+                tvNoStudents.setVisibility(View.VISIBLE);
+                tvNoStudents.setText("No hay estudiantes asignados");
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.GONE);
+            }
+        } else {
+            Log.d(TAG, "Lista tiene elementos, ocultando mensaje y mostrando RecyclerView");
+            if (tvNoStudents != null) {
+                tvNoStudents.setVisibility(View.GONE);
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.VISIBLE);
+                Log.d(TAG, "RecyclerView visibility establecido a VISIBLE");
+            }
+        }
     }
 
     @Override

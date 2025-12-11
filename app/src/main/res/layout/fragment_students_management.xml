@@ -73,18 +73,14 @@
 
     </LinearLayout>
 
-    <!-- Tabs/Filtros -->
+    <!-- Tabs/Filtros - Ocultos porque el maestro solo ve alumnos asignados (todos aprobados) -->
     <LinearLayout
         android:id="@+id/layoutTabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:orientation="horizontal"
         android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:elevation="1dp">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/tabAll"
@@ -141,33 +137,40 @@
 
     </LinearLayout>
 
-    <!-- Lista de estudiantes -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_students"
+    <!-- Contenedor para RecyclerView, ProgressBar y mensaje -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="8dp"
-        android:clipToPadding="false" />
+        android:layout_weight="1">
 
-    <!-- Progress Bar -->
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+        <!-- Lista de estudiantes -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_students"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:clipToPadding="false" />
 
-    <!-- Mensaje cuando no hay estudiantes -->
-    <TextView
-        android:id="@+id/tv_no_students"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="No hay estudiantes"
-        android:textSize="16sp"
-        android:textColor="@color/text_secondary"
-        android:padding="16dp"
-        android:visibility="gone" />
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Mensaje cuando no hay estudiantes -->
+        <TextView
+            android:id="@+id/tv_no_students"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No hay estudiantes asignados"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:padding="16dp"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </LinearLayout>
